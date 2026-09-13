@@ -8,45 +8,53 @@ import {
   type Track,
 } from './api'
 import {
-  type AnswerResult,
+  type AttemptResult,
   type FinalScore,
   type GameOver,
+  type GameCatalog,
   type GameStart,
   joinRoom,
   type MultiplayerRound,
   type Player,
-  type PlayerAnswer,
+  type PlayerGuess,
   type RoundComplete,
+  type RoundReveal,
   type RoomConnection,
-} from './multiplayer'
+  type ScoreUpdate,
+} from './multiplayer/realtime'
 import {
-  getAnswerTracks,
+  findGuessOption,
+  formatGuessOption,
   getRandomTrack,
-  getRoundScore,
   isRoundCount,
+  isRoundDuration,
+  MAX_ATTEMPTS,
   ROUND_COUNT_OPTIONS,
+  ROUND_DURATION_OPTIONS,
+  type GuessOption,
   type RoundCount,
+  type RoundDuration,
 } from './game'
+import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
+import { scorePlayerGuess } from './multiplayer/game'
+import { renderFinalLeaderboard, renderLeaderboard } from './multiplayer/game-ui'
+import { createSoloGame } from './solo'
 
-const ROUND_DURATION_MS = 10_000
 const MAX_ROUND_SCORE = 1000
 const HIGH_SCORE_KEY = 'blindtest-high-score'
 const VOLUME_KEY = 'blindtest-volume'
 const MUSIC_THEME_KEY = 'blindtest-music-theme'
 const ROUND_COUNT_KEY = 'blindtest-round-count'
+const ROUND_DURATION_KEY = 'blindtest-round-duration'
 const DEFAULT_VOLUME = 0.5
 const DEFAULT_MUSIC_THEME: MusicTheme = 'all'
 const DEFAULT_ROUND_COUNT: RoundCount = 5
+const DEFAULT_ROUND_DURATION: RoundDuration = 30
 const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const MULTIPLAYER_START_DELAY_MS = 3000
 const MULTIPLAYER_ROUND_TRANSITION_MS = 2000
 
-let tracks: Track[] = []
-let currentRound = 0
-let currentAudio: HTMLAudioElement | null = null
-let playedTrackIds: string[] = []
-let score = 0
-let timerId: number | null = null
+let multiplayerTracks: Track[] = []
 let roomConnection: RoomConnection | null = null
 let multiplayerAudio: HTMLAudioElement | null = null
 let multiplayerTimerId: number | null = null
@@ -55,10 +63,15 @@ let multiplayerPlayerId: string | null = null
 let multiplayerIsHost = false
 let currentMultiplayerGameId: string | null = null
 let currentMultiplayerRound: MultiplayerRound | null = null
-let answeredPlayerIds = new Set<string>()
+let currentHostTrack: Track | null = null
+let currentRoundReveal: RoundReveal | null = null
+let ownAnswerResult: AttemptResult | null = null
+let finishedPlayerIds = new Set<string>()
+let multiplayerAttempts = new Map<string, number>()
+let multiplayerTriedAnswerIds = new Map<string, Set<string>>()
+let multiplayerCatalog: GuessOption[] = []
 let multiplayerScores = new Map<string, number>()
 let multiplayerPlayerNames = new Map<string, string>()
-let multiplayerAnswerSent = false
 let multiplayerCurrentRoundNumber = 0
 let multiplayerPlayedTrackIds = new Set<string>()
 let multiplayerRoundPlayerIds = new Set<string>()
@@ -67,18 +80,21 @@ let multiplayerTransitionId: number | null = null
 let multiplayerClockOffsetMs = 0
 let multiplayerClockSyncPromise: Promise<void> | null = null
 let multiplayerHostSeen = false
+let multiplayerHostId: string | null = null
 let multiplayerHostLeft = false
 let multiplayerGameOver = false
 let multiplayerLastRoundId: string | null = null
 let multiplayerLeaveInProgress = false
-let tracksTheme: MusicTheme | null = null
 let selectedTheme: MusicTheme = readStoredMusicTheme()
 let selectedRoundCount: RoundCount = readStoredRoundCount()
+let selectedRoundDuration: RoundDuration = readStoredRoundDuration()
 let currentVolume = readStoredVolume()
 let multiplayerMusicTheme: MusicTheme = DEFAULT_MUSIC_THEME
 let currentGameMusicTheme: MusicTheme = DEFAULT_MUSIC_THEME
 let multiplayerRoundCount: RoundCount = DEFAULT_ROUND_COUNT
 let currentGameRoundCount: RoundCount = DEFAULT_ROUND_COUNT
+let multiplayerRoundDuration: RoundDuration = DEFAULT_ROUND_DURATION
+let currentGameRoundDuration: RoundDuration = DEFAULT_ROUND_DURATION
 
 function readStoredVolume(): number {
   const storedValue = localStorage.getItem(VOLUME_KEY)
@@ -108,11 +124,13 @@ function readStoredRoundCount(): RoundCount {
   return isRoundCount(storedRoundCount) ? storedRoundCount : DEFAULT_ROUND_COUNT
 }
 
-function applyVolumeToActiveAudio(): void {
-  if (currentAudio) {
-    currentAudio.volume = currentVolume
-  }
+function readStoredRoundDuration(): RoundDuration {
+  const storedDuration = Number(localStorage.getItem(ROUND_DURATION_KEY))
+  return isRoundDuration(storedDuration) ? storedDuration : DEFAULT_ROUND_DURATION
+}
 
+function applyVolumeToActiveAudio(): void {
+  soloGame.setVolume(currentVolume)
   if (multiplayerAudio) {
     multiplayerAudio.volume = currentVolume
   }
@@ -141,6 +159,19 @@ function renderRoundCountSelectMarkup(selectId: string, selected: RoundCount): s
     <div class="form-field">
       <label for="${selectId}">Manches</label>
       <select id="${selectId}" name="roundCount">${options}</select>
+    </div>
+  `
+}
+
+function renderRoundDurationSelectMarkup(selectId: string, selected: RoundDuration): string {
+  const options = ROUND_DURATION_OPTIONS.map(
+    (duration) => `<option value="${duration}"${duration === selected ? ' selected' : ''}>${duration} s</option>`,
+  ).join('')
+
+  return `
+    <div class="form-field">
+      <label for="${selectId}">Durée</label>
+      <select id="${selectId}" name="roundDuration">${options}</select>
     </div>
   `
 }
@@ -262,19 +293,6 @@ function setupVolumeControls(): void {
   }
 }
 
-function setStatusMessage(
-  element: HTMLElement | null,
-  message: string,
-  isError = false,
-): void {
-  if (!element) {
-    return
-  }
-
-  element.textContent = message
-  element.classList.toggle('status--error', isError && message.length > 0)
-}
-
 function highScoreKey(roundCount: RoundCount): string {
   return `${HIGH_SCORE_KEY}-${roundCount}`
 }
@@ -299,21 +317,6 @@ function readHighScore(roundCount: RoundCount): number {
 }
 
 const app = document.querySelector<HTMLDivElement>('#app')!
-
-function stopTimer(): void {
-  if (timerId !== null) {
-    window.clearInterval(timerId)
-    timerId = null
-  }
-}
-
-function stopCurrentAudio(): void {
-  if (currentAudio) {
-    currentAudio.pause()
-    currentAudio.currentTime = 0
-    currentAudio = null
-  }
-}
 
 function stopMultiplayerAudio(): void {
   if (multiplayerAudio) {
@@ -355,9 +358,14 @@ function resetMultiplayerGameState(): void {
   cleanupMultiplayerRound()
   stopMultiplayerTransition()
   currentMultiplayerRound = null
-  answeredPlayerIds = new Set()
+  currentHostTrack = null
+  currentRoundReveal = null
+  ownAnswerResult = null
+  finishedPlayerIds = new Set()
+  multiplayerAttempts = new Map()
+  multiplayerTriedAnswerIds = new Map()
+  multiplayerCatalog = []
   multiplayerScores = new Map()
-  multiplayerAnswerSent = false
   multiplayerCurrentRoundNumber = 0
   multiplayerPlayedTrackIds = new Set()
   multiplayerRoundPlayerIds = new Set()
@@ -367,53 +375,14 @@ function resetMultiplayerGameState(): void {
 }
 
 function renderMultiplayerLeaderboard(): void {
-  const leaderboard = document.querySelector<HTMLOListElement>('#multiplayer-leaderboard')
-
-  if (!leaderboard) {
-    return
-  }
-
-  const players = [...multiplayerPlayerNames.entries()]
-    .map(([playerId, name]) => ({
-      playerId,
-      name,
-      score: multiplayerScores.get(playerId) ?? 0,
-    }))
-    .sort((firstPlayer, secondPlayer) =>
-      secondPlayer.score - firstPlayer.score || firstPlayer.name.localeCompare(secondPlayer.name),
-    )
-
-  const playerElements = players.map((player, index) => {
-    const playerElement = document.createElement('li')
-    const rankElement = document.createElement('span')
-    const nameElement = document.createElement('span')
-    const scoreElement = document.createElement('span')
-
-    rankElement.className = 'leaderboard__rank'
-    rankElement.textContent = String(index + 1)
-    nameElement.className = 'leaderboard__name'
-    nameElement.textContent = player.name
-    scoreElement.className = 'leaderboard__score'
-    scoreElement.textContent = String(player.score)
-
-    if (player.playerId === multiplayerPlayerId) {
-      playerElement.classList.add('is-current-player')
-    }
-
-    playerElement.append(rankElement, nameElement, scoreElement)
-    return playerElement
-  })
-
-  leaderboard.replaceChildren(...playerElements)
+  renderLeaderboard(
+    document.querySelector('#multiplayer-leaderboard'),
+    multiplayerPlayerNames,
+    multiplayerScores,
+    multiplayerPlayerId,
+  )
 }
 
-function formatScore(value: number): string {
-  return value.toLocaleString('fr-FR')
-}
-
-function formatRemainingTime(milliseconds: number): string {
-  return `${(milliseconds / 1000).toFixed(1)} s`
-}
 
 const ROUND_RESULT_MARKS = {
   correct:
@@ -422,17 +391,20 @@ const ROUND_RESULT_MARKS = {
     '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.2 6.2l7.6 7.6M13.8 6.2l-7.6 7.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>',
   timeout:
     '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
+  skip:
+    '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 5l6 5-6 5M13 5v10" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
 } as const
 
 const ROUND_RESULT_LABELS = {
   correct: 'Bonne réponse',
   wrong: 'Raté',
   timeout: 'Temps écoulé',
+  skip: 'Passé',
 } as const
 
 function renderRoundResult(
   status: HTMLElement,
-  state: 'correct' | 'wrong' | 'timeout',
+  state: 'correct' | 'wrong' | 'timeout' | 'skip',
   title: string,
   artist: string,
   points = 0,
@@ -465,7 +437,7 @@ function renderRoundResult(
   body.append(statusLabel, track)
   status.append(badge, body)
 
-  if (state !== 'timeout') {
+  if (state !== 'timeout' && state !== 'skip') {
     const pointsElement = document.createElement('span')
     pointsElement.className = 'round-result__points'
     pointsElement.textContent = state === 'correct' ? `+${formatScore(points)}` : '0'
@@ -475,14 +447,27 @@ function renderRoundResult(
   status.closest('.game-shell')?.classList.add('is-answered')
 }
 
-function saveHighScoreIfNeeded(roundCount: RoundCount): boolean {
-  if (score <= readHighScore(roundCount)) {
+function saveHighScoreIfNeeded(roundCount: RoundCount, value: number): boolean {
+  if (value <= readHighScore(roundCount)) {
     return false
   }
 
-  localStorage.setItem(highScoreKey(roundCount), String(score))
+  localStorage.setItem(highScoreKey(roundCount), String(value))
   return true
 }
+
+const soloGame = createSoloGame({
+  app,
+  getVolume: () => currentVolume,
+  setupVolumeControls,
+  renderVolumeControlMarkup,
+  renderArtworkMarkup,
+  revealArtwork,
+  renderRoundResult,
+  readHighScore,
+  saveHighScore: saveHighScoreIfNeeded,
+  renderHome: () => renderHome(),
+})
 
 function generateRoomCode(): string {
   return Array.from({ length: 4 }, () => {
@@ -515,8 +500,8 @@ function createId(): string {
   }
 
   const bytes = crypto.getRandomValues(new Uint8Array(16))
-  bytes[6] = (bytes[6] & 0x0f) | 0x40
-  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  bytes[6] = (bytes[6] ?? 0) & 0x0f | 0x40
+  bytes[8] = (bytes[8] ?? 0) & 0x3f | 0x80
 
   const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
 
@@ -597,6 +582,7 @@ function handleMultiplayerHostLeft(): void {
       </section>
     </main>
   `
+  focusScreenHeading(app)
 
   const returnHomeButton = document.querySelector<HTMLButtonElement>('#return-home-button')!
   returnHomeButton.addEventListener('click', () => {
@@ -641,6 +627,7 @@ function renderPlayers(players: Player[]): void {
   }
 
   const hostPlayer = players.find((player) => player.isHost)
+  multiplayerHostId = hostPlayer?.playerId ?? multiplayerHostId
 
   if (!multiplayerIsHost && hostPlayer?.musicTheme) {
     multiplayerMusicTheme = hostPlayer.musicTheme
@@ -648,6 +635,10 @@ function renderPlayers(players: Player[]): void {
 
   if (!multiplayerIsHost && hostPlayer?.roundCount) {
     multiplayerRoundCount = hostPlayer.roundCount
+  }
+
+  if (!multiplayerIsHost && hostPlayer?.roundDuration) {
+    multiplayerRoundDuration = hostPlayer.roundDuration
   }
 
   multiplayerPlayerNames = new Map(
@@ -691,6 +682,9 @@ function renderPlayers(players: Player[]): void {
   if (lobbyRoundCountValue) {
     lobbyRoundCountValue.textContent = String(multiplayerRoundCount)
   }
+
+  const lobbyRoundDurationValue = document.querySelector<HTMLElement>('#lobby-round-duration-value')
+  if (lobbyRoundDurationValue) lobbyRoundDurationValue.textContent = `${multiplayerRoundDuration} s`
 
   const startButton = document.querySelector<HTMLButtonElement>('#start-game-button')
   if (startButton) {
@@ -754,6 +748,7 @@ function handleGameStart(gameStart: GameStart): void {
     multiplayerHostLeft
     || !gameStart?.gameId
     || !gameStart.startedBy
+    || gameStart.startedBy !== multiplayerHostId
     || gameStart.gameId === currentMultiplayerGameId
   ) {
     return
@@ -765,9 +760,16 @@ function handleGameStart(gameStart: GameStart): void {
   currentGameRoundCount = isRoundCount(gameStart.roundCount)
     ? gameStart.roundCount
     : DEFAULT_ROUND_COUNT
+  currentGameRoundDuration = isRoundDuration(gameStart.roundDuration)
+    ? gameStart.roundDuration
+    : DEFAULT_ROUND_DURATION
   currentMultiplayerGameId = gameStart.gameId
   resetMultiplayerGameState()
   showGameStarting()
+}
+
+function handleGameCatalog(catalog: GameCatalog): void {
+  if (catalog.gameId === currentMultiplayerGameId) multiplayerCatalog = catalog.options
 }
 
 async function startMultiplayerGame(): Promise<void> {
@@ -780,17 +782,18 @@ async function startMultiplayerGame(): Promise<void> {
   currentMultiplayerGameId = createId()
   currentGameMusicTheme = multiplayerMusicTheme
   currentGameRoundCount = multiplayerRoundCount
+  currentGameRoundDuration = multiplayerRoundDuration
   resetMultiplayerGameState()
   showGameStarting()
   await connection.startGame(currentMultiplayerGameId, {
     musicTheme: currentGameMusicTheme,
     roundCount: currentGameRoundCount,
+    roundDuration: currentGameRoundDuration,
   })
 
-  if (tracksTheme !== currentGameMusicTheme) {
-    tracks = await fetchTracks(currentGameMusicTheme)
-    tracksTheme = currentGameMusicTheme
-  }
+  multiplayerTracks = await fetchTracks(currentGameMusicTheme)
+  multiplayerCatalog = multiplayerTracks.map(({ id, title, artist }) => ({ id, title, artist }))
+  await connection.sendCatalog({ gameId: currentMultiplayerGameId, options: multiplayerCatalog })
 
   multiplayerCurrentRoundNumber = 1
   multiplayerScores = new Map(
@@ -806,10 +809,12 @@ async function sendNextMultiplayerRound(connection: RoomConnection): Promise<voi
 
   cleanupMultiplayerRound()
   currentMultiplayerRound = null
-  answeredPlayerIds = new Set()
-  multiplayerAnswerSent = false
+  currentHostTrack = null
+  finishedPlayerIds = new Set()
+  multiplayerAttempts = new Map()
+  multiplayerTriedAnswerIds = new Map()
 
-  const availableTracks = tracks.filter((track) => !multiplayerPlayedTrackIds.has(track.id))
+  const availableTracks = multiplayerTracks.filter((track) => !multiplayerPlayedTrackIds.has(track.id))
   const correctTrack = getRandomTrack(availableTracks)
   multiplayerPlayedTrackIds.add(correctTrack.id)
 
@@ -818,17 +823,10 @@ async function sendNextMultiplayerRound(connection: RoomConnection): Promise<voi
     roundId: createId(),
     round: multiplayerCurrentRoundNumber,
     startAt: Date.now() + MULTIPLAYER_START_DELAY_MS,
-    correctTrackId: correctTrack.id,
     audioUrl: correctTrack.audioUrl,
-    title: correctTrack.title,
-    artist: correctTrack.artist,
-    imageUrl: correctTrack.imageUrl,
-    answers: getAnswerTracks(tracks, correctTrack).map((track) => ({
-      id: track.id,
-      title: track.title,
-    })),
   }
 
+  currentHostTrack = correctTrack
   multiplayerRoundPlayerIds = new Set(multiplayerPlayerNames.keys())
   multiplayerRoundFinished = false
   await connection.sendRound(round)
@@ -842,6 +840,16 @@ async function completeMultiplayerRound(round: MultiplayerRound): Promise<void> 
   }
 
   try {
+    if (!currentHostTrack) {
+      throw new Error('Réponse de la manche introuvable')
+    }
+    await connection.sendRoundReveal({
+      roundId: round.roundId,
+      correctTrackId: currentHostTrack.id,
+      title: currentHostTrack.title,
+      artist: currentHostTrack.artist,
+      imageUrl: currentHostTrack.imageUrl,
+    })
     await connection.sendRoundComplete({
       roundId: round.roundId,
       round: round.round,
@@ -897,7 +905,7 @@ function checkMultiplayerRoundCompletion(): void {
   }
 
   const allPlayersAnswered = [...multiplayerRoundPlayerIds].every((playerId) =>
-    answeredPlayerIds.has(playerId),
+    finishedPlayerIds.has(playerId),
   )
 
   if (!allPlayersAnswered) {
@@ -920,15 +928,17 @@ async function leaveMultiplayerRoom(initialStatus = ''): Promise<void> {
   multiplayerClockOffsetMs = 0
   multiplayerClockSyncPromise = null
   multiplayerHostSeen = false
+  multiplayerHostId = null
   multiplayerHostLeft = false
   multiplayerGameOver = false
   multiplayerLastRoundId = null
   currentMultiplayerGameId = null
-  tracks = []
-  tracksTheme = null
+  multiplayerTracks = []
   currentGameMusicTheme = DEFAULT_MUSIC_THEME
   currentGameRoundCount = DEFAULT_ROUND_COUNT
   multiplayerRoundCount = DEFAULT_ROUND_COUNT
+  currentGameRoundDuration = DEFAULT_ROUND_DURATION
+  multiplayerRoundDuration = DEFAULT_ROUND_DURATION
   multiplayerPlayerId = null
   multiplayerIsHost = false
 
@@ -945,71 +955,44 @@ async function leaveMultiplayerRoom(initialStatus = ''): Promise<void> {
   }
 }
 
-function handlePlayerAnswer(answer: PlayerAnswer): void {
-  if (!multiplayerIsHost || !currentMultiplayerRound || multiplayerRoundFinished) {
-    return
-  }
-
-  if (answer.roundId !== currentMultiplayerRound.roundId) {
-    return
-  }
-
-  if (answeredPlayerIds.has(answer.playerId)) {
-    return
-  }
-
-  if (!multiplayerRoundPlayerIds.has(answer.playerId)) {
-    return
-  }
-
-  answeredPlayerIds.add(answer.playerId)
-
-  const now = Date.now()
-  const remainingTime = Math.max(
-    0,
-    currentMultiplayerRound.startAt
-      + ROUND_DURATION_MS
-      - now,
-  )
-  const isCorrect =
-    now >= currentMultiplayerRound.startAt
-    && remainingTime > 0
-    && answer.answerId !== null
-    && answer.answerId === currentMultiplayerRound.correctTrackId
-  const addedScore = isCorrect
-    ? getRoundScore(
-      remainingTime,
-      ROUND_DURATION_MS,
-      MAX_ROUND_SCORE,
-    )
-    : 0
-  const totalScore = (multiplayerScores.get(answer.playerId) ?? 0) + addedScore
-
-  multiplayerScores.set(answer.playerId, totalScore)
+function handlePlayerGuess(guess: PlayerGuess): void {
+  if (multiplayerRoundFinished) return
+  const result = scorePlayerGuess({
+    isHost: multiplayerIsHost,
+    round: currentMultiplayerRound,
+    correctTrackId: currentHostTrack?.id ?? null,
+    catalogIds: new Set(multiplayerCatalog.map(({ id }) => id)),
+    activePlayerIds: multiplayerRoundPlayerIds,
+    finishedPlayerIds,
+    attempts: multiplayerAttempts,
+    triedAnswerIds: multiplayerTriedAnswerIds,
+    scores: multiplayerScores,
+    guess,
+    now: Date.now(),
+    roundDurationMs: currentGameRoundDuration * 1000,
+    maxRoundScore: MAX_ROUND_SCORE,
+  })
+  if (!result) return
   renderMultiplayerLeaderboard()
-
-  const result: AnswerResult = {
-    roundId: answer.roundId,
-    playerId: answer.playerId,
-    answerId: answer.answerId,
-    isCorrect,
-    addedScore,
-    totalScore,
-  }
 
   const connection = roomConnection
 
   if (connection) {
-    void connection.sendAnswerResult(result).catch((error) => {
-      console.error(error)
-      void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
+    void (async () => {
+      await connection.sendAttemptResult(result)
+      if (result.addedScore > 0) await connection.sendScoreUpdate(result)
+      checkMultiplayerRoundCompletion()
+    })().catch((error) => {
+        console.error(error)
+        void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
     })
+    return
   }
 
   checkMultiplayerRoundCompletion()
 }
 
-function handleAnswerResult(result: AnswerResult): void {
+function handleAttemptResult(result: AttemptResult): void {
   if (
     multiplayerHostLeft
     || multiplayerGameOver
@@ -1026,41 +1009,42 @@ function handleAnswerResult(result: AnswerResult): void {
     return
   }
 
+  ownAnswerResult = result
+
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')
 
   if (!gameStatus) {
     return
   }
 
-  const answerButtons = [...document.querySelectorAll<HTMLButtonElement>(
-    '.multiplayer-answer-button',
-  )]
-  const correctButton = answerButtons.find(
-    (button) => button.dataset.answerId === currentMultiplayerRound?.correctTrackId,
-  )
+  gameStatus.textContent = result.isCorrect
+    ? 'Bonne réponse ! Résultat à venir…'
+    : result.finished ? 'Plus aucun essai. Résultat à venir…' : 'Mauvaise réponse, réessaie.'
 
-  correctButton?.classList.add('is-correct')
+  document.querySelector<HTMLFormElement>('#multiplayer-guess-form')
+    ?.dispatchEvent(new CustomEvent('multiplayer-attempt-result', { detail: result }))
+}
 
-  if (result.answerId !== null && result.answerId !== currentMultiplayerRound.correctTrackId) {
-    const selectedButton = answerButtons.find(
-      (button) => button.dataset.answerId === result.answerId,
+function handleScoreUpdate(update: ScoreUpdate): void {
+  if (update.roundId !== currentMultiplayerRound?.roundId) return
+  multiplayerScores.set(update.playerId, update.totalScore)
+  renderMultiplayerLeaderboard()
+}
+
+function handleRoundReveal(reveal: RoundReveal): void {
+  if (!currentMultiplayerRound || reveal.roundId !== currentMultiplayerRound.roundId) return
+  currentRoundReveal = reveal
+  revealArtwork(document, reveal.imageUrl, `Cover de ${reveal.title} par ${reveal.artist}`)
+  const status = document.querySelector<HTMLParagraphElement>('#multiplayer-status')
+  if (status) {
+    renderRoundResult(
+      status,
+      ownAnswerResult ? (ownAnswerResult.isCorrect ? 'correct' : 'wrong') : 'timeout',
+      reveal.title,
+      reveal.artist,
+      ownAnswerResult?.isCorrect ? ownAnswerResult.addedScore : 0,
     )
-    selectedButton?.classList.add('is-wrong')
   }
-
-  revealArtwork(
-    document,
-    currentMultiplayerRound.imageUrl,
-    `Cover de ${currentMultiplayerRound.title} par ${currentMultiplayerRound.artist}`,
-  )
-
-  renderRoundResult(
-    gameStatus,
-    result.answerId === null ? 'timeout' : result.isCorrect ? 'correct' : 'wrong',
-    currentMultiplayerRound.title,
-    currentMultiplayerRound.artist,
-    result.isCorrect ? result.addedScore : 0,
-  )
 }
 
 function handleRoundComplete(result: RoundComplete): void {
@@ -1077,18 +1061,12 @@ function handleRoundComplete(result: RoundComplete): void {
   multiplayerRoundFinished = true
   cleanupMultiplayerRound()
 
-  revealArtwork(
-    document,
-    currentMultiplayerRound.imageUrl,
-    `Cover de ${currentMultiplayerRound.title} par ${currentMultiplayerRound.artist}`,
-  )
+  if (currentRoundReveal) {
+    revealArtwork(document, currentRoundReveal.imageUrl, `Cover de ${currentRoundReveal.title} par ${currentRoundReveal.artist}`)
+  }
 
-  const answerButtons = document.querySelectorAll<HTMLButtonElement>(
-    '.multiplayer-answer-button',
-  )
-  answerButtons.forEach((button) => {
-    button.disabled = true
-  })
+  document.querySelector<HTMLFormElement>('#multiplayer-guess-form')?.querySelectorAll('input, button')
+    .forEach((control) => { (control as HTMLInputElement | HTMLButtonElement).disabled = true })
 
   const playAudioButton = document.querySelector<HTMLButtonElement>('#play-audio-button')
   if (playAudioButton) {
@@ -1131,36 +1109,12 @@ function handleGameOver(gameOver: GameOver): void {
       </section>
     </main>
   `
+  focusScreenHeading(app)
 
   const leaderboard = document.querySelector<HTMLOListElement>(
     '#multiplayer-final-leaderboard',
   )!
-  const playerElements = gameOver.scores.map((player, index) => {
-    const playerElement = document.createElement('li')
-    const rankElement = document.createElement('span')
-    const nameElement = document.createElement('span')
-    const scoreElement = document.createElement('span')
-
-    rankElement.className = 'leaderboard__rank'
-    rankElement.textContent = String(index + 1)
-    nameElement.className = 'leaderboard__name'
-    nameElement.textContent = player.name
-    scoreElement.className = 'leaderboard__score'
-    scoreElement.textContent = formatScore(player.score)
-
-    if (index === 0) {
-      playerElement.classList.add('is-winner')
-    }
-
-    if (player.playerId === multiplayerPlayerId) {
-      playerElement.classList.add('is-current-player')
-    }
-
-    playerElement.append(rankElement, nameElement, scoreElement)
-    return playerElement
-  })
-
-  leaderboard.replaceChildren(...playerElements)
+  renderFinalLeaderboard(leaderboard, gameOver.scores, multiplayerPlayerId)
 
   document.querySelector<HTMLButtonElement>('#return-home-button')!.addEventListener('click', (event) => {
     const button = event.currentTarget as HTMLButtonElement
@@ -1195,9 +1149,13 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
 
   cleanupMultiplayerRound()
   currentMultiplayerRound = round
+  currentRoundReveal = null
+  ownAnswerResult = null
   multiplayerLastRoundId = round.roundId
   multiplayerCurrentRoundNumber = round.round
-  answeredPlayerIds = new Set()
+  finishedPlayerIds = new Set()
+  multiplayerAttempts = new Map()
+  multiplayerTriedAnswerIds = new Map()
   multiplayerRoundFinished = false
 
   for (const playerId of multiplayerPlayerNames.keys()) {
@@ -1206,7 +1164,6 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     }
   }
 
-  multiplayerAnswerSent = false
 
   app.innerHTML = `
     <main class="welcome welcome--game">
@@ -1230,7 +1187,14 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
           </div>
         </div>
         <h1 id="multiplayer-question-title" class="question-title">Quel est ce titre ?</h1>
-        <div id="multiplayer-answers" class="answers"></div>
+        <form id="multiplayer-guess-form" class="guess-form">
+          <label class="sr-only" for="multiplayer-guess-input">Titre et artiste</label>
+          <input id="multiplayer-guess-input" type="text" list="multiplayer-guess-options" autocomplete="off" aria-describedby="multiplayer-attempts-left" placeholder="Titre — Artiste" disabled />
+          <datalist id="multiplayer-guess-options"></datalist>
+          <button class="button-primary" type="submit" disabled>Valider</button>
+        </form>
+        <p id="multiplayer-attempts-left" class="attempts-left">${MAX_ATTEMPTS} essais restants</p>
+        <ul id="multiplayer-guess-history" class="guess-history" aria-label="Essais précédents"></ul>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite">Répondez lorsque la manche commence.</p>
         <p id="multiplayer-round-status" class="status" role="status" aria-live="polite"></p>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
@@ -1244,20 +1208,33 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
       </section>
     </main>
   `
+  focusScreenHeading(app)
 
-  const answers = document.querySelector<HTMLDivElement>('#multiplayer-answers')!
+  const form = document.querySelector<HTMLFormElement>('#multiplayer-guess-form')!
+  const input = document.querySelector<HTMLInputElement>('#multiplayer-guess-input')!
+  const submitButton = form.querySelector<HTMLButtonElement>('button')!
+  const datalist = document.querySelector<HTMLDataListElement>('#multiplayer-guess-options')!
+  const attemptsLeft = document.querySelector<HTMLParagraphElement>('#multiplayer-attempts-left')!
+  const history = document.querySelector<HTMLUListElement>('#multiplayer-guess-history')!
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')!
   const gameTimer = document.querySelector<HTMLParagraphElement>('#multiplayer-timer')!
   const timerProgress = document.querySelector<HTMLDivElement>('#multiplayer-timer-progress')!
   const leaveButton = document.querySelector<HTMLButtonElement>('#leave-multiplayer-round-button')!
   const playAudioButton = document.querySelector<HTMLButtonElement>('#play-audio-button')!
-  const answerButtons: HTMLButtonElement[] = []
   let hasFinished = false
   let roundHasStarted = false
   let audioHasStarted = false
   let audioStartAttempted = false
+  let waitingForResult = false
+  const triedIds = new Set<string>()
+  const roundDurationMs = currentGameRoundDuration * 1000
 
   setupVolumeControls()
+  datalist.replaceChildren(...multiplayerCatalog.map((track) => {
+    const option = document.createElement('option')
+    option.value = formatGuessOption(track)
+    return option
+  }))
 
   const isCurrentRound = (): boolean =>
     currentMultiplayerRound?.roundId === round.roundId
@@ -1272,65 +1249,60 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     void leaveMultiplayerRoom()
   })
 
-  const finishRound = (
-    answerId: string | null,
-  ): void => {
-    if (!isCurrentRound() || hasFinished || multiplayerAnswerSent) {
-      return
-    }
-
-    const remainingTime = Math.max(
-      0,
-      round.startAt + ROUND_DURATION_MS - getEstimatedHostNow(),
-    )
-    const timedOut = remainingTime <= 0
-
-    roundHasStarted = true
+  const finishOwnRound = (message: string): void => {
     hasFinished = true
-    multiplayerAnswerSent = true
-  cleanupMultiplayerRound()
-    gameTimer.textContent = formatRemainingTime(remainingTime)
-    timerProgress.style.transform = `scaleX(${remainingTime / ROUND_DURATION_MS})`
-    playAudioButton.hidden = true
-    playAudioButton.disabled = true
+    input.disabled = true
+    submitButton.disabled = true
+    gameStatus.textContent = message
+  }
 
-    answerButtons.forEach((button) => {
-      button.disabled = true
-    })
-    gameStatus.textContent = 'Réponse envoyée...'
+  const onAttemptResult = (event: Event): void => {
+    const result = (event as CustomEvent<AttemptResult>).detail
+    if (result.roundId !== round.roundId || result.playerId !== multiplayerPlayerId) return
+    waitingForResult = false
+    history.lastElementChild?.classList.add(result.isCorrect ? 'is-correct' : 'is-wrong')
+    attemptsLeft.textContent = `${result.attemptsRemaining} essai${result.attemptsRemaining === 1 ? '' : 's'} restant${result.attemptsRemaining === 1 ? '' : 's'}`
+    if (result.finished) {
+      finishOwnRound(result.isCorrect ? 'Bonne réponse ! Résultat à venir…' : 'Plus aucun essai. Résultat à venir…')
+    } else {
+      input.value = ''
+      input.disabled = false
+      submitButton.disabled = false
+      input.focus()
+    }
+  }
+  form.addEventListener('multiplayer-attempt-result', onAttemptResult)
 
-    const connection = roomConnection
-
-    if (!connection || !multiplayerPlayerId) {
-      gameStatus.textContent = 'Impossible d’envoyer la réponse.'
+  form.addEventListener('submit', (event) => {
+    event.preventDefault()
+    if (!isCurrentRound() || !roundHasStarted || hasFinished || waitingForResult) return
+    const answer = findGuessOption(multiplayerCatalog, input.value)
+    if (!answer) {
+      input.setAttribute('aria-invalid', 'true')
+      gameStatus.textContent = 'Choisis un titre dans les suggestions.'
+      return
+    }
+    if (triedIds.has(answer.id)) {
+      input.setAttribute('aria-invalid', 'true')
+      gameStatus.textContent = 'Ce titre a déjà été essayé.'
       return
     }
 
-    void connection.sendAnswer({
-      roundId: round.roundId,
-      playerId: multiplayerPlayerId,
-      answerId: timedOut ? null : answerId,
-    }).catch((error) => {
-      console.error(error)
-      void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
-    })
-  }
-
-  for (const answer of round.answers) {
-    const answerButton = document.createElement('button')
-    answerButton.type = 'button'
-    answerButton.className = 'answer-button multiplayer-answer-button'
-    answerButton.dataset.answerId = answer.id
-    answerButton.textContent = answer.title
-    answerButton.disabled = true
-
-    answerButton.addEventListener('click', () => {
-      finishRound(answer.id)
-    })
-
-    answerButtons.push(answerButton)
-    answers.append(answerButton)
-  }
+    input.removeAttribute('aria-invalid')
+    triedIds.add(answer.id)
+    const item = document.createElement('li')
+    item.textContent = formatGuessOption(answer)
+    history.append(item)
+    waitingForResult = true
+    input.disabled = true
+    submitButton.disabled = true
+    gameStatus.textContent = 'Vérification…'
+    void roomConnection?.sendGuess({ roundId: round.roundId, guessId: createId(), answerId: answer.id })
+      .catch((error) => {
+        console.error(error)
+        void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
+      })
+  })
 
   const audio = new Audio(round.audioUrl)
   audio.volume = currentVolume
@@ -1353,16 +1325,13 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   multiplayerAudio = audio
 
   const startAudio = async (): Promise<void> => {
-    if (!isCurrentRound() || audioHasStarted || audioStartAttempted || !roundHasStarted || hasFinished) {
+    if (!isCurrentRound() || audioHasStarted || audioStartAttempted || !roundHasStarted) {
       return
     }
 
     const elapsedTime = getEstimatedHostNow() - round.startAt
 
-    if (elapsedTime >= ROUND_DURATION_MS) {
-      finishRound(null)
-      return
-    }
+    if (elapsedTime >= roundDurationMs) return
 
     if (audio.readyState < 1) {
       audio.addEventListener('loadedmetadata', () => {
@@ -1387,14 +1356,13 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     try {
       await audio.play()
 
-      if (!isCurrentRound() || hasFinished) {
+      if (!isCurrentRound()) {
         audio.pause()
         return
       }
 
-      if (getEstimatedHostNow() - round.startAt >= ROUND_DURATION_MS) {
+      if (getEstimatedHostNow() - round.startAt >= roundDurationMs) {
         audio.pause()
-        finishRound(null)
         return
       }
 
@@ -1404,7 +1372,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
       audioStartAttempted = false
       console.error(error)
 
-      if (!isCurrentRound() || hasFinished) {
+      if (!isCurrentRound()) {
         return
       }
 
@@ -1418,7 +1386,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   })
 
   function startRoundAudio(): void {
-    if (!isCurrentRound() || roundHasStarted || hasFinished) {
+    if (!isCurrentRound() || roundHasStarted) {
       return
     }
 
@@ -1431,15 +1399,15 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
 
     roundHasStarted = true
     gameTimer.classList.remove('is-countdown')
-    answerButtons.forEach((button) => {
-      button.disabled = false
-    })
+    input.disabled = false
+    submitButton.disabled = false
+    input.focus()
     gameStatus.textContent = 'Extrait en cours...'
     void startAudio()
   }
 
   function scheduleRoundStart(): void {
-    if (!isCurrentRound() || roundHasStarted || hasFinished) {
+    if (!isCurrentRound() || roundHasStarted) {
       return
     }
 
@@ -1473,19 +1441,22 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
       startRoundAudio()
     }
 
-    if (hasFinished) {
-      return
-    }
-
     const remainingTime = Math.max(
       0,
-      round.startAt + ROUND_DURATION_MS - getEstimatedHostNow(),
+      round.startAt + roundDurationMs - getEstimatedHostNow(),
     )
     gameTimer.textContent = formatRemainingTime(remainingTime)
-    timerProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, remainingTime / ROUND_DURATION_MS))})`
+    timerProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, remainingTime / roundDurationMs))})`
 
     if (remainingTime <= 0) {
-      finishRound(null)
+      if (!hasFinished) {
+        ownAnswerResult = null
+        finishOwnRound('Temps écoulé. Résultat à venir…')
+      }
+      if (multiplayerIsHost) {
+        for (const playerId of multiplayerRoundPlayerIds) finishedPlayerIds.add(playerId)
+        checkMultiplayerRoundCompletion()
+      }
     }
   }
 
@@ -1524,6 +1495,14 @@ function renderLobby(roomCode: string, isHost: boolean): void {
                 ).join('')}</select>`
               : `<span id="lobby-round-count-value" class="lobby-rule__value">${multiplayerRoundCount}</span>`}
           </div>
+          <div class="lobby-rule">
+            <span class="field-label">Durée</span>
+            ${isHost
+              ? `<select id="lobby-round-duration" name="roundDuration">${ROUND_DURATION_OPTIONS.map(
+                  (duration) => `<option value="${duration}"${duration === multiplayerRoundDuration ? ' selected' : ''}>${duration} s</option>`,
+                ).join('')}</select>`
+              : `<span id="lobby-round-duration-value" class="lobby-rule__value">${multiplayerRoundDuration} s</span>`}
+          </div>
         </div>
 
         <h2 class="lobby-heading lobby-players-heading">Joueurs <span id="players-count" class="player-count"></span></h2>
@@ -1543,6 +1522,7 @@ function renderLobby(roomCode: string, isHost: boolean): void {
       </section>
     </main>
   `
+  focusScreenHeading(app)
 
   const startButton = document.querySelector<HTMLButtonElement>('#start-game-button')
   const leaveButton = document.querySelector<HTMLButtonElement>('#leave-room-button')!
@@ -1550,11 +1530,13 @@ function renderLobby(roomCode: string, isHost: boolean): void {
   const lobbyStatus = document.querySelector<HTMLParagraphElement>('#lobby-status')!
   const themeSelect = document.querySelector<HTMLSelectElement>('#lobby-theme-select')
   const roundCountSelect = document.querySelector<HTMLSelectElement>('#lobby-round-count')
+  const roundDurationSelect = document.querySelector<HTMLSelectElement>('#lobby-round-duration')
 
   const pushGameSettings = (): void => {
     void roomConnection?.updateGameSettings({
       musicTheme: multiplayerMusicTheme,
       roundCount: multiplayerRoundCount,
+      roundDuration: multiplayerRoundDuration,
     }).catch((error) => {
       console.error(error)
       lobbyStatus.textContent = 'Impossible de mettre à jour les réglages.'
@@ -1580,6 +1562,13 @@ function renderLobby(roomCode: string, isHost: boolean): void {
     }
 
     multiplayerRoundCount = roundCount
+    pushGameSettings()
+  })
+
+  roundDurationSelect?.addEventListener('change', () => {
+    const duration = Number(roundDurationSelect.value)
+    if (!isRoundDuration(duration)) return
+    multiplayerRoundDuration = duration
     pushGameSettings()
   })
 
@@ -1624,10 +1613,12 @@ async function openRoom(roomCode: string, playerName: string, isHost: boolean): 
   try {
     multiplayerMusicTheme = DEFAULT_MUSIC_THEME
     multiplayerRoundCount = DEFAULT_ROUND_COUNT
+    multiplayerRoundDuration = DEFAULT_ROUND_DURATION
     renderLobby(roomCode, isHost)
 
     multiplayerClockOffsetMs = 0
     multiplayerHostSeen = false
+    multiplayerHostId = null
     multiplayerHostLeft = false
     multiplayerGameOver = false
     multiplayerLastRoundId = null
@@ -1646,12 +1637,16 @@ async function openRoom(roomCode: string, playerName: string, isHost: boolean): 
       {
         musicTheme: multiplayerMusicTheme,
         roundCount: multiplayerRoundCount,
+        roundDuration: multiplayerRoundDuration,
       },
       renderPlayers,
       handleGameStart,
+      handleGameCatalog,
       handleRoundStart,
-      handlePlayerAnswer,
-      handleAnswerResult,
+      handlePlayerGuess,
+      handleAttemptResult,
+      handleScoreUpdate,
+      handleRoundReveal,
       handleRoundComplete,
       handleGameOver,
     )
@@ -1673,241 +1668,13 @@ async function openRoom(roomCode: string, playerName: string, isHost: boolean): 
     multiplayerClockOffsetMs = 0
     multiplayerClockSyncPromise = null
     multiplayerHostSeen = false
+    multiplayerHostId = null
     multiplayerHostLeft = false
     multiplayerGameOver = false
     multiplayerLastRoundId = null
     currentMultiplayerGameId = null
-    renderHome('Impossible de rejoindre cette partie.')
+    renderHome(error instanceof Error ? error.message : 'Impossible de rejoindre cette partie.')
   }
-}
-
-function showResult(): void {
-  stopTimer()
-  stopCurrentAudio()
-  const isNewHighScore = saveHighScoreIfNeeded(selectedRoundCount)
-  const highScore = readHighScore(selectedRoundCount)
-
-  app.innerHTML = `
-    <main class="welcome welcome--result">
-      <section class="welcome__content result-shell surface" aria-labelledby="result-title">
-        <h1 id="result-title">Partie terminée</h1>
-        <div class="score-summary">
-          <div class="stat"><span class="stat__label">Score</span><span class="stat__value">${formatScore(score)} / ${formatScore(selectedRoundCount * MAX_ROUND_SCORE)}</span></div>
-          <div class="stat"><span class="stat__label">Meilleur score · ${selectedRoundCount} manches</span><span class="stat__value stat__value--score">${formatScore(highScore)}</span></div>
-        </div>
-        ${isNewHighScore ? '<p class="new-high-score">Nouveau record !</p>' : ''}
-        <div class="result-actions">
-          <button id="replay-button" class="button-primary" type="button">Rejouer</button>
-          <button id="return-home-button" class="button-secondary" type="button">Retour à l'accueil</button>
-        </div>
-        <p class="status" role="status" aria-live="polite"></p>
-      </section>
-    </main>
-  `
-
-  const replayButton = document.querySelector<HTMLButtonElement>('#replay-button')!
-
-  document.querySelector<HTMLButtonElement>('#return-home-button')!.addEventListener('click', (event) => {
-    const button = event.currentTarget as HTMLButtonElement
-    button.disabled = true
-    renderHome()
-  })
-
-  replayButton.addEventListener('click', async () => {
-    replayButton.disabled = true
-    stopTimer()
-    stopCurrentAudio()
-    currentRound = 1
-    playedTrackIds = []
-    score = 0
-
-    try {
-      await startRound()
-    } catch (error) {
-      console.error(error)
-      const statusMessage = document.querySelector<HTMLParagraphElement>('.status')
-      setStatusMessage(statusMessage, 'Impossible de relancer la partie.', true)
-      replayButton.disabled = false
-    }
-  })
-}
-
-async function startRound(): Promise<void> {
-  stopTimer()
-  stopCurrentAudio()
-
-  let availableTracks = tracks.filter((track) => !playedTrackIds.includes(track.id))
-
-  if (availableTracks.length === 0) {
-    playedTrackIds = []
-    availableTracks = tracks
-  }
-
-  const correctTrack = getRandomTrack(availableTracks)
-  playedTrackIds.push(correctTrack.id)
-
-  const answerTracks = getAnswerTracks(tracks, correctTrack)
-  const audio = new Audio(correctTrack.audioUrl)
-  audio.volume = currentVolume
-  currentAudio = audio
-
-  try {
-    await audio.play()
-  } catch (error) {
-    stopCurrentAudio()
-    throw error
-  }
-
-  const roundStartedAt = performance.now()
-  let hasAnswered = false
-
-  app.innerHTML = `
-    <main class="welcome welcome--game">
-      <section class="welcome__content game-shell" aria-labelledby="question-title">
-        <header class="game-topbar">
-          <p class="round-label">Manche ${currentRound} / ${selectedRoundCount}</p>
-          <div class="game-topbar__right">
-            <p class="round-score">Score <span id="score">${formatScore(score)}</span></p>
-            <div class="game-volume">
-              <label class="sr-only" for="volume-slider-round">Volume</label>
-              ${renderVolumeControlMarkup('volume-slider-round', true)}
-            </div>
-          </div>
-        </header>
-        <div class="game-stage">
-          ${renderArtworkMarkup()}
-          <div class="progress">
-            <p id="timer" class="progress__time">${formatRemainingTime(ROUND_DURATION_MS)}</p>
-            <div class="progress__track" aria-hidden="true">
-              <div id="timer-progress" class="progress__bar"></div>
-            </div>
-          </div>
-        </div>
-        <h1 id="question-title" class="question-title">Quel est ce titre ?</h1>
-        <div id="answers" class="answers"></div>
-        <p id="game-status" class="status" role="status" aria-live="polite">Extrait en cours...</p>
-      </section>
-    </main>
-  `
-
-  const answers = document.querySelector<HTMLDivElement>('#answers')!
-  const gameStatus = document.querySelector<HTMLParagraphElement>('#game-status')!
-  const gameTimer = document.querySelector<HTMLParagraphElement>('#timer')!
-  const timerProgress = document.querySelector<HTMLDivElement>('#timer-progress')!
-  const scoreDisplay = document.querySelector<HTMLParagraphElement>('#score')!
-  const answerButtons: HTMLButtonElement[] = []
-  let correctAnswerButton: HTMLButtonElement | null = null
-
-  setupVolumeControls()
-
-  const getRemainingTime = (): number =>
-    Math.max(0, ROUND_DURATION_MS - (performance.now() - roundStartedAt))
-
-  const updateTimerDisplay = (remainingTime: number): void => {
-    gameTimer.textContent = formatRemainingTime(remainingTime)
-    const progress = Math.max(0, Math.min(1, remainingTime / ROUND_DURATION_MS))
-    timerProgress.style.transform = `scaleX(${progress})`
-  }
-
-  const finishRound = (
-    selectedTrack: Track | null,
-    selectedButton: HTMLButtonElement | null,
-  ): void => {
-    if (hasAnswered) {
-      return
-    }
-
-    const remainingTime = getRemainingTime()
-    const timedOut = remainingTime <= 0
-
-    hasAnswered = true
-    stopTimer()
-    stopCurrentAudio()
-    updateTimerDisplay(remainingTime)
-
-    answerButtons.forEach((button) => {
-      button.disabled = true
-    })
-    correctAnswerButton?.classList.add('is-correct')
-    const isCorrect = selectedTrack?.id === correctTrack.id
-
-    revealArtwork(
-      document,
-      correctTrack.imageUrl,
-      `Cover de ${correctTrack.title} par ${correctTrack.artist}`,
-    )
-
-    if (timedOut) {
-      renderRoundResult(gameStatus, 'timeout', correctTrack.title, correctTrack.artist)
-    } else if (isCorrect) {
-      const addedScore = getRoundScore(remainingTime, ROUND_DURATION_MS, MAX_ROUND_SCORE)
-      score += addedScore
-      scoreDisplay.textContent = formatScore(score)
-      selectedButton?.classList.add('is-correct')
-      renderRoundResult(gameStatus, 'correct', correctTrack.title, correctTrack.artist, addedScore)
-    } else {
-      selectedButton?.classList.add('is-wrong')
-      renderRoundResult(gameStatus, 'wrong', correctTrack.title, correctTrack.artist)
-    }
-
-    const nextButton = document.createElement('button')
-    nextButton.type = 'button'
-    nextButton.className = 'button-primary next-button'
-    nextButton.textContent = currentRound === selectedRoundCount
-      ? 'Voir le résultat'
-      : 'Manche suivante'
-
-    nextButton.addEventListener('click', async () => {
-      nextButton.disabled = true
-
-      if (currentRound === selectedRoundCount) {
-        showResult()
-        return
-      }
-
-      currentRound += 1
-
-      try {
-        await startRound()
-      } catch (error) {
-        console.error(error)
-        gameStatus.textContent = 'Impossible de lancer la manche suivante.'
-        nextButton.disabled = false
-      }
-    })
-
-    gameStatus.insertAdjacentElement('afterend', nextButton)
-  }
-
-  for (const answerTrack of answerTracks) {
-    const answerButton = document.createElement('button')
-    answerButton.type = 'button'
-    answerButton.className = 'answer-button'
-    answerButton.textContent = answerTrack.title
-
-    if (answerTrack.id === correctTrack.id) {
-      correctAnswerButton = answerButton
-    }
-
-    answerButton.addEventListener('click', () => {
-      finishRound(answerTrack, answerButton)
-    })
-
-    answerButtons.push(answerButton)
-    answers.append(answerButton)
-  }
-
-  const updateTimer = (): void => {
-    const remainingTime = getRemainingTime()
-    updateTimerDisplay(remainingTime)
-
-    if (remainingTime <= 0) {
-      finishRound(null, null)
-    }
-  }
-
-  timerId = window.setInterval(updateTimer, 100)
-  updateTimer()
 }
 
 function renderHome(initialStatus = ''): void {
@@ -1925,6 +1692,7 @@ function renderHome(initialStatus = ''): void {
         <div class="home-settings">
           ${renderThemeSelectMarkup('solo-theme-select', selectedTheme)}
           ${renderRoundCountSelectMarkup('solo-round-count', selectedRoundCount)}
+          ${renderRoundDurationSelectMarkup('solo-round-duration', selectedRoundDuration)}
           <div class="form-field home-settings__volume">
             <label for="volume-slider">Volume</label>
             ${renderVolumeControlMarkup('volume-slider')}
@@ -1949,11 +1717,12 @@ function renderHome(initialStatus = ''): void {
             <button type="submit" class="button-primary">Rejoindre</button>
             <button id="create-room-button" class="button-secondary" type="button">Créer une partie</button>
           </div>
-          <p id="home-status" class="status${initialStatus ? ' status--error' : ''}" role="status" aria-live="polite">${initialStatus}</p>
+          <p id="home-status" class="status" role="status" aria-live="polite"></p>
         </form>
       </section>
     </main>
   `
+  focusScreenHeading(app)
 
   const startButton = document.querySelector<HTMLButtonElement>('#start-button')!
   const multiplayerForm = document.querySelector<HTMLFormElement>('#multiplayer-form')!
@@ -1965,6 +1734,9 @@ function renderHome(initialStatus = ''): void {
   const soloStatusMessage = document.querySelector<HTMLParagraphElement>('#solo-status')!
   const soloThemeSelect = document.querySelector<HTMLSelectElement>('#solo-theme-select')!
   const soloRoundCountSelect = document.querySelector<HTMLSelectElement>('#solo-round-count')!
+  const soloRoundDurationSelect = document.querySelector<HTMLSelectElement>('#solo-round-duration')!
+
+  setStatusMessage(statusMessage, initialStatus, initialStatus.length > 0)
 
   setupVolumeControls()
 
@@ -1989,6 +1761,13 @@ function renderHome(initialStatus = ''): void {
     selectedRoundCount = roundCount
     localStorage.setItem(ROUND_COUNT_KEY, String(roundCount))
     updateHomeHighScore()
+  })
+
+  soloRoundDurationSelect.addEventListener('change', () => {
+    const duration = Number(soloRoundDurationSelect.value)
+    if (!isRoundDuration(duration)) return
+    selectedRoundDuration = duration
+    localStorage.setItem(ROUND_DURATION_KEY, String(duration))
   })
 
   const setControlsDisabled = (disabled: boolean): void => {
@@ -2016,12 +1795,7 @@ function renderHome(initialStatus = ''): void {
     setStatusMessage(soloStatusMessage, '')
 
     try {
-      tracks = await fetchTracks(selectedTheme)
-      tracksTheme = selectedTheme
-      currentRound = 1
-      playedTrackIds = []
-      score = 0
-      await startRound()
+      await soloGame.start(selectedTheme, selectedRoundCount, selectedRoundDuration)
     } catch (error) {
       console.error(error)
       setStatusMessage(

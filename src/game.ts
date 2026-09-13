@@ -1,11 +1,34 @@
 import type { Track } from './api'
 
 export const ROUND_COUNT_OPTIONS = [5, 10, 15, 20] as const
+export const ROUND_DURATION_OPTIONS = [15, 20, 30] as const
+export const MAX_ATTEMPTS = 5
 
 export type RoundCount = (typeof ROUND_COUNT_OPTIONS)[number]
+export type RoundDuration = (typeof ROUND_DURATION_OPTIONS)[number]
+
+export type GuessOption = Pick<Track, 'id' | 'title' | 'artist'>
 
 export function isRoundCount(value: unknown): value is RoundCount {
   return typeof value === 'number' && (ROUND_COUNT_OPTIONS as readonly number[]).includes(value)
+}
+
+export function isRoundDuration(value: unknown): value is RoundDuration {
+  return typeof value === 'number'
+    && (ROUND_DURATION_OPTIONS as readonly number[]).includes(value)
+}
+
+export function formatGuessOption(track: GuessOption): string {
+  return `${track.title} — ${track.artist}`
+}
+
+function normalizeGuess(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+}
+
+export function findGuessOption(options: GuessOption[], value: string): GuessOption | null {
+  const normalized = normalizeGuess(value)
+  return options.find((option) => normalizeGuess(formatGuessOption(option)) === normalized) ?? null
 }
 
 export function getRandomTrack(availableTracks: Track[]): Track {
@@ -13,7 +36,11 @@ export function getRandomTrack(availableTracks: Track[]): Track {
     throw new Error('Aucun morceau disponible')
   }
 
-  return availableTracks[Math.floor(Math.random() * availableTracks.length)]
+  const track = availableTracks[Math.floor(Math.random() * availableTracks.length)]
+  if (!track) {
+    throw new Error('Aucun morceau disponible')
+  }
+  return track
 }
 
 export function getAnswerTracks(allTracks: Track[], correctTrack: Track): Track[] {
@@ -53,7 +80,11 @@ export function shuffleTracks(tracksToShuffle: Track[]): Track[] {
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
     const currentTrack = shuffled[index]
-    shuffled[index] = shuffled[randomIndex]
+    const randomTrack = shuffled[randomIndex]
+    if (!currentTrack || !randomTrack) {
+      continue
+    }
+    shuffled[index] = randomTrack
     shuffled[randomIndex] = currentTrack
   }
 
@@ -65,6 +96,20 @@ export function getRoundScore(
   roundDurationMs: number,
   maxRoundScore: number,
 ): number {
+  if (roundDurationMs <= 0 || maxRoundScore <= 0 || !Number.isFinite(remainingTime)) {
+    return 0
+  }
   const ratio = remainingTime / roundDurationMs
   return Math.max(1, Math.min(maxRoundScore, Math.floor(maxRoundScore * ratio)))
+}
+
+export function getAttemptScore(
+  remainingTime: number,
+  roundDurationMs: number,
+  maxRoundScore: number,
+  attempt: number,
+): number {
+  if (!Number.isInteger(attempt) || attempt < 1 || attempt > MAX_ATTEMPTS) return 0
+  const timeScore = getRoundScore(remainingTime, roundDurationMs, maxRoundScore)
+  return timeScore === 0 ? 0 : Math.max(1, Math.floor(timeScore * (6 - attempt) / 5))
 }

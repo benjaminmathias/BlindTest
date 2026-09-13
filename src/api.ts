@@ -75,11 +75,15 @@ function normalizeGenre(genre: string): string {
     .toLowerCase()
 }
 
-function normalizeTrackKey(track: Track): string {
-  return `${track.artist.trim().toLowerCase()}|${track.title.trim().toLowerCase()}`
+function normalizeText(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
 }
 
-function deduplicateTracks(tracks: Track[]): Track[] {
+function normalizeTrackKey(track: Track): string {
+  return `${normalizeText(track.artist)}|${normalizeText(track.title)}`
+}
+
+export function deduplicateTracks(tracks: Track[]): Track[] {
   const uniqueTracks = new Map<string, Track>()
 
   for (const track of tracks) {
@@ -132,26 +136,50 @@ async function fetchTracksForTheme(theme: Exclude<MusicTheme, 'all'>): Promise<T
   const config = THEME_CONFIG[theme]
   const acceptedGenres = new Set(config.genres.map(normalizeGenre))
 
-  const tracksByQuery = await Promise.all(
+  const results = await Promise.allSettled(
     config.queries.map((query) => fetchTracksForQuery(query, acceptedGenres)),
   )
 
-  return tracksByQuery.flat()
+  const failures = results.filter((result) => result.status === 'rejected')
+  if (failures.length > 0) {
+    console.warn(`${failures.length} recherche(s) iTunes ont échoué pour le thème ${theme}`)
+  }
+
+  return results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
+}
+
+const catalogCache = new Map<MusicTheme, Track[]>()
+
+export function clearCatalogCache(): void {
+  catalogCache.clear()
 }
 
 export async function fetchTracks(theme: MusicTheme = 'all'): Promise<Track[]> {
+  const cached = catalogCache.get(theme)
+  if (cached) {
+    return cached
+  }
+
   const themesToLoad = theme === 'all' ? CONCRETE_THEMES : [theme]
-  const tracksByTheme = await Promise.all(
+  const results = await Promise.allSettled(
     themesToLoad.map((currentTheme) => fetchTracksForTheme(currentTheme)),
   )
-  const tracks = deduplicateTracks(tracksByTheme.flat())
+  const failures = results.filter((result) => result.status === 'rejected')
+  if (failures.length > 0) {
+    console.warn(`${failures.length} thème(s) iTunes n'ont pas pu être chargés`)
+  }
+  const tracks = deduplicateTracks(
+    results.flatMap((result) => result.status === 'fulfilled' ? result.value : []),
+  )
+  const distinctTitleCount = new Set(tracks.map((track) => normalizeText(track.title))).size
 
-  if (tracks.length < MIN_CATALOG_SIZE) {
+  if (tracks.length < MIN_CATALOG_SIZE || distinctTitleCount < 4) {
     throw new Error(
       `Catalogue insuffisant pour le thème « ${MUSIC_THEME_LABELS[theme]} » `
       + `(${tracks.length} morceau${tracks.length > 1 ? 'x' : ''}, ${MIN_CATALOG_SIZE} minimum).`,
     )
   }
 
+  catalogCache.set(theme, tracks)
   return tracks
 }

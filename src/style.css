@@ -604,6 +604,41 @@ input[aria-invalid="true"] { border-color: var(--danger); }
   gap: var(--space-3);
 }
 
+.guess-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+}
+
+.guess-form .button-primary { min-width: 7rem; }
+
+.attempts-left {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.guess-history {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  list-style: none;
+}
+
+.guess-history li::before {
+  content: "×";
+  margin-right: var(--space-2);
+  color: var(--danger);
+}
+
+.guess-history li.is-correct::before {
+  content: "✓";
+  color: var(--success);
+}
+
 .answer-button {
   position: relative;
   width: 100%;
@@ -849,6 +884,7 @@ input[aria-invalid="true"] { border-color: var(--danger); }
   .home-settings,
   .lobby-rules,
   .answers,
+  .guess-form,
   .multiplayer-actions,
   .result-actions,
   .lobby-actions { grid-template-columns: 1fr; }

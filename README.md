@@ -4,10 +4,12 @@ Joue à un blindtest musical en solo ou entre amis : devine le titre à partir d
 
 ## Fonctionnalités
 
-- Mode solo complet ;
+- Réponse par saisie avec suggestions et cinq essais par manche ;
+- Mode solo avec possibilité de passer un titre ;
 - Multijoueur temps réel via Supabase Realtime ;
 - Thèmes musicaux (tous, pop, rock, rap, électro) ;
 - Choix du nombre de manches : 5, 10, 15 ou 20 ;
+- Durée des manches réglable : 15, 20 ou 30 secondes ;
 - Classement en direct et classement final ;
 - Revanche entre joueurs ;
 - Volume réglable et mémorisé localement.
