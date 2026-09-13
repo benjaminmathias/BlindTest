@@ -9,6 +9,11 @@ export type RoundDuration = (typeof ROUND_DURATION_OPTIONS)[number]
 
 export type GuessOption = Pick<Track, 'id' | 'title' | 'artist'>
 
+export type RoundOutcome = 'correct' | 'failed' | 'timeout' | 'skipped'
+
+export const MIN_SEARCH_LENGTH = 2
+export const MAX_SUGGESTIONS = 5
+
 export function isRoundCount(value: unknown): value is RoundCount {
   return typeof value === 'number' && (ROUND_COUNT_OPTIONS as readonly number[]).includes(value)
 }
@@ -22,13 +27,72 @@ export function formatGuessOption(track: GuessOption): string {
   return `${track.title} — ${track.artist}`
 }
 
-function normalizeGuess(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+export function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
 }
 
 export function findGuessOption(options: GuessOption[], value: string): GuessOption | null {
-  const normalized = normalizeGuess(value)
-  return options.find((option) => normalizeGuess(formatGuessOption(option)) === normalized) ?? null
+  const normalized = normalizeSearchText(value)
+  return options.find((option) => normalizeSearchText(formatGuessOption(option)) === normalized) ?? null
+}
+
+type RankedGuess = {
+  option: GuessOption
+  score: number
+  order: number
+}
+
+export function searchGuessOptions(
+  options: readonly GuessOption[],
+  query: string,
+  limit = MAX_SUGGESTIONS,
+): GuessOption[] {
+  const needle = normalizeSearchText(query)
+
+  if (needle.length < MIN_SEARCH_LENGTH || limit <= 0) {
+    return []
+  }
+
+  const ranked: RankedGuess[] = []
+  const seenIds = new Set<string>()
+  const seenKeys = new Set<string>()
+
+  options.forEach((option, order) => {
+    if (seenIds.has(option.id)) {
+      return
+    }
+
+    const title = normalizeSearchText(option.title)
+    const artist = normalizeSearchText(option.artist)
+
+    let score = -1
+    if (title.startsWith(needle)) score = 0
+    else if (artist.startsWith(needle)) score = 1
+    else if (title.includes(needle)) score = 2
+    else if (artist.includes(needle)) score = 3
+
+    if (score === -1) {
+      return
+    }
+
+    const key = `${title}|${artist}`
+    if (seenKeys.has(key)) {
+      return
+    }
+
+    seenIds.add(option.id)
+    seenKeys.add(key)
+    ranked.push({ option, score, order })
+  })
+
+  ranked.sort((first, second) => first.score - second.score || first.order - second.order)
+
+  return ranked.slice(0, limit).map(({ option }) => option)
 }
 
 export function getRandomTrack(availableTracks: Track[]): Track {

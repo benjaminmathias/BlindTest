@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Track } from './api'
 import {
   findGuessOption, formatGuessOption, getAnswerTracks, getAttemptScore, getRoundScore,
-  shuffleTracks,
+  searchGuessOptions, shuffleTracks, type GuessOption,
 } from './game'
 
 const tracks: Track[] = Array.from({ length: 5 }, (_, index) => ({
@@ -56,5 +56,52 @@ describe('game', () => {
       getAttemptScore(10_000, 10_000, 1000, attempt),
     )).toEqual([1000, 800, 600, 400, 200])
     expect(getAttemptScore(10_000, 10_000, 1000, 6)).toBe(0)
+  })
+})
+
+describe('searchGuessOptions', () => {
+  const catalog: GuessOption[] = [
+    { id: '1', title: 'Californication', artist: 'Red Hot Chili Peppers' },
+    { id: '2', title: 'Dani California', artist: 'Red Hot Chili Peppers' },
+    { id: '3', title: 'Otherside', artist: 'Red Hot Chili Peppers' },
+    { id: '4', title: 'Scar Tissue', artist: 'Red Hot Chili Peppers' },
+    { id: '5', title: "Can't Stop", artist: 'Red Hot Chili Peppers' },
+    { id: '6', title: 'By the Way', artist: 'Red Hot Chili Peppers' },
+    { id: '7', title: 'Été', artist: 'Cali' },
+    { id: '8', title: 'Some Cali Song', artist: 'Autre' },
+  ]
+
+  it("n'affiche rien avant deux caractères", () => {
+    expect(searchGuessOptions(catalog, '')).toEqual([])
+    expect(searchGuessOptions(catalog, 'c')).toEqual([])
+  })
+
+  it('classe le titre en préfixe avant un artiste qui contient', () => {
+    const results = searchGuessOptions(catalog, 'cali')
+    expect(results[0]?.title).toBe('Californication')
+    expect(results.map(({ id }) => id)).toEqual(['1', '7', '2', '8'])
+  })
+
+  it('trouve par artiste et limite à cinq résultats', () => {
+    const results = searchGuessOptions(catalog, 'red')
+    expect(results).toHaveLength(5)
+    expect(results.every(({ artist }) => artist === 'Red Hot Chili Peppers')).toBe(true)
+    expect(results.map(({ id }) => id)).toEqual(['1', '2', '3', '4', '5'])
+  })
+
+  it('ignore la casse, les accents et les espaces superflus', () => {
+    expect(searchGuessOptions(catalog, '  CALI  ').map(({ id }) => id)).toEqual(['1', '7', '2', '8'])
+    expect(searchGuessOptions(catalog, 'ete').map(({ id }) => id)).toEqual(['7'])
+    expect(searchGuessOptions(catalog, 'red   hot').length).toBe(5)
+  })
+
+  it('déduplique par identifiant et par titre/artiste identiques', () => {
+    const duplicates: GuessOption[] = [
+      { id: 'a', title: 'Californication', artist: 'Red Hot Chili Peppers' },
+      { id: 'a', title: 'Californication', artist: 'Red Hot Chili Peppers' },
+      { id: 'b', title: 'Californication', artist: 'Red Hot Chili Peppers' },
+      { id: 'c', title: 'Californication (Remaster)', artist: 'Red Hot Chili Peppers' },
+    ]
+    expect(searchGuessOptions(duplicates, 'cali')).toHaveLength(2)
   })
 })

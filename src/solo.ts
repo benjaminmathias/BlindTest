@@ -1,8 +1,11 @@
 import { fetchTracks, type MusicTheme, type Track } from './api'
 import {
-  findGuessOption, formatGuessOption, getAttemptScore, getRandomTrack, MAX_ATTEMPTS,
-  type GuessOption, type RoundCount, type RoundDuration,
+  formatGuessOption, getAttemptScore, getRandomTrack, MAX_ATTEMPTS,
+  type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
 } from './game'
+import {
+  createGuessArea, roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry,
+} from './guess-ui'
 import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
 const MAX_ROUND_SCORE = 1000
@@ -14,6 +17,8 @@ export type SoloGameState = {
   roundDuration: RoundDuration
   score: number
   playedTrackIds: Set<string>
+  roundHistory: (RoundOutcome | undefined)[]
+  roundRecap: (RoundRecapEntry | undefined)[]
   audio: HTMLAudioElement | null
   timerId: number | null
 }
@@ -46,7 +51,8 @@ export type SoloGame = {
 export function createSoloGame(options: SoloGameOptions): SoloGame {
   const state: SoloGameState = {
     tracks: [], round: 0, roundCount: 5, roundDuration: 30, score: 0,
-    playedTrackIds: new Set(), audio: null, timerId: null,
+    playedTrackIds: new Set(), roundHistory: [], roundRecap: [],
+    audio: null, timerId: null,
   }
 
   const stopTimer = (): void => {
@@ -73,6 +79,10 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       <main class="welcome welcome--result">
         <section class="welcome__content result-shell surface" aria-labelledby="result-title">
           <h1 id="result-title">Partie terminée</h1>
+          <div class="result-progress">
+            ${roundTimelineMarkup(state.roundCount, state.roundHistory, -1)}
+            ${roundRecapMarkup(state.roundRecap, state.roundCount)}
+          </div>
           <div class="score-summary">
             <div class="stat"><span class="stat__label">Score</span><span class="stat__value">${formatScore(state.score)} / ${formatScore(state.roundCount * MAX_ROUND_SCORE)}</span></div>
             <div class="stat"><span class="stat__label">Meilleur score · ${state.roundCount} manches</span><span class="stat__value stat__value--score">${formatScore(highScore)}</span></div>
@@ -96,6 +106,8 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       replayButton.disabled = true
       state.round = 1
       state.playedTrackIds.clear()
+      state.roundHistory = []
+      state.roundRecap = []
       state.score = 0
       try {
         await startRound()
@@ -141,44 +153,41 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
               <div class="game-volume"><label class="sr-only" for="volume-slider-round">Volume</label>${options.renderVolumeControlMarkup('volume-slider-round', true)}</div>
             </div>
           </header>
+          <div data-round-timeline class="round-timeline-host"></div>
           <div class="game-stage">${options.renderArtworkMarkup()}<div class="progress">
             <p id="timer" class="progress__time">${formatRemainingTime(roundDurationMs)}</p>
             <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
           </div></div>
           <h1 id="question-title" class="question-title">Quel est ce titre ?</h1>
-          <form id="guess-form" class="guess-form">
-            <label for="guess-input">Titre</label>
-            <input id="guess-input" type="text" list="guess-options" autocomplete="off" aria-describedby="attempts-left" />
-            <datalist id="guess-options"></datalist>
-            <button class="button-primary" type="submit">Valider</button>
-          </form>
-          <p id="attempts-left" class="status">5 essais restants</p>
-          <ul id="guess-history" class="guess-history" aria-live="polite"></ul>
+          <div data-guess-area></div>
           <p id="game-status" class="status" role="status" aria-live="polite">Extrait en cours...</p>
           <button id="solo-play-audio-button" class="button-primary next-button" type="button"${audioBlocked ? '' : ' hidden'}>Lire l'extrait</button>
-          <button id="skip-round-button" class="button-secondary next-button" type="button">Passer</button>
         </section>
       </main>`
     focusScreenHeading(options.app)
 
-    const form = options.app.querySelector<HTMLFormElement>('#guess-form')!
-    const input = options.app.querySelector<HTMLInputElement>('#guess-input')!
-    const datalist = options.app.querySelector<HTMLDataListElement>('#guess-options')!
-    const attemptsLabel = options.app.querySelector<HTMLParagraphElement>('#attempts-left')!
-    const history = options.app.querySelector<HTMLUListElement>('#guess-history')!
     const status = options.app.querySelector<HTMLParagraphElement>('#game-status')!
     const timer = options.app.querySelector<HTMLParagraphElement>('#timer')!
     const progress = options.app.querySelector<HTMLDivElement>('#timer-progress')!
     const scoreDisplay = options.app.querySelector<HTMLSpanElement>('#score')!
     const playButton = options.app.querySelector<HTMLButtonElement>('#solo-play-audio-button')!
-    const skipButton = options.app.querySelector<HTMLButtonElement>('#skip-round-button')!
+    const timelineHost = options.app.querySelector<HTMLElement>('[data-round-timeline]')!
     const triedIds = new Set<string>()
     let attemptsUsed = 0
-    for (const track of state.tracks) {
-      const option = document.createElement('option')
-      option.value = formatGuessOption(track)
-      datalist.append(option)
-    }
+    let lastGuess: GuessOption | null = null
+
+    timelineHost.innerHTML = roundTimelineMarkup(state.roundCount, state.roundHistory, state.round - 1)
+
+    const guessArea = createGuessArea(options.app.querySelector<HTMLElement>('[data-guess-area]')!, {
+      catalog: state.tracks,
+      maxAttempts: MAX_ATTEMPTS,
+      placeholder: 'Rechercher un titre ou un artiste…',
+      canSkip: true,
+      onSkip: () => finish(null, 'skip'),
+    })
+    const form = guessArea.form
+    guessArea.setExcludedIds(triedIds)
+
     options.setupVolumeControls()
 
     if (audioBlocked) status.textContent = 'Lecture audio bloquée par le navigateur.'
@@ -193,7 +202,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       }
     })
 
-    input.focus()
+    guessArea.focusInput()
     const remaining = (): number => Math.max(0, roundDurationMs - (performance.now() - roundStartedAt))
     const updateTimer = (value: number): void => {
       timer.textContent = formatRemainingTime(value)
@@ -206,11 +215,27 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       hasAnswered = true
       stop()
       updateTimer(time)
-      input.disabled = true
-      form.querySelector<HTMLButtonElement>('button')!.disabled = true
-      skipButton.disabled = true
+      guessArea.setDisabled(true)
+      guessArea.setSubmitHidden(true)
+      guessArea.destroy()
       options.revealArtwork(document, correctTrack.imageUrl, `Cover de ${correctTrack.title} par ${correctTrack.artist}`)
       const isCorrect = selected?.id === correctTrack.id
+      const roundOutcome: RoundOutcome =
+        timedOut || outcome === 'timeout'
+          ? 'timeout'
+          : outcome === 'skip'
+            ? 'skipped'
+            : isCorrect
+              ? 'correct'
+              : 'failed'
+      state.roundHistory[state.round - 1] = roundOutcome
+      state.roundRecap[state.round - 1] = {
+        outcome: roundOutcome,
+        guess: selected ?? lastGuess,
+        attemptsUsed,
+        solution: { title: correctTrack.title, artist: correctTrack.artist },
+      }
+      timelineHost.innerHTML = roundTimelineMarkup(state.roundCount, state.roundHistory, state.round - 1)
       if (timedOut || outcome === 'timeout') {
         options.renderRoundResult(status, 'timeout', correctTrack.title, correctTrack.artist)
       } else if (outcome === 'skip') {
@@ -245,37 +270,33 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
 
     form.addEventListener('submit', (event) => {
       event.preventDefault()
-      const guess = findGuessOption(state.tracks, input.value)
+      const guess = guessArea.getSelectedOption()
       if (!guess) {
-        input.setAttribute('aria-invalid', 'true')
-        status.textContent = 'Choisis une suggestion dans la liste.'
-        input.focus()
+        guessArea.showError('Choisis une suggestion dans la liste.')
+        guessArea.focusInput()
         return
       }
       if (triedIds.has(guess.id)) {
-        input.setAttribute('aria-invalid', 'true')
-        status.textContent = 'Cette réponse a déjà été essayée.'
-        input.focus()
+        guessArea.showError('Cette réponse a déjà été essayée.')
+        guessArea.focusInput()
         return
       }
-      input.removeAttribute('aria-invalid')
+      guessArea.clearError()
       triedIds.add(guess.id)
+      guessArea.setExcludedIds(triedIds)
+      lastGuess = guess
       attemptsUsed += 1
-      const attemptsLeft = MAX_ATTEMPTS - attemptsUsed
-      attemptsLabel.textContent = `${attemptsLeft} essai${attemptsLeft === 1 ? '' : 's'} restant${attemptsLeft === 1 ? '' : 's'}`
-      const item = document.createElement('li')
-      item.textContent = formatGuessOption(guess)
-      item.className = guess.id === correctTrack.id ? 'is-correct' : 'is-wrong'
-      history.append(item)
-      if (guess.id === correctTrack.id || attemptsUsed === MAX_ATTEMPTS) {
+      const isCorrect = guess.id === correctTrack.id
+      guessArea.slots.setResult(attemptsUsed - 1, isCorrect ? 'correct' : 'wrong', formatGuessOption(guess))
+      guessArea.announceRemaining(MAX_ATTEMPTS - attemptsUsed)
+      if (isCorrect || attemptsUsed === MAX_ATTEMPTS) {
         finish(guess)
         return
       }
       status.textContent = 'Mauvaise réponse.'
-      input.value = ''
-      input.focus()
+      guessArea.clearInput()
+      guessArea.focusInput()
     })
-    skipButton.addEventListener('click', () => finish(null, 'skip'))
     state.timerId = window.setInterval(() => {
       const time = remaining()
       updateTimer(time)
@@ -292,6 +313,8 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       state.roundDuration = duration
       state.score = 0
       state.playedTrackIds.clear()
+      state.roundHistory = []
+      state.roundRecap = []
       await startRound()
     },
     stop,

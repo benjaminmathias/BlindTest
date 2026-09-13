@@ -23,7 +23,6 @@ import {
   type ScoreUpdate,
 } from './multiplayer/realtime'
 import {
-  findGuessOption,
   formatGuessOption,
   getRandomTrack,
   isRoundCount,
@@ -34,7 +33,15 @@ import {
   type GuessOption,
   type RoundCount,
   type RoundDuration,
+  type RoundOutcome,
 } from './game'
+import {
+  createGuessArea,
+  roundRecapMarkup,
+  roundTimelineMarkup,
+  type GuessArea,
+  type RoundRecapEntry,
+} from './guess-ui'
 import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 import { scorePlayerGuess } from './multiplayer/game'
 import { renderFinalLeaderboard, renderLeaderboard } from './multiplayer/game-ui'
@@ -73,6 +80,10 @@ let multiplayerCatalog: GuessOption[] = []
 let multiplayerScores = new Map<string, number>()
 let multiplayerPlayerNames = new Map<string, string>()
 let multiplayerCurrentRoundNumber = 0
+let multiplayerOwnRoundHistory: (RoundOutcome | undefined)[] = []
+let multiplayerOwnRoundRecap: (RoundRecapEntry | undefined)[] = []
+let multiplayerLastOwnGuess: GuessOption | null = null
+let multiplayerGuessArea: GuessArea | null = null
 let multiplayerPlayedTrackIds = new Set<string>()
 let multiplayerRoundPlayerIds = new Set<string>()
 let multiplayerRoundFinished = false
@@ -352,6 +363,8 @@ function stopMultiplayerTransition(): void {
 function cleanupMultiplayerRound(): void {
   stopMultiplayerTimer()
   stopMultiplayerAudio()
+  multiplayerGuessArea?.destroy()
+  multiplayerGuessArea = null
 }
 
 function resetMultiplayerGameState(): void {
@@ -367,6 +380,9 @@ function resetMultiplayerGameState(): void {
   multiplayerCatalog = []
   multiplayerScores = new Map()
   multiplayerCurrentRoundNumber = 0
+  multiplayerOwnRoundHistory = []
+  multiplayerOwnRoundRecap = []
+  multiplayerLastOwnGuess = null
   multiplayerPlayedTrackIds = new Set()
   multiplayerRoundPlayerIds = new Set()
   multiplayerRoundFinished = false
@@ -1061,12 +1077,46 @@ function handleRoundComplete(result: RoundComplete): void {
   multiplayerRoundFinished = true
   cleanupMultiplayerRound()
 
+  const roundIndex = result.round - 1
+  const localOutcome: RoundOutcome = ownAnswerResult
+    ? (ownAnswerResult.isCorrect ? 'correct' : 'failed')
+    : 'timeout'
+  const solution = currentRoundReveal
+    ? { title: currentRoundReveal.title, artist: currentRoundReveal.artist }
+    : currentHostTrack
+      ? { title: currentHostTrack.title, artist: currentHostTrack.artist }
+      : null
+
+  if (solution) {
+    multiplayerOwnRoundHistory[roundIndex] = localOutcome
+    multiplayerOwnRoundRecap[roundIndex] = {
+      outcome: localOutcome,
+      guess: multiplayerLastOwnGuess,
+      attemptsUsed: ownAnswerResult?.attemptsUsed ?? 0,
+      solution,
+    }
+  }
+
   if (currentRoundReveal) {
     revealArtwork(document, currentRoundReveal.imageUrl, `Cover de ${currentRoundReveal.title} par ${currentRoundReveal.artist}`)
   }
 
+  const timelineHost = document.querySelector<HTMLElement>('[data-round-timeline]')
+  if (timelineHost) {
+    timelineHost.innerHTML = roundTimelineMarkup(
+      currentGameRoundCount,
+      multiplayerOwnRoundHistory,
+      roundIndex,
+    )
+  }
+
   document.querySelector<HTMLFormElement>('#multiplayer-guess-form')?.querySelectorAll('input, button')
     .forEach((control) => { (control as HTMLInputElement | HTMLButtonElement).disabled = true })
+
+  const guessSubmit = document.querySelector<HTMLButtonElement>('#multiplayer-guess-form .guess-search__submit')
+  if (guessSubmit) {
+    guessSubmit.hidden = true
+  }
 
   const playAudioButton = document.querySelector<HTMLButtonElement>('#play-audio-button')
   if (playAudioButton) {
@@ -1099,6 +1149,10 @@ function handleGameOver(gameOver: GameOver): void {
     <main class="welcome welcome--result">
       <section class="welcome__content result-shell surface" aria-labelledby="multiplayer-result-title">
         <h1 id="multiplayer-result-title">Partie terminée</h1>
+        <div class="result-progress">
+          ${roundTimelineMarkup(currentGameRoundCount, multiplayerOwnRoundHistory, -1)}
+          ${roundRecapMarkup(multiplayerOwnRoundRecap, currentGameRoundCount)}
+        </div>
         <section class="leaderboard-section" aria-labelledby="multiplayer-final-title">
           <h2 id="multiplayer-final-title" class="leaderboard-heading">Classement final</h2>
           <ol id="multiplayer-final-leaderboard" class="leaderboard"></ol>
@@ -1157,6 +1211,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   multiplayerAttempts = new Map()
   multiplayerTriedAnswerIds = new Map()
   multiplayerRoundFinished = false
+  multiplayerLastOwnGuess = null
 
   for (const playerId of multiplayerPlayerNames.keys()) {
     if (!multiplayerScores.has(playerId)) {
@@ -1177,6 +1232,9 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
             </div>
           </div>
         </header>
+        <div data-round-timeline class="round-timeline-host">
+          ${roundTimelineMarkup(currentGameRoundCount, multiplayerOwnRoundHistory, round.round - 1)}
+        </div>
         <div class="game-stage">
           ${renderArtworkMarkup()}
           <div class="progress">
@@ -1187,14 +1245,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
           </div>
         </div>
         <h1 id="multiplayer-question-title" class="question-title">Quel est ce titre ?</h1>
-        <form id="multiplayer-guess-form" class="guess-form">
-          <label class="sr-only" for="multiplayer-guess-input">Titre et artiste</label>
-          <input id="multiplayer-guess-input" type="text" list="multiplayer-guess-options" autocomplete="off" aria-describedby="multiplayer-attempts-left" placeholder="Titre — Artiste" disabled />
-          <datalist id="multiplayer-guess-options"></datalist>
-          <button class="button-primary" type="submit" disabled>Valider</button>
-        </form>
-        <p id="multiplayer-attempts-left" class="attempts-left">${MAX_ATTEMPTS} essais restants</p>
-        <ul id="multiplayer-guess-history" class="guess-history" aria-label="Essais précédents"></ul>
+        <div data-guess-area></div>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite">Répondez lorsque la manche commence.</p>
         <p id="multiplayer-round-status" class="status" role="status" aria-live="polite"></p>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
@@ -1210,12 +1261,6 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   `
   focusScreenHeading(app)
 
-  const form = document.querySelector<HTMLFormElement>('#multiplayer-guess-form')!
-  const input = document.querySelector<HTMLInputElement>('#multiplayer-guess-input')!
-  const submitButton = form.querySelector<HTMLButtonElement>('button')!
-  const datalist = document.querySelector<HTMLDataListElement>('#multiplayer-guess-options')!
-  const attemptsLeft = document.querySelector<HTMLParagraphElement>('#multiplayer-attempts-left')!
-  const history = document.querySelector<HTMLUListElement>('#multiplayer-guess-history')!
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')!
   const gameTimer = document.querySelector<HTMLParagraphElement>('#multiplayer-timer')!
   const timerProgress = document.querySelector<HTMLDivElement>('#multiplayer-timer-progress')!
@@ -1230,11 +1275,18 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   const roundDurationMs = currentGameRoundDuration * 1000
 
   setupVolumeControls()
-  datalist.replaceChildren(...multiplayerCatalog.map((track) => {
-    const option = document.createElement('option')
-    option.value = formatGuessOption(track)
-    return option
-  }))
+
+  const guessArea = createGuessArea(document.querySelector<HTMLElement>('[data-guess-area]')!, {
+    catalog: multiplayerCatalog,
+    maxAttempts: MAX_ATTEMPTS,
+    placeholder: 'Rechercher un titre ou un artiste…',
+    formId: 'multiplayer-guess-form',
+    canSkip: false,
+  })
+  const form = guessArea.form
+  multiplayerGuessArea = guessArea
+  guessArea.setDisabled(true)
+  guessArea.setExcludedIds(triedIds)
 
   const isCurrentRound = (): boolean =>
     currentMultiplayerRound?.roundId === round.roundId
@@ -1251,8 +1303,8 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
 
   const finishOwnRound = (message: string): void => {
     hasFinished = true
-    input.disabled = true
-    submitButton.disabled = true
+    guessArea.setDisabled(true)
+    guessArea.setSubmitHidden(true)
     gameStatus.textContent = message
   }
 
@@ -1260,15 +1312,19 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     const result = (event as CustomEvent<AttemptResult>).detail
     if (result.roundId !== round.roundId || result.playerId !== multiplayerPlayerId) return
     waitingForResult = false
-    history.lastElementChild?.classList.add(result.isCorrect ? 'is-correct' : 'is-wrong')
-    attemptsLeft.textContent = `${result.attemptsRemaining} essai${result.attemptsRemaining === 1 ? '' : 's'} restant${result.attemptsRemaining === 1 ? '' : 's'}`
+    guessArea.slots.setResult(
+      result.attemptsUsed - 1,
+      result.isCorrect ? 'correct' : 'wrong',
+      multiplayerLastOwnGuess ? formatGuessOption(multiplayerLastOwnGuess) : '',
+    )
+    guessArea.announceRemaining(result.attemptsRemaining)
+    guessArea.setExcludedIds(triedIds)
     if (result.finished) {
       finishOwnRound(result.isCorrect ? 'Bonne réponse ! Résultat à venir…' : 'Plus aucun essai. Résultat à venir…')
     } else {
-      input.value = ''
-      input.disabled = false
-      submitButton.disabled = false
-      input.focus()
+      guessArea.clearInput()
+      guessArea.setDisabled(false)
+      guessArea.focusInput()
     }
   }
   form.addEventListener('multiplayer-attempt-result', onAttemptResult)
@@ -1276,26 +1332,22 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   form.addEventListener('submit', (event) => {
     event.preventDefault()
     if (!isCurrentRound() || !roundHasStarted || hasFinished || waitingForResult) return
-    const answer = findGuessOption(multiplayerCatalog, input.value)
+    const answer = guessArea.getSelectedOption()
     if (!answer) {
-      input.setAttribute('aria-invalid', 'true')
-      gameStatus.textContent = 'Choisis un titre dans les suggestions.'
+      guessArea.showError('Choisis un titre dans les suggestions.')
       return
     }
     if (triedIds.has(answer.id)) {
-      input.setAttribute('aria-invalid', 'true')
-      gameStatus.textContent = 'Ce titre a déjà été essayé.'
+      guessArea.showError('Ce titre a déjà été essayé.')
       return
     }
 
-    input.removeAttribute('aria-invalid')
+    guessArea.clearError()
     triedIds.add(answer.id)
-    const item = document.createElement('li')
-    item.textContent = formatGuessOption(answer)
-    history.append(item)
+    guessArea.setExcludedIds(triedIds)
+    multiplayerLastOwnGuess = answer
     waitingForResult = true
-    input.disabled = true
-    submitButton.disabled = true
+    guessArea.setDisabled(true)
     gameStatus.textContent = 'Vérification…'
     void roomConnection?.sendGuess({ roundId: round.roundId, guessId: createId(), answerId: answer.id })
       .catch((error) => {
@@ -1399,9 +1451,8 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
 
     roundHasStarted = true
     gameTimer.classList.remove('is-countdown')
-    input.disabled = false
-    submitButton.disabled = false
-    input.focus()
+    guessArea.setDisabled(false)
+    guessArea.focusInput()
     gameStatus.textContent = 'Extrait en cours...'
     void startAudio()
   }
