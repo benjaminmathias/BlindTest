@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Blindtest">
-  <rect width="64" height="64" rx="14" fill="#0a0a0c"/>
-  <g fill="#e08e3c">
-    <ellipse cx="24" cy="45" rx="8.5" ry="6.5" transform="rotate(-18 24 45)"/>
-    <rect x="30" y="16" width="4" height="29" rx="2"/>
-  </g>
-  <path d="M34 16c7 1.5 11 5 11 11" fill="none" stroke="#e08e3c" stroke-width="4" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="14" fill="#101114"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#2a2b31" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="22" fill="#0d0e11" stroke="#3a3c44" stroke-width="2"/>
+  <circle cx="32" cy="32" r="15.5" fill="none" stroke="#1e1f24" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="10" fill="#f0522f"/>
+  <path d="M32 32 L32 24" stroke="#ede6d6" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="1.6" fill="#0d0e11"/>
 </svg>

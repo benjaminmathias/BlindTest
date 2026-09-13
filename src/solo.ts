@@ -208,6 +208,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     const updateTimer = (value: number): void => {
       timer.textContent = formatRemainingTime(value)
       progress.style.transform = `scaleX(${Math.max(0, Math.min(1, value / roundDurationMs))})`
+      timer.parentElement?.classList.toggle('is-low', value > 0 && value <= 5000)
     }
     const finish = (selected: GuessOption | null, outcome?: 'timeout' | 'skip'): void => {
       if (hasAnswered) return

@@ -228,11 +228,20 @@ function renderArtworkMarkup(): string {
       <div class="artwork__frame">
         <img class="artwork__image" data-artwork-image alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
         <span class="artwork__mystery" data-artwork-placeholder aria-hidden="true">
-          <svg class="artwork__glyph" viewBox="0 0 120 120" focusable="false">
-            <circle cx="60" cy="60" r="46" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.45" />
-            <circle cx="60" cy="60" r="32" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3" />
-            <circle cx="60" cy="60" r="14" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55" />
-            <circle cx="60" cy="60" r="4" fill="currentColor" opacity="0.75" />
+          <svg class="artwork__disc" viewBox="0 0 200 200" focusable="false">
+            <circle cx="100" cy="100" r="98" fill="#0c0d0f" stroke="#2c2d33" stroke-width="2" />
+            <g fill="none" stroke="#1e1f24" stroke-width="1.25">
+              <circle cx="100" cy="100" r="91" />
+              <circle cx="100" cy="100" r="85" />
+              <circle cx="100" cy="100" r="79" />
+              <circle cx="100" cy="100" r="73" />
+              <circle cx="100" cy="100" r="67" />
+              <circle cx="100" cy="100" r="61" />
+            </g>
+            <circle cx="100" cy="100" r="34" fill="#f0522f" />
+            <circle cx="100" cy="100" r="34" fill="none" stroke="#000000" stroke-opacity="0.28" stroke-width="1" />
+            <path d="M100 100 L100 73" stroke="#f7efe0" stroke-width="2.6" stroke-linecap="round" />
+            <circle cx="100" cy="100" r="3.2" fill="#0c0d0f" />
           </svg>
         </span>
       </div>
@@ -1267,6 +1276,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')!
   const gameTimer = document.querySelector<HTMLParagraphElement>('#multiplayer-timer')!
   const timerProgress = document.querySelector<HTMLDivElement>('#multiplayer-timer-progress')!
+  const roundProgress = gameTimer.parentElement
   const leaveButton = document.querySelector<HTMLButtonElement>('#leave-multiplayer-round-button')!
   const playAudioButton = document.querySelector<HTMLButtonElement>('#play-audio-button')!
   let hasFinished = false
@@ -1489,6 +1499,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
       if (timeUntilStart > 0) {
         gameTimer.textContent = `${Math.ceil(timeUntilStart / 1000)}…`
         timerProgress.style.transform = 'scaleX(1)'
+        roundProgress?.classList.remove('is-low')
         return
       }
 
@@ -1501,6 +1512,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     )
     gameTimer.textContent = formatRemainingTime(remainingTime)
     timerProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, remainingTime / roundDurationMs))})`
+    roundProgress?.classList.toggle('is-low', remainingTime > 0 && remainingTime <= 5000)
 
     if (remainingTime <= 0) {
       if (!hasFinished) {

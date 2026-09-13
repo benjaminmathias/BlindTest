@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Impeccable review evidence (screenshots, diffs)
+.impeccable/review/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
