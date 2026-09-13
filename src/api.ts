@@ -184,7 +184,9 @@ export async function fetchTracks(theme: MusicTheme = 'all'): Promise<Track[]> {
     results.flatMap((result) => result.status === 'fulfilled' ? result.value : []),
   )
   const distinctTitleCount = new Set(
-    tracks.map((track) => normalizeComparableText(track.title)),
+    tracks.map((track) =>
+      normalizeComparableText(canonicalizeSongTitle(track.title)),
+    ),
   ).size
 
   if (tracks.length < MIN_CATALOG_SIZE || distinctTitleCount < 4) {
