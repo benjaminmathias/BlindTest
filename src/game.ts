@@ -1,4 +1,5 @@
 import type { Track } from './api'
+import { getCanonicalSongKey, getDisplaySongTitle, normalizeComparableText } from './song'
 
 export const ROUND_COUNT_OPTIONS = [5, 10, 15, 20] as const
 export const ROUND_DURATION_OPTIONS = [15, 20, 30] as const
@@ -24,16 +25,11 @@ export function isRoundDuration(value: unknown): value is RoundDuration {
 }
 
 export function formatGuessOption(track: GuessOption): string {
-  return `${track.title} — ${track.artist}`
+  return `${getDisplaySongTitle(track.title)} — ${track.artist}`
 }
 
 export function normalizeSearchText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+  return normalizeComparableText(value)
 }
 
 export function findGuessOption(options: GuessOption[], value: string): GuessOption | null {
@@ -67,7 +63,7 @@ export function searchGuessOptions(
       return
     }
 
-    const title = normalizeSearchText(option.title)
+    const title = normalizeSearchText(getDisplaySongTitle(option.title))
     const artist = normalizeSearchText(option.artist)
 
     let score = -1
@@ -80,7 +76,7 @@ export function searchGuessOptions(
       return
     }
 
-    const key = `${title}|${artist}`
+    const key = getCanonicalSongKey({ title: option.title, artist: option.artist })
     if (seenKeys.has(key)) {
       return
     }

@@ -1,3 +1,10 @@
+import {
+  canonicalizeSongTitle,
+  getCanonicalSongKey,
+  isParasiteVersion,
+  normalizeComparableText,
+} from './song'
+
 export type Track = {
   id: string
   title: string
@@ -75,21 +82,24 @@ function normalizeGenre(genre: string): string {
     .toLowerCase()
 }
 
-function normalizeText(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
-}
-
-function normalizeTrackKey(track: Track): string {
-  return `${normalizeText(track.artist)}|${normalizeText(track.title)}`
+function hasCleanTitle(track: Track): boolean {
+  return normalizeComparableText(track.title)
+    === normalizeComparableText(canonicalizeSongTitle(track.title))
 }
 
 export function deduplicateTracks(tracks: Track[]): Track[] {
   const uniqueTracks = new Map<string, Track>()
 
   for (const track of tracks) {
-    const key = normalizeTrackKey(track)
+    const key = getCanonicalSongKey(track)
+    const existing = uniqueTracks.get(key)
 
-    if (!uniqueTracks.has(key)) {
+    if (!existing) {
+      uniqueTracks.set(key, track)
+      continue
+    }
+
+    if (hasCleanTitle(track) && !hasCleanTitle(existing)) {
       uniqueTracks.set(key, track)
     }
   }
@@ -121,7 +131,9 @@ async function fetchTracksForQuery(
   return (data.results ?? [])
     .filter(
       (track) =>
-        track.previewUrl && acceptedGenres.has(normalizeGenre(track.primaryGenreName ?? '')),
+        track.previewUrl
+        && acceptedGenres.has(normalizeGenre(track.primaryGenreName ?? ''))
+        && !isParasiteVersion(track.trackName),
     )
     .map((track) => ({
       id: String(track.trackId),
@@ -171,7 +183,9 @@ export async function fetchTracks(theme: MusicTheme = 'all'): Promise<Track[]> {
   const tracks = deduplicateTracks(
     results.flatMap((result) => result.status === 'fulfilled' ? result.value : []),
   )
-  const distinctTitleCount = new Set(tracks.map((track) => normalizeText(track.title))).size
+  const distinctTitleCount = new Set(
+    tracks.map((track) => normalizeComparableText(track.title)),
+  ).size
 
   if (tracks.length < MIN_CATALOG_SIZE || distinctTitleCount < 4) {
     throw new Error(

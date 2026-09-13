@@ -17,6 +17,46 @@ describe('catalogue', () => {
     ])
   })
 
+  it('déduplique les éditions remaster en préférant le titre propre', () => {
+    const remastered: Track = { ...track(1, 'Wonderwall (Remastered)'), artist: 'Oasis' }
+    const clean: Track = { ...track(2, 'Wonderwall'), artist: 'Oasis' }
+
+    expect(deduplicateTracks([remastered, clean])).toEqual([clean])
+    expect(deduplicateTracks([clean, remastered])).toEqual([clean])
+    expect(deduplicateTracks([remastered])).toEqual([remastered])
+  })
+
+  it('écarte les versions parasites de la recherche iTunes', async () => {
+    const clean = Array.from({ length: 20 }, (_, index) => ({
+      trackId: index,
+      trackName: `Titre ${index}`,
+      artistName: `Artiste ${index}`,
+      previewUrl: 'audio',
+      artworkUrl100: 'image',
+      primaryGenreName: 'Pop',
+    }))
+    const parasites = ['Wonderwall (Instrumental)', 'Wonderwall (Karaoke Version)']
+      .map((name, index) => ({
+        trackId: 100 + index,
+        trackName: name,
+        artistName: 'Oasis',
+        previewUrl: 'audio',
+        artworkUrl100: 'image',
+        primaryGenreName: 'Pop',
+      }))
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [...clean, ...parasites] }),
+    }))
+
+    const tracks = await fetchTracks('pop')
+
+    expect(tracks).toHaveLength(20)
+    expect(tracks.some((item) => /instrumental|karaoke|tribute|cover/i.test(item.title)))
+      .toBe(false)
+  })
+
   it('conserve une recherche réussie quand une autre échoue et met en cache', async () => {
     const fetchMock = vi.fn()
       .mockRejectedValueOnce(new Error('réseau'))

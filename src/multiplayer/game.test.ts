@@ -6,12 +6,24 @@ const round: MultiplayerRound = {
   gameId: 'g', roundId: 'r2', round: 2, startAt: 1_000, audioUrl: 'audio',
 }
 
+const catalog = new Map<string, { title: string; artist: string }>([
+  ['correct', { title: 'Wonderwall (Remastered)', artist: 'Oasis' }],
+  ['clean', { title: 'Wonderwall', artist: 'Oasis' }],
+  ['live', { title: 'Wonderwall (Live)', artist: 'Oasis' }],
+  ['other', { title: 'Wonderwall', artist: 'Autre Artiste' }],
+  ['a', { title: 'A', artist: 'X' }],
+  ['b', { title: 'B', artist: 'X' }],
+  ['c', { title: 'C', artist: 'X' }],
+  ['d', { title: 'D', artist: 'X' }],
+  ['e', { title: 'E', artist: 'X' }],
+])
+
 function score(guess: PlayerGuess, overrides: Partial<Parameters<typeof scorePlayerGuess>[0]> = {}) {
   return scorePlayerGuess({
     isHost: true,
     round,
-    correctTrackId: 'correct',
-    catalogIds: new Set(['correct', 'b', 'c', 'd']),
+    correctTrack: catalog.get('correct')!,
+    catalog,
     activePlayerIds: new Set(['p1']),
     finishedPlayerIds: new Set(),
     attempts: new Map(),
@@ -60,14 +72,30 @@ describe('autorité de manche', () => {
     const attempts = new Map<string, number>()
     const triedAnswerIds = new Map<string, Set<string>>()
     const finishedPlayerIds = new Set<string>()
-    const catalogIds = new Set(['a', 'b', 'c', 'd', 'e', 'correct'])
     let result = null
     for (const answerId of ['a', 'b', 'c', 'd', 'e']) {
       result = score(
         { roundId: 'r2', guessId: answerId, playerId: 'p1', answerId },
-        { attempts, triedAnswerIds, finishedPlayerIds, catalogIds },
+        { attempts, triedAnswerIds, finishedPlayerIds },
       )
     }
     expect(result).toMatchObject({ attemptsUsed: 5, attemptsRemaining: 0, finished: true })
+  })
+})
+
+describe('validation canonique côté hôte', () => {
+  it('accepte une autre édition de la même chanson', () => {
+    expect(score({ roundId: 'r2', guessId: 'g', playerId: 'p1', answerId: 'clean' }))
+      .toMatchObject({ isCorrect: true })
+  })
+
+  it('refuse une version live', () => {
+    expect(score({ roundId: 'r2', guessId: 'g', playerId: 'p1', answerId: 'live' }))
+      .toMatchObject({ isCorrect: false })
+  })
+
+  it('refuse un autre artiste', () => {
+    expect(score({ roundId: 'r2', guessId: 'g', playerId: 'p1', answerId: 'other' }))
+      .toMatchObject({ isCorrect: false })
   })
 })

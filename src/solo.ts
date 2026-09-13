@@ -6,6 +6,7 @@ import {
 import {
   createGuessArea, roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry,
 } from './guess-ui'
+import { isSameSong } from './song'
 import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
 const MAX_ROUND_SCORE = 1000
@@ -219,7 +220,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       guessArea.setSubmitHidden(true)
       guessArea.destroy()
       options.revealArtwork(document, correctTrack.imageUrl, `Cover de ${correctTrack.title} par ${correctTrack.artist}`)
-      const isCorrect = selected?.id === correctTrack.id
+      const isCorrect = selected ? isSameSong(selected, correctTrack) : false
       const roundOutcome: RoundOutcome =
         timedOut || outcome === 'timeout'
           ? 'timeout'
@@ -286,7 +287,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       guessArea.setExcludedIds(triedIds)
       lastGuess = guess
       attemptsUsed += 1
-      const isCorrect = guess.id === correctTrack.id
+      const isCorrect = isSameSong(guess, correctTrack)
       guessArea.slots.setResult(attemptsUsed - 1, isCorrect ? 'correct' : 'wrong', formatGuessOption(guess))
       guessArea.announceRemaining(MAX_ATTEMPTS - attemptsUsed)
       if (isCorrect || attemptsUsed === MAX_ATTEMPTS) {

@@ -45,6 +45,7 @@ import {
 import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 import { scorePlayerGuess } from './multiplayer/game'
 import { renderFinalLeaderboard, renderLeaderboard } from './multiplayer/game-ui'
+import { getDisplaySongTitle } from './song'
 import { createSoloGame } from './solo'
 
 const MAX_ROUND_SCORE = 1000
@@ -443,7 +444,7 @@ function renderRoundResult(
 
   const track = document.createElement('span')
   track.className = 'round-result__track'
-  track.textContent = title
+  track.textContent = getDisplaySongTitle(title)
 
   const artistElement = document.createElement('span')
   artistElement.className = 'round-result__artist'
@@ -976,8 +977,10 @@ function handlePlayerGuess(guess: PlayerGuess): void {
   const result = scorePlayerGuess({
     isHost: multiplayerIsHost,
     round: currentMultiplayerRound,
-    correctTrackId: currentHostTrack?.id ?? null,
-    catalogIds: new Set(multiplayerCatalog.map(({ id }) => id)),
+    correctTrack: currentHostTrack,
+    catalog: new Map(
+      multiplayerCatalog.map(({ id, title, artist }) => [id, { title, artist }]),
+    ),
     activePlayerIds: multiplayerRoundPlayerIds,
     finishedPlayerIds,
     attempts: multiplayerAttempts,

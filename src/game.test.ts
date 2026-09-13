@@ -4,6 +4,7 @@ import {
   findGuessOption, formatGuessOption, getAnswerTracks, getAttemptScore, getRoundScore,
   searchGuessOptions, shuffleTracks, type GuessOption,
 } from './game'
+import { isSameSong } from './song'
 
 const tracks: Track[] = Array.from({ length: 5 }, (_, index) => ({
   id: String(index),
@@ -95,13 +96,56 @@ describe('searchGuessOptions', () => {
     expect(searchGuessOptions(catalog, 'red   hot').length).toBe(5)
   })
 
-  it('déduplique par identifiant et par titre/artiste identiques', () => {
+  it('déduplique par identifiant et par clé canonique', () => {
     const duplicates: GuessOption[] = [
       { id: 'a', title: 'Californication', artist: 'Red Hot Chili Peppers' },
       { id: 'a', title: 'Californication', artist: 'Red Hot Chili Peppers' },
       { id: 'b', title: 'Californication', artist: 'Red Hot Chili Peppers' },
       { id: 'c', title: 'Californication (Remaster)', artist: 'Red Hot Chili Peppers' },
     ]
-    expect(searchGuessOptions(duplicates, 'cali')).toHaveLength(2)
+    expect(searchGuessOptions(duplicates, 'cali')).toHaveLength(1)
+  })
+})
+
+describe('autocomplete canonique', () => {
+  const catalog: GuessOption[] = [
+    { id: '1', title: 'Wonderwall', artist: 'Oasis' },
+    { id: '2', title: 'Wonderwall (Remastered)', artist: 'Oasis' },
+    { id: '3', title: 'Wonderwall (2014 Remaster)', artist: 'Oasis' },
+  ]
+
+  it('ne montre qu’une suggestion malgré les éditions', () => {
+    const results = searchGuessOptions(catalog, 'wonder')
+    expect(results).toHaveLength(1)
+    expect(results[0]?.artist).toBe('Oasis')
+  })
+
+  it('trouve par le titre canonique même si le titre brut est un remaster', () => {
+    const results = searchGuessOptions(
+      [{ id: '9', title: 'Wonderwall (2014 Remaster)', artist: 'Oasis' }],
+      'wonder',
+    )
+    expect(results.map(({ id }) => id)).toEqual(['9'])
+  })
+
+  it('trouve par artiste', () => {
+    expect(searchGuessOptions(catalog, 'oasis')).toHaveLength(1)
+  })
+})
+
+describe('validation solo canonique', () => {
+  const correct: Track = {
+    id: '123', title: 'Wonderwall (Remastered)', artist: 'Oasis', audioUrl: '', imageUrl: '',
+  }
+  const guess: GuessOption = { id: '456', title: 'Wonderwall', artist: 'Oasis' }
+
+  it('accepte une édition canonique équivalente', () => {
+    expect(isSameSong(guess, correct)).toBe(true)
+  })
+
+  it('conserve le barème des essais', () => {
+    expect([1, 2, 3, 4, 5].map((attempt) =>
+      getAttemptScore(10_000, 10_000, 1000, attempt),
+    )).toEqual([1000, 800, 600, 400, 200])
   })
 })

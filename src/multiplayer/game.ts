@@ -1,11 +1,12 @@
 import { getAttemptScore, MAX_ATTEMPTS } from '../game'
+import { isSameSong, type SongIdentity } from '../song'
 import type { AttemptResult, MultiplayerRound, PlayerGuess } from './realtime'
 
 type ScoreGuessOptions = {
   isHost: boolean
   round: MultiplayerRound | null
-  correctTrackId: string | null
-  catalogIds: Set<string>
+  correctTrack: SongIdentity | null
+  catalog: ReadonlyMap<string, SongIdentity>
   activePlayerIds: Set<string>
   finishedPlayerIds: Set<string>
   attempts: Map<string, number>
@@ -20,14 +21,16 @@ type ScoreGuessOptions = {
 export function scorePlayerGuess(options: ScoreGuessOptions): AttemptResult | null {
   const { guess, round } = options
   const tried = options.triedAnswerIds.get(guess.playerId) ?? new Set<string>()
-  if (!options.isHost || !round || !options.correctTrackId
+  if (!options.isHost || !round || !options.correctTrack
     || guess.roundId !== round.roundId
     || options.finishedPlayerIds.has(guess.playerId)
     || !options.activePlayerIds.has(guess.playerId)
-    || !options.catalogIds.has(guess.answerId)
+    || !options.catalog.has(guess.answerId)
     || tried.has(guess.answerId)) {
     return null
   }
+
+  const answer = options.catalog.get(guess.answerId)!
 
   tried.add(guess.answerId)
   options.triedAnswerIds.set(guess.playerId, tried)
@@ -35,7 +38,7 @@ export function scorePlayerGuess(options: ScoreGuessOptions): AttemptResult | nu
   options.attempts.set(guess.playerId, attemptsUsed)
   const remainingTime = Math.max(0, round.startAt + options.roundDurationMs - options.now)
   const isCorrect = options.now >= round.startAt && remainingTime > 0
-    && guess.answerId === options.correctTrackId
+    && isSameSong(answer, options.correctTrack)
   const finished = isCorrect || attemptsUsed >= MAX_ATTEMPTS || remainingTime <= 0
   if (finished) options.finishedPlayerIds.add(guess.playerId)
   const addedScore = isCorrect

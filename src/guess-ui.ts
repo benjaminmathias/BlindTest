@@ -5,6 +5,7 @@ import {
   type GuessOption,
   type RoundOutcome,
 } from './game'
+import { getDisplaySongTitle } from './song'
 
 const ROUND_MARK_SVG: Record<RoundOutcome, string> = {
   correct:
@@ -80,7 +81,7 @@ export function roundRecapMarkup(
       return ''
     }
 
-    const solutionLabel = `${escapeHtml(entry.solution.title)} — ${escapeHtml(entry.solution.artist)}`
+    const solutionLabel = `${escapeHtml(getDisplaySongTitle(entry.solution.title))} — ${escapeHtml(entry.solution.artist)}`
     let answer: string
     let meta: string
 
@@ -437,7 +438,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
       const title = document.createElement('span')
       title.className = 'guess-suggestion__title'
-      appendHighlighted(title, option.title, needle)
+      appendHighlighted(title, getDisplaySongTitle(option.title), needle)
 
       const artist = document.createElement('span')
       artist.className = 'guess-suggestion__artist'
