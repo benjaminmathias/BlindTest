@@ -62,7 +62,9 @@ describe('volume', () => {
     manager.setupControls()
 
     toggle().click()
-    toggle().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    expect(document.activeElement).toBe(slider())
+
+    slider().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 
     expect(panel().hidden).toBe(true)
     expect(toggle().getAttribute('aria-expanded')).toBe('false')

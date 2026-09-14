@@ -137,8 +137,12 @@ export function createVolumeManager(): VolumeManager {
         }
       })
 
-      toggle.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') {
+      // Escape must work from the slider too, so the handler lives on the
+      // wrapper (which contains both the button and the panel).
+      const control = toggle.closest<HTMLElement>('.volume-control--popover') ?? toggle
+
+      control.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || panel.hidden) {
           return
         }
 
