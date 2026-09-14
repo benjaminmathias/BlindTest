@@ -16,7 +16,7 @@ const ROUND_MARK_SVG: Record<RoundOutcome, string> = {
   timeout:
     '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
   skipped:
-    '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 5l6 5-6 5M13 5v10" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
+    '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 4.7L11.8 10 5 15.3z" fill="currentColor" /><rect x="12.6" y="4.7" width="2.6" height="10.6" rx="1.3" fill="currentColor" /></svg>',
 }
 
 const TIMELINE_LABELS: Record<RoundOutcome, string> = {
@@ -297,7 +297,12 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
     number.className = 'attempt-slot__index'
     number.textContent = String(index + 1)
 
-    slot.append(number)
+    const placeholder = document.createElement('span')
+    placeholder.className = 'attempt-slot__placeholder'
+    placeholder.textContent = '—'
+    placeholder.setAttribute('aria-hidden', 'true')
+
+    slot.append(number, placeholder)
     slotsElement.append(slot)
     slotElements.push(slot)
   }

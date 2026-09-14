@@ -193,14 +193,14 @@ Responsive behaviour is driven by a few narrow breakpoints. At **560px** the mul
 
 ## Elevation & Depth
 
-Depth is **flat and bordered**. The system uses no drop shadows on plates, buttons, inputs, or cards: a surface is either a plate at `Plate`, a raised element at `Plate High`, or a well at `Well`, each separated by a 1px hairline. The only shadow in the system floats the autocomplete suggestion panel above the plate, and the only other shadow is the focus ring. There is no texture, no inner bevel, and no gradient surface.
+Depth is **flat and bordered**. The system uses no drop shadows on plates, buttons, inputs, or cards: a surface is either a plate at `Plate`, a raised element at `Plate High`, or a well at `Well`, each separated by a 1px hairline. The only shadow in the system floats the autocomplete suggestion panel and the in-game volume popover above the plate, and the only other shadow is the focus ring. There is no texture, no inner bevel, and no gradient surface.
 
 ### Shadow Vocabulary
-- **Popover lift** (`0 24px 48px -12px rgba(0, 0, 0, 0.78)`): the guess suggestion panel only.
+- **Popover lift** (`0 24px 48px -12px rgba(0, 0, 0, 0.78)`): the guess suggestion panel and the in-game volume popover.
 - **Focus ring** (`0 0 0 3px rgba(49, 217, 130, 0.18)`): inputs and the search field on focus, paired with a green border. Error fields use `0 0 0 3px rgba(255, 107, 107, 0.16)`.
 
 ### Named Rules
-**The Flat-Plate Rule.** Elevation is tone plus a hairline, never a cast shadow. The only floating surface in the product is the suggestion panel; adding a shadow anywhere else is drift.
+**The Flat-Plate Rule.** Elevation is tone plus a hairline, never a cast shadow. The floating surfaces in the product are the suggestion panel and the in-game volume popover; adding a shadow anywhere else is drift.
 
 ## Shapes
 
@@ -214,7 +214,7 @@ Corners are soft and modern, never pill-shaped for containers. Plates and the ar
 - **Tonal:** Plate High fill, green text, green hairline — the multiplayer "Rejoindre", so the home screen keeps a single solid primary.
 - **Secondary:** Plate High fill with a hairline-strong border and Ink text; pairs with the primary.
 - **Ghost:** transparent with muted text; low-priority controls ("Copier").
-- **Hover / Focus:** primary brightens to Green Bright; secondary lifts one tone; focus-visible is a 2px green outline at 2px offset; `:active` presses 1px down; disabled drops to 42% opacity.
+- **Hover / Focus:** primary brightens to Green Bright; secondary lifts one tone; hover states only apply on fine pointers (`@media (hover: hover) and (pointer: fine)`); focus-visible is a 2px green outline at 2px offset; `:active` presses 1px down and scales to 0.96; disabled drops to 42% opacity.
 
 ### Cards / Containers
 - **Corner Style:** 18px plate; 14px nested plate.
@@ -229,20 +229,29 @@ Corners are soft and modern, never pill-shaped for containers. Plates and the ar
 - **Error / Disabled:** `aria-invalid` switches border and ring to Miss Red; disabled is 42% opacity.
 
 ### Attempt Slots
-- **Style:** stacked wells (12px corners) with a Geist Mono index in Ink Dim.
-- **State:** wrong fills and borders tint Miss Red; correct tints green; both lift in over 200ms.
+- **Style:** stacked compact wells (12px corners) with a Geist Mono index in Ink Dim and a faint em-dash placeholder for unused rows.
+- **State:** wrong fills and borders tint Miss Red; correct tints green; both lift in over 200ms. On reveal the whole stack softens in place (`blur(2px)` at 50% opacity) so the result card is the only sharp verdict, the space never reads empty, and nothing below shifts.
+- **Marks:** correct ✓, failed ✗, timeout ○ and skipped ▶| are drawn at a uniform 2px weight; the filled skip-forward mark keeps the 'passer' meaning legible at 15px.
 
 ### Clock & Progress
 - **Style:** a Geist Mono readout (clamp 2.1–2.9rem) over a 6px pill track filled with Now-Playing Green.
 - **State:** the fill scales left-to-right; in the final 5 seconds both the readout and the fill switch to Miss Red.
 
+### Round Result
+- **Style:** a full-width Plate High bar (14px corners, 1px hairline) that takes the clock's slot on reveal; a 26px well chip holds the verdict mark, then the track — artist, with the round's points in Geist Mono at the right. It stays under the clock's height so the reveal never moves the layout.
+- **State:** correct tints the border and chip green; wrong tints them Miss Red; timeout and skip stay neutral (Hairline Strong border, Well chip, Ink Muted mark). The bar lifts in over 240ms and the awarded points land with a short pop.
+
 ### Artwork Stage
 - **Style:** a square 18px plate (`min(72vw, 300px)`) holding either the mystery mark or the cover. On phones it eases to `min(56vw, 230px)` at ≤560px and `min(58vw, 195px)` at ≤380px to help keep the guess field and its action in view.
-- **Behaviour:** the mystery mark is two faint rings and a green note that rotates slowly (8s) while the extract plays, pausing on reveal; the cover scales from 1.05 to 1 as it fades in over 440ms while the mystery mark scales down and fades. Both are disabled under `prefers-reduced-motion`.
+- **Behaviour:** the mystery mark is two faint rings and a green note that rotates slowly (8s) while the extract plays, pausing on reveal; the cover scales from 1.05 to 1 as it fades in over 380ms while the mystery mark scales down and fades over 280ms. Both are disabled under `prefers-reduced-motion`.
 
 ### Suggestion Panel
 - **Style:** Plate High, 14px corners, 0.35rem padding, floating on the popover lift above the search field.
 - **State:** the hovered/active row tints green-soft; the matched substring is green.
+
+### Volume
+- **Style:** the home screen shows the fader inline as a full-width row. During a round it collapses to a 44px authored speaker icon in the topbar that opens the same fader in a Plate High popover on the popover lift; the icon swaps to a muted mark at 0%.
+- **Behaviour:** the popover closes on Escape or an outside tap, and focus moves to the slider when it opens.
 
 ### Chips & Badges
 - **Style:** pills. The host badge is green text on green-soft with a green border; the personal-best chip is Recessed with muted text and an Ink numeral.

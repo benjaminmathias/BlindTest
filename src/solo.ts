@@ -7,7 +7,7 @@ import {
   createGuessArea, roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry,
 } from './guess-ui'
 import { getCanonicalSongKey, isSameSong } from './song'
-import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
+import { animateScore, focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
 const MAX_ROUND_SCORE = 1000
 
@@ -252,8 +252,9 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         options.renderRoundResult(revealCard, 'skip', correctTrack.title, correctTrack.artist)
       } else if (isCorrect) {
         const points = getAttemptScore(time, roundDurationMs, MAX_ROUND_SCORE, attemptsUsed)
+        const previousScore = state.score
         state.score += points
-        scoreDisplay.textContent = formatScore(state.score)
+        animateScore(scoreDisplay, previousScore, state.score)
         options.renderRoundResult(revealCard, 'correct', correctTrack.title, correctTrack.artist, points)
       } else {
         options.renderRoundResult(revealCard, 'wrong', correctTrack.title, correctTrack.artist)

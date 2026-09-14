@@ -9,7 +9,7 @@ const ROUND_RESULT_MARKS = {
   timeout:
     '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
   skip:
-    '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 5l6 5-6 5M13 5v10" fill="none" stroke="currentColor" stroke-width="2" /></svg>',
+    '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 4.7L11.8 10 5 15.3z" fill="currentColor" /><rect x="12.6" y="4.7" width="2.6" height="10.6" rx="1.3" fill="currentColor" /></svg>',
 } as const
 
 const ROUND_RESULT_LABELS = {

@@ -11,6 +11,9 @@
   --well: #100e0d;
   --line: #2a2623;
   --line-2: #3a352f;
+  --line-hover: #463f38;
+  --line-3: #4a453f;
+  --surface-3: #262019;
 
   /* ink */
   --text: #f4f1ec;
@@ -23,12 +26,15 @@
   --accent-ink: #04160c;
   --accent-soft: rgba(49, 217, 130, 0.12);
   --accent-line: rgba(49, 217, 130, 0.38);
+  --accent-ink-soft: #cdeedb;
   --wrong: #ff6b6b;
   --wrong-soft: rgba(255, 107, 107, 0.1);
   --wrong-line: rgba(255, 107, 107, 0.42);
 
   --radius: 12px;
+  --radius-md: 14px;
   --radius-lg: 18px;
+  --track: #211d19;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -62,8 +68,17 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--bg);
+}
+
+/* Fixed gradient layer: avoids `background-attachment: fixed`, which is janky
+   and buggy on iOS Safari. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image: radial-gradient(120% 70% at 50% -10%, #1b1714 0%, #0e0c0b 52%, #0a0908 100%);
-  background-attachment: fixed;
 }
 
 button,
@@ -90,17 +105,10 @@ button {
   box-shadow: none;
 }
 
-.button-primary:hover:not(:disabled) { background: var(--accent-hi); }
-
 .button-secondary {
   border-color: var(--line-2);
   color: var(--text);
   background: var(--surface-2);
-}
-
-.button-secondary:hover:not(:disabled) {
-  border-color: #463f38;
-  background: #262019;
 }
 
 .button-ghost {
@@ -112,12 +120,7 @@ button {
   font-size: 0.9rem;
 }
 
-.button-ghost:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--surface-2);
-}
-
-button:active:not(:disabled) { transform: translateY(1px); }
+button:active:not(:disabled) { transform: translateY(1px) scale(0.96); }
 
 button:focus-visible,
 input:focus-visible,
@@ -151,7 +154,7 @@ button[hidden] { display: none; }
   background: var(--line-2);
 }
 
-::-webkit-scrollbar-thumb:hover { background: #4a453f; }
+::-webkit-scrollbar-thumb:hover { background: var(--line-3); }
 
 .sr-only {
   position: absolute;
@@ -359,10 +362,6 @@ h2 {
   border-color: var(--accent-line);
 }
 
-.multiplayer-actions .button-primary:hover:not(:disabled) {
-  background: rgba(49, 217, 130, 0.2);
-}
-
 .form-field {
   display: grid;
   align-content: start;
@@ -392,9 +391,6 @@ select {
 }
 
 input[type="text"]::placeholder { color: var(--text-2); }
-
-input[type="text"]:hover:not(:disabled),
-select:hover:not(:disabled) { border-color: var(--line-2); }
 
 input[type="text"]:focus-visible,
 select:focus-visible {
@@ -497,31 +493,53 @@ input[aria-invalid="true"] {
   text-align: right;
 }
 
-.volume-control--compact {
+/* In-game volume: a 44px icon that opens the fader in a popover, so the topbar
+   keeps room for the score. */
+.volume-control--popover {
+  position: relative;
+  gap: 0;
+  min-height: 0;
+}
+
+.volume-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  background: var(--well);
+}
+
+.volume-button__icon { width: 20px; height: 20px; }
+.volume-button__icon--muted { display: none; }
+.volume-button.is-muted .volume-button__icon--on { display: none; }
+.volume-button.is-muted .volume-button__icon--muted { display: block; }
+
+.volume-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
+  min-width: 190px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.78);
+}
+
+.volume-popover[hidden] { display: none; }
+
+.volume-popover input[type="range"] {
+  flex: 1 1 auto;
+  width: 100%;
   min-height: 32px;
-}
-
-.volume-control--compact input[type="range"] {
-  flex: 0 1 auto;
-  width: clamp(64px, 18vw, 104px);
-  min-height: 32px;
-}
-
-.volume-control--compact input[type="range"]::-webkit-slider-thumb {
-  width: 15px;
-  height: 15px;
-  margin-top: -4.5px;
-}
-
-.volume-control--compact input[type="range"]::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
-}
-
-.volume-control--compact .volume-value {
-  min-width: 3.2em;
-  font-size: 0.78rem;
 }
 
 /* ---- Lobby ---- */
@@ -568,9 +586,11 @@ input[aria-invalid="true"] {
 }
 
 .lobby-rule__value {
-  font-size: 1rem;
-  font-weight: 600;
   color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 
 .lobby-players-heading { margin-top: var(--space-6); }
@@ -762,7 +782,8 @@ input[aria-invalid="true"] {
   object-fit: cover;
   opacity: 0;
   transform: scale(1.05);
-  transition: opacity 300ms ease, transform 440ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .artwork__image.is-visible { opacity: 1; transform: scale(1); }
@@ -772,7 +793,8 @@ input[aria-invalid="true"] {
   inset: 0;
   display: grid;
   place-items: center;
-  transition: opacity 260ms ease, transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .artwork__mystery.is-hidden { opacity: 0; transform: scale(0.94); }
@@ -822,6 +844,7 @@ input[aria-invalid="true"] {
   border-radius: 999px;
   background: var(--accent);
   transform-origin: left center;
+  will-change: transform;
   transition: transform 100ms linear, background-color var(--transition);
 }
 
@@ -842,7 +865,7 @@ input[aria-invalid="true"] {
   min-width: 0;
   height: 6px;
   border-radius: 999px;
-  background: #211d19;
+  background: var(--track);
 }
 
 .round-timeline__item--current { background: var(--accent); }
@@ -854,7 +877,7 @@ input[aria-invalid="true"] {
 .round-timeline__item--timeout,
 .round-timeline__item--skipped { background: var(--line-2); }
 
-.round-timeline__item--pending { background: #211d19; }
+.round-timeline__item--pending { background: var(--track); }
 
 .guess-area {
   display: grid;
@@ -870,6 +893,16 @@ input[aria-invalid="true"] {
   margin: 0;
   padding: 0;
   list-style: none;
+  transition: filter 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* On reveal the result card is the only sharp verdict; the attempts stay in
+   place, softly blurred, so the space below is never empty and nothing moves. */
+.game-shell.is-answered .attempt-slots {
+  filter: blur(2px);
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .attempt-slot {
@@ -877,14 +910,18 @@ input[aria-invalid="true"] {
   align-items: baseline;
   gap: var(--space-2);
   min-width: 0;
-  min-height: 42px;
-  padding: 0.6rem 0.85rem;
+  min-height: 36px;
+  padding: 0.45rem 0.75rem;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--well);
   color: var(--text-3);
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.attempt-slot__placeholder {
+  color: var(--line-2);
 }
 
 .attempt-slot__index {
@@ -920,7 +957,7 @@ input[aria-invalid="true"] {
 .attempt-slot--correct {
   border-color: var(--accent-line);
   background: var(--accent-soft);
-  color: #cdeedb;
+  color: var(--accent-ink-soft);
 }
 
 .attempt-slot--wrong .attempt-slot__mark { color: var(--wrong); }
@@ -961,7 +998,7 @@ input[aria-invalid="true"] {
   min-height: 54px;
   padding: 0 0.9rem;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--well);
   transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -1020,7 +1057,7 @@ input[aria-invalid="true"] {
   padding: 0.35rem;
   overflow-y: auto;
   list-style: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface-2);
   box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.78);
 }
@@ -1031,11 +1068,15 @@ input[aria-invalid="true"] {
   display: grid;
   gap: 1px;
   padding: 0.55rem 0.7rem;
-  border-radius: 12px;
+  border-radius: var(--radius);
   cursor: pointer;
+  transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.guess-suggestion:hover,
+.guess-suggestion:active {
+  transform: scale(0.98);
+}
+
 .guess-suggestion.is-active {
   background: var(--accent-soft);
 }
@@ -1166,29 +1207,42 @@ input[aria-invalid="true"] {
   gap: var(--space-3);
   min-height: 0;
   margin: var(--space-4) 0 var(--space-2);
-  padding: 0.7rem 0.95rem;
+  padding: 0.45rem 0.8rem;
   border: 1px solid var(--line-2);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface-2);
   text-align: left;
 }
 
+/* The mark sits in a small tinted well so the verdict reads as a chip, not a
+   stray glyph floating in the card. */
 .round-result__badge {
   display: grid;
   place-items: center;
-  width: auto;
-  height: auto;
-  margin-top: 0;
-  color: var(--text-3);
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  color: var(--text-2);
+  background: var(--well);
 }
 
-.round-result__badge svg { width: 20px; height: 20px; }
+.round-result__badge svg { width: 15px; height: 15px; }
 
 .round-result--correct { border-color: var(--accent-line); }
 .round-result--wrong { border-color: var(--wrong-line); }
 
-.round-result--correct .round-result__badge { color: var(--accent); }
-.round-result--wrong .round-result__badge { color: var(--wrong); }
+.round-result--correct .round-result__badge {
+  border-color: var(--accent-line);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.round-result--wrong .round-result__badge {
+  border-color: var(--wrong-line);
+  color: var(--wrong);
+  background: var(--wrong-soft);
+}
 
 .round-result__body {
   display: flex;
@@ -1224,12 +1278,27 @@ input[aria-invalid="true"] {
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   white-space: nowrap;
+  transform-origin: right center;
+  animation: points-pop 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes points-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .round-result,
 .game-shell .next-button:not([hidden]) {
   animation: round-reveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.game-shell .next-button:not([hidden]) { animation-delay: 70ms; }
 
 @keyframes round-reveal {
   from {
@@ -1323,15 +1392,16 @@ input[aria-invalid="true"] {
   gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--surface-2);
 }
 
 .stat__value {
   color: var(--text);
+  font-family: var(--font-mono);
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
 }
 
@@ -1391,8 +1461,8 @@ input[aria-invalid="true"] {
   .attempt-slots { gap: 4px; }
 
   .attempt-slot {
-    min-height: 36px;
-    padding: 0.45rem 0.7rem;
+    min-height: 32px;
+    padding: 0.35rem 0.65rem;
   }
 }
 
@@ -1424,6 +1494,36 @@ input[aria-invalid="true"] {
   .progress__time { font-size: clamp(1.85rem, 8vw, 2.9rem); }
 }
 
+/* Pointer hover only: touch devices trigger :hover on tap, which leaves a
+   sticky hover state behind. */
+@media (hover: hover) and (pointer: fine) {
+  .button-primary:hover:not(:disabled) { background: var(--accent-hi); }
+
+  .button-secondary:hover:not(:disabled) {
+    border-color: var(--line-hover);
+    background: var(--surface-3);
+  }
+
+  .button-ghost:hover:not(:disabled) {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+
+  .multiplayer-actions .button-primary:hover:not(:disabled) {
+    background: rgba(49, 217, 130, 0.2);
+  }
+
+  input[type="text"]:hover:not(:disabled):not(:focus-visible),
+  select:hover:not(:disabled):not(:focus-visible) { border-color: var(--line-2); }
+
+  .volume-button:hover {
+    color: var(--text);
+    border-color: var(--line-2);
+  }
+
+  .guess-suggestion:hover { background: var(--accent-soft); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1431,6 +1531,7 @@ input[aria-invalid="true"] {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
   }
 
