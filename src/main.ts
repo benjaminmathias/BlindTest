@@ -229,19 +229,10 @@ function renderArtworkMarkup(): string {
         <img class="artwork__image" data-artwork-image alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
         <span class="artwork__mystery" data-artwork-placeholder aria-hidden="true">
           <svg class="artwork__disc" viewBox="0 0 200 200" focusable="false">
-            <circle cx="100" cy="100" r="98" fill="#0c0d0f" stroke="#2c2d33" stroke-width="2" />
-            <g fill="none" stroke="#1e1f24" stroke-width="1.25">
-              <circle cx="100" cy="100" r="91" />
-              <circle cx="100" cy="100" r="85" />
-              <circle cx="100" cy="100" r="79" />
-              <circle cx="100" cy="100" r="73" />
-              <circle cx="100" cy="100" r="67" />
-              <circle cx="100" cy="100" r="61" />
-            </g>
-            <circle cx="100" cy="100" r="34" fill="#f0522f" />
-            <circle cx="100" cy="100" r="34" fill="none" stroke="#000000" stroke-opacity="0.28" stroke-width="1" />
-            <path d="M100 100 L100 73" stroke="#f7efe0" stroke-width="2.6" stroke-linecap="round" />
-            <circle cx="100" cy="100" r="3.2" fill="#0c0d0f" />
+            <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="3" />
+            <circle cx="100" cy="100" r="46" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="3" />
+            <circle cx="100" cy="100" r="13" fill="#31d982" />
+            <path d="M100 100 L100 74" stroke="#31d982" stroke-width="5" stroke-linecap="round" />
           </svg>
         </span>
       </div>
@@ -1256,9 +1247,9 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
             </div>
           </div>
         </div>
+        <p id="multiplayer-status" class="status" role="status" aria-live="polite">Répondez lorsque la manche commence.</p>
         <h1 id="multiplayer-question-title" class="question-title">Quel est ce titre ?</h1>
         <div data-guess-area></div>
-        <p id="multiplayer-status" class="status" role="status" aria-live="polite">Répondez lorsque la manche commence.</p>
         <p id="multiplayer-round-status" class="status" role="status" aria-live="polite"></p>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
         <section class="leaderboard-section" aria-labelledby="leaderboard-title">

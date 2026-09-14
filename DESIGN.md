@@ -1,69 +1,61 @@
 ---
 name: Blindtest
-description: An analogue DJ console for a music blind-test played solo or in real time with friends.
+description: A contemporary now-playing music screen for a blind-test played solo or in real time with friends.
 colors:
-  void: "#08090a"
-  chassis: "#101114"
-  plate: "#17181c"
-  plate-high: "#1e1f24"
-  well: "#0d0e11"
-  hairline: "#2a2b31"
-  hairline-strong: "#3a3c44"
-  cream: "#ede6d6"
-  cream-muted: "#aaa395"
-  cream-dim: "#807a6d"
-  signal: "#f0522f"
-  signal-bright: "#ff6c48"
-  signal-deep: "#c23b1b"
-  signal-ink: "#180a05"
-  cue-cyan: "#5ec8d6"
-  vu-green: "#79c98d"
-  hazard-red: "#dd4b57"
-  peak-amber: "#efb64a"
-  dial-cream: "#ded5c2"
-  walnut-high: "#6b4a32"
-  walnut-deep: "#392519"
+  room-black: "#0c0a09"
+  recessed: "#131110"
+  plate: "#171412"
+  plate-high: "#1e1a17"
+  well: "#100e0d"
+  hairline: "#2a2623"
+  hairline-strong: "#3a352f"
+  ink: "#f4f1ec"
+  ink-muted: "#a8a29a"
+  ink-dim: "#8a847c"
+  now-playing-green: "#31d982"
+  green-bright: "#4be495"
+  green-ink: "#04160c"
+  miss-red: "#ff6b6b"
 typography:
   display:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "clamp(2.1rem, 7vw, 3.1rem)"
+    fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontSize: "clamp(2.4rem, 9vw, 3.4rem)"
     fontWeight: 800
     lineHeight: 1
-    letterSpacing: "-0.035em"
+    letterSpacing: "-0.032em"
   headline:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "clamp(1.45rem, 4.4vw, 1.85rem)"
+    fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontSize: "clamp(1.6rem, 5vw, 2.1rem)"
     fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: "-0.02em"
+    lineHeight: 1.1
+    letterSpacing: "-0.028em"
   title:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
     fontSize: "1.05rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "-0.01em"
+    letterSpacing: "-0.012em"
   body:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
     fontSize: "0.95rem"
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "Archivo, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
-    fontSize: "0.68rem"
-    fontWeight: 600
-    letterSpacing: "0.14em"
-  counter:
-    fontFamily: "Doto, Archivo, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.4rem, 8.5vw, 3.6rem)"
-    fontWeight: 900
+    fontFamily: "Schibsted Grotesk, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"
+    fontSize: "0.82rem"
+    fontWeight: 500
+    letterSpacing: "0.01em"
+  numeric:
+    fontFamily: "Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "clamp(2.1rem, 8vw, 2.9rem)"
+    fontWeight: 500
     lineHeight: 1
-    letterSpacing: "0.02em"
+    letterSpacing: "0.01em"
 rounded:
-  xs: "4px"
-  sm: "6px"
-  md: "8px"
-  lg: "14px"
-  display: "5px"
+  sm: "12px"
+  md: "14px"
+  lg: "18px"
+  pill: "999px"
 spacing:
   "1": "0.25rem"
   "2": "0.5rem"
@@ -74,205 +66,208 @@ spacing:
   "7": "3rem"
 components:
   button-primary:
-    backgroundColor: "{colors.signal}"
-    textColor: "{colors.signal-ink}"
-    rounded: "{rounded.md}"
-    padding: "0.75rem 1.25rem"
+    backgroundColor: "{colors.now-playing-green}"
+    textColor: "{colors.green-ink}"
+    rounded: "{rounded.sm}"
+    padding: "0.75rem 1.15rem"
+    height: "48px"
+  button-primary-hover:
+    backgroundColor: "{colors.green-bright}"
   button-secondary:
     backgroundColor: "{colors.plate-high}"
-    textColor: "{colors.cream}"
-    rounded: "{rounded.md}"
-    padding: "0.75rem 1.25rem"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.sm}"
+    padding: "0.75rem 1.15rem"
   button-ghost:
     backgroundColor: "transparent"
-    textColor: "{colors.cream-muted}"
-    rounded: "{rounded.md}"
-    padding: "0.35rem 0.7rem"
+    textColor: "{colors.ink-muted}"
+    rounded: "{rounded.sm}"
+    padding: "0.4rem 0.7rem"
+    height: "40px"
+  button-tonal:
+    backgroundColor: "{colors.plate-high}"
+    textColor: "{colors.now-playing-green}"
+    rounded: "{rounded.sm}"
+    padding: "0.75rem 1.15rem"
   field:
     backgroundColor: "{colors.well}"
-    textColor: "{colors.cream}"
-    rounded: "{rounded.md}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.sm}"
     padding: "0.7rem 0.85rem"
-  faceplate:
+  plate:
     backgroundColor: "{colors.plate}"
-    textColor: "{colors.cream}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
-    padding: "clamp(1.35rem, 4vw, 1.9rem)"
+    padding: "clamp(1.5rem, 4.5vw, 2.25rem)"
   attempt-slot:
     backgroundColor: "{colors.well}"
-    textColor: "{colors.cream-muted}"
+    textColor: "{colors.ink-muted}"
     rounded: "{rounded.sm}"
-    padding: "0.42rem 0.7rem"
-  level-meter-track:
-    backgroundColor: "{colors.dial-cream}"
-    textColor: "{colors.chassis}"
-    rounded: "{rounded.xs}"
-    height: "14px"
-  platter:
-    backgroundColor: "{colors.well}"
-    textColor: "{colors.signal}"
-    rounded: "{rounded.lg}"
-    width: "min(72vw, 300px)"
+    padding: "0.6rem 0.85rem"
+  stat:
+    backgroundColor: "{colors.plate-high}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.md}"
+    padding: "1rem"
+  progress-track:
+    backgroundColor: "{colors.hairline-strong}"
+    rounded: "{rounded.pill}"
+    height: "6px"
 ---
 
 # Design System: Blindtest
 
 ## Overview
 
-**Creative North Star: "The Analogue Console"**
+**Creative North Star: "The Listening Room"**
 
-Blindtest is a physical two-channel DJ console sitting in a dim living room, not a dark-mode web app. Every screen is a faceplate: brushed graphite metal with walnut end-cheeks and corner screws, cream screen-printed legends, and incandescent indicator lamps. Nothing glows, nothing is glass, and nothing floats — state is shown by a switch, a lamp, or a meter, the way it is on real hardware.
+Blindtest is a contemporary music player's now-playing screen, not a game console. Every screen is the same warm near-black room lit only by the album art: flat plates, 1px hairlines, soft radii, and a lot of quiet space. Nothing is textured, bevelled, glassy, or glowing. Where a state needs to speak — hit play, time running out, right answer, wrong answer — a single vivid green or a single red does the whole job.
 
-The world was chosen for a room of friends passing phones and sharing one laptop: the product is a music machine, and it should read as one before a single word is parsed. The extract is a record on a platter; the round timer is a cream-faced meter with a printed scale and a black pointer; the volume is a fader with a metal cap; the primary action is a record-armed pad. The visual identity was replaced wholesale while the screens, flows and layout were preserved exactly.
+The world was chosen for a room of friends passing phones and sharing one laptop: the extract is the product, so the cover is the only saturated object and the interface steps back. The mystery tile holds the secret track, the clock runs down beside it, and the real cover resolves out of the tile when the round ends. Colour is never decoration; it is either the artwork or a verdict.
 
-Density is low and deliberate. Large plates, generous separation between groups, and tight gaps inside a group. Type does the hierarchy work: tracked uppercase legends name every control, Archivo carries the words, and a dot-matrix face carries measurement. The charm lives in the small physical details — bevels, ticks, a spun platter, a lamp that goes dark when the round is answered.
+Density is low and deliberate. Groups are tight, sections are generous, and the hierarchy is carried by one grotesque for words and one mono for measurement. The charm lives in restraint — a green progress line, a spinning note, a cover that arrives.
 
 **Key Characteristics:**
-- Graphite faceplates with walnut end-cheeks, corner screws, and inset hardware bevels.
-- Cream screen-print ink on dark metal; no pure black text and no gray.
-- One saturated signal orange-red for the record-armed primary; cue-cyan for the selected/active track; VU-green correct; hazard-red wrong.
-- A cream-faced analogue meter as the round clock, with a black pointer.
-- Dot-matrix numerals reserved for large readouts: timer, room code, best score.
+- A warm near-black ground with flat plates and 1px hairlines; no texture, bevel, glow, or hardware.
+- One vivid green accent for action, progress, and correct; one red for wrong. Nothing else is coloured.
+- Album art as the only broad source of colour, front and centre on the game stage.
+- Schibsted Grotesk for UI and display; Geist Mono for timecode numerals.
+- Soft 12–18px radii, pill-shaped meters and chips, generous whitespace.
 
 ## Colors
 
-A warm graphite chassis carrying one saturated signal color, a small set of panel LEDs, and a cream "printed ink" family. Color is never decorative; each hue has a job.
+The system is a warm neutral room plus two functional signals. Album art supplies every other hue. Colour is never used decoratively; each token has a job.
 
 ### Primary
-- **Record-Arm Orange** (`#f0522f`): the one primary action per screen ("Jouer en solo", "Rejoindre", "Manche suivante"). It is a hot orange-red like a record button, and it is the only large saturated field on the page.
-- **Record-Arm Bright** (`#ff6c48`): the top of the primary pad's vertical gradient and its hover state; also highlighted search matches.
-- **Record-Arm Deep** (`#c23b1b`): the bottom of the primary pad gradient and the start of the meter's level fill.
-- **Armature Ink** (`#180a05`): text sitting on the orange pad; near-black warm brown, never pure black.
+- **Now-Playing Green** (`#31d982`): the single accent. The one primary action per screen ("Jouer en solo", "Valider", "Manche suivante"), the countdown and progress fill, correct-answer tints and marks, the current player's name, the winner's rank, and a new record. It is the only saturated field the UI itself paints.
+- **Green Bright** (`#4be495`): the primary button's hover fill.
+- **Green Ink** (`#04160c`): text sitting on the green pad; a near-black green, never pure black.
 
 ### Secondary
-- **Cue Cyan** (`#5ec8d6`): the headphone-cue color. Marks the currently selected or focused thing — keyboard focus rings, the active search field, the hovered suggestion, the current player in a leaderboard. It never competes with the orange action.
-- **VU Green** (`#79c98d`): correct answers only — attempt marks, recap marks, timeline segments.
-- **Hazard Red** (`#dd4b57`): wrong answers, validation errors, and the final seconds of a round.
-- **Peak Amber** (`#efb64a`): scores and readouts; the "record" number; the count in a players list.
+- **Miss Red** (`#ff6b6b`): wrong answers only — failed attempt slots, the incorrect result row, validation errors, and the clock's final seconds. It never appears outside a wrong or urgent state.
 
 ### Neutral
-- **Room Void** (`#08090a`): the page ground beneath everything.
-- **Chassis** (`#101114`): the body falloff the page ground fades to.
-- **Faceplate** (`#17181c`): the main panel surface, always under a soft diagonal sheen.
-- **Faceplate High** (`#1e1f24`): raised secondary surfaces and popover panels.
-- **Recessed Well** (`#0d0e11`): inputs, selects, slots, settings panels, stat readouts — anything sunk into the plate.
-- **Hairline** (`#2a2b31`) and **Hairline Strong** (`#3a3c44`): 1px panel rules, borders, and dividers.
-- **Screen-Print Cream** (`#ede6d6`): primary text and the dial face.
-- **Screen-Print Muted** (`#aaa395`): secondary text, legends, placeholders, artists.
-- **Screen-Print Dim** (`#807a6d`): decorative-only marks; never body text.
-- **Dial Cream** (`#ded5c2`): the meter face and the best-score display.
-- **Walnut High** (`#6b4a32`) / **Walnut Deep** (`#392519`): the end-cheeks painted at the left and right edges of every faceplate.
+- **Room Black** (`#0c0a09`): the page ground; a warm near-black, never blue-black.
+- **Recessed** (`#131110`): the low chip background (personal best) and deep backgrounds.
+- **Plate** (`#171412`): the main card surface on every screen.
+- **Plate High** (`#1e1a17`): raised surfaces — secondary buttons, stat plates, the suggestion panel.
+- **Well** (`#100e0d`): inputs, selects, attempt slots — anything sunk below the plate.
+- **Hairline** (`#2a2623`) and **Hairline Strong** (`#3a352f`): 1px borders, dividers, progress-track fill.
+- **Ink** (`#f4f1ec`): primary text and numerals.
+- **Ink Muted** (`#a8a29a`): secondary text, labels, placeholders, artists.
+- **Ink Dim** (`#8a847c`): tertiary data — ranks, meta lines, slot indices, empty-state copy.
 
 ### Named Rules
-**The No-Glow Rule.** Nothing emits light. Indicator lamps are flat filled dots; there is no text-shadow glow, no outer halo, and no neon. "Lit" is a saturated fill, not radiance.
+**The Art-Is-The-Color Rule.** Broad colour comes only from album art. The interface itself paints exactly two signals — green and red — and nothing else. If a surface wants a new hue, it is wrong.
 
-**The Lamp Palette Rule.** Red, amber and cyan appear only as small lamps, meter fills and marks, or one primary pad — never as page-scale fields, never as background washes.
+**The One-Accent Rule.** Green means *action, progress, or correct*; red means *wrong or urgent*. A green element that carries none of those meanings is decoration and does not ship.
 
 ## Typography
 
-**Display Font:** Archivo (Google Fonts; fallback `ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`)
-**Body Font:** Archivo (same stack)
-**Counter Font:** Doto (Google Fonts; fallback `Archivo`, then the same sans stack)
+**Display Font:** Schibsted Grotesk (Google Fonts; fallback `ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`)
+**Body Font:** Schibsted Grotesk (same stack)
+**Numeric Font:** Geist Mono (Google Fonts; fallback `ui-monospace, "SFMono-Regular", Menlo, monospace`)
 
-**Character:** Archivo is a neutral, slightly technical grotesque that behaves like screen-print legend on a metal panel; it stays out of the way at small sizes and holds tight, confident headlines. Doto is a dot-matrix display face borrowed from a hardware readout window — used only where a real console would have a segmented or dot display, so its texture reads as instrumentation rather than as a retro costume.
+**Character:** Schibsted Grotesk is a clean, confident grotesque with just enough character to feel designed rather than default; it stays legible at label sizes and holds a tight, calm headline. Geist Mono is a precise contemporary mono used only where a player would show a number — a timecode, a code, a score — so its fixed width reads as instrumentation rather than as a costume.
 
 ### Hierarchy
-- **Display** (800, clamp(2.1rem, 7vw, 3.1rem), 1, -0.035em): the home wordmark only.
-- **Headline** (700, clamp(1.45rem, 4.4vw, 1.85rem), 1.2): screen headings ("Quel est ce titre ?", "Partie terminée", "Lobby"). Result-screen `h1` runs slightly larger at clamp(1.75rem, 5vw, 2.5rem).
+- **Display** (800, clamp(2.4rem, 9vw, 3.4rem), 1, -0.032em): the home wordmark only.
+- **Headline** (700, clamp(1.6rem, 5vw, 2.1rem), 1.1): screen headings ("Quel est ce titre ?", "Partie terminée", "Lobby").
 - **Title** (600, 1.05rem, 1.3): section headings and card-scale titles.
-- **Body** (400, 0.95rem, 1.5): descriptions and status copy; muted cream by default, full cream for emphasis.
-- **Label** (600, 0.68rem, 0.14em, uppercase): every screen-print legend — field labels, "MANCHE 1 / 5", "SCORE", "RÉCAPITULATIF", "CLASSEMENT", stat labels, result statuses.
-- **Counter** (900, clamp(2.4rem, 8.5vw, 3.6rem), 1): the round timer; also the room code (up to 3.6rem) and the best-score and peak-stat readouts at reduced sizes.
+- **Body** (400, 0.95rem, 1.5): descriptions, status copy, suggestion rows.
+- **Label** (500, 0.82rem, 0.01em, sentence case): field labels and quiet section labels. Labels are sentence case and untracked — never uppercase hardware legends.
+- **Numeric** (500, Geist Mono): the round timer, room code, scores, ranks, player count and volume percentage, always with `font-variant-numeric: tabular-nums`.
 
 ### Named Rules
-**The Doto-Is-A-Display Rule.** Doto is used only for a large measurement inside a display — the timer, the room code, the best score, the peak stat. Inline data (scores in the topbar and leaderboard, volume percentage, slot indices, round numbers) stays in Archivo with `font-variant-numeric: tabular-nums`. If a Doto number would sit below ~1.3rem in a busy row, it is the wrong face.
+**The Timecode-Is-Mono Rule.** Geist Mono is reserved for measurement — timer, room code, scores, ranks, percentages. It never sets a word. If a string is prose, it is Schibsted Grotesk.
 
-**The Legend Carries The Weight Rule.** Small uppercase tracked Archivo labels name the controls; headings are never preceded by an eyebrow or kicker, because the legend already does that job.
+**The Sentence-Case Rule.** Labels are sentence case at 0.82rem, not tracked uppercase. The old screen-print legend voice is gone; a control is named quietly.
 
 ## Layout
 
-A single centered column on every screen, widening from 540px (home, result) to 560px (lobby, game). The column is a faceplate: `padding: clamp(1.35rem, 4vw, 1.9rem)` with 8–12px of walnut painted at the left and right edges, so content keeps a safe inner margin on all breakpoints. The page ground is a fixed radial falloff from the top center into the void.
+Every screen is one centred column. The content column is `min(100% - 2rem, 560px)` on home, lobby, result and game — there is no wide desktop layout and no sidebar; the phone-shaped column is the product. Plates pad at `clamp(1.5rem, 4.5vw, 2.25rem)`.
 
-Spacing follows one 0.25rem-based scale (0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3rem). Groups are tight (0.5–0.75rem inside a field), sections are generous (1.5–2rem), and a heading always has more space above it than below. The game screen is a vertical stack: topbar, round timeline, stage (platter + meter), question, guess area, status, leaderboard, leave.
+Spacing follows one 0.25rem-based scale (0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3rem). Groups are tight (0.5–0.75rem), sections are generous (1.5–2rem), and a heading always has more space above it than below. The game screen is a vertical stack: topbar, round timeline, stage (cover + clock), status/result, question, guess area, leaderboard, leave.
 
-Responsive behavior is two breakpoints. At **560px** every multi-column arrangement collapses to one column — the settings grid, the multiplayer form, the guess search, and the action pairs — and the faceplate padding tightens to 1.2rem. At **380px** the score summary collapses to one column and the platter/meter width eases to `min(78vw, 280px)`. The settings and rules grids are two columns above 560px, with duration and volume taking the full row.
+Responsive behaviour is two breakpoints. At **560px** the multi-column arrangements collapse to one column — the settings grid, the multiplayer form, the guess search, the action pairs, the score summary — the faceplate padding tightens to 1.35rem, and the submit button goes full width. The stage also eases to `min(56vw, 230px)` so the clock, question and guess field stay in view on a phone. At **380px** the stage tightens to `min(58vw, 195px)`, the clock drops to a 1.85rem floor, the stage's bottom margin shrinks, and the page padding tightens again — keeping both the guess field and its action above the fold down to a 360×800 phone.
 
 ## Elevation & Depth
 
-Depth is **inset, not cast**. There are no drop shadows on panels, buttons or inputs: surfaces are milled into the plate. Raised elements (the primary pad, popovers) get a 1px top highlight and an inset bottom shadow; recessed elements (wells, slots, the settings panel) get a dark inner shadow and a 1px lower highlight. The only outer shadow in the system floats the autocomplete popover above the plate. Plates carry a soft **103° diagonal sheen** to read as brushed aluminium rather than flat paint.
+Depth is **flat and bordered**. The system uses no drop shadows on plates, buttons, inputs, or cards: a surface is either a plate at `Plate`, a raised element at `Plate High`, or a well at `Well`, each separated by a 1px hairline. The only shadow in the system floats the autocomplete suggestion panel above the plate, and the only other shadow is the focus ring. There is no texture, no inner bevel, and no gradient surface.
 
 ### Shadow Vocabulary
-- **Plate bevel** (`inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.55)`): every faceplate.
-- **Pad top light** (`inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -3px 5px rgba(0,0,0,0.28)`): primary and secondary buttons; inverted on `:active` to `inset 0 1px 3px rgba(0,0,0,0.5)`.
-- **Well recess** (`inset 0 2px 6px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.03)`): inputs, selects, slots, stat panels.
-- **Popover lift** (`0 22px 44px -16px rgba(0,0,0,0.85)`): the suggestion list only.
-- **Sheen** (`linear-gradient(103deg, rgba(255,255,255,0.05), transparent 22%, transparent 72%, rgba(255,255,255,0.022))`): the top background layer of every faceplate.
+- **Popover lift** (`0 24px 48px -12px rgba(0, 0, 0, 0.78)`): the guess suggestion panel only.
+- **Focus ring** (`0 0 0 3px rgba(49, 217, 130, 0.18)`): inputs and the search field on focus, paired with a green border. Error fields use `0 0 0 3px rgba(255, 107, 107, 0.16)`.
 
 ### Named Rules
-**The Milled-Not-Floating Rule.** Elevation is expressed as a bevel: highlight on top, shadow inside the bottom. A raised element never adds an outer drop shadow, and a card is never a card within a card — nested surfaces are recessed wells.
+**The Flat-Plate Rule.** Elevation is tone plus a hairline, never a cast shadow. The only floating surface in the product is the suggestion panel; adding a shadow anywhere else is drift.
 
 ## Shapes
 
-Corners are gently milled, never pill-shaped: 14px for faceplates, 10px for the settings panel, stat readouts and popovers, 8px for buttons and fields, 6px for attempt slots, 4px for timeline and meter segments. The meter and score displays cap at 5px. Borders are always 1px hairlines; the only heavier rules are the 2px signal underline beneath the lobby room code and the 3px black pointer at the meter fill's leading edge. Nothing is clipped, masked or shaped into a circle except the authored vinyl disc and LED lamps.
+Corners are soft and modern, never pill-shaped for containers. Plates and the artwork frame carry 18px; stat plates, the search field, round-result cards and the suggestion panel carry 14px; buttons, inputs, selects, attempt slots and suggestion rows carry 12px. Pills (999px) are reserved for meters, progress bars, chips and badges. Borders are always 1px hairlines. Nothing is clipped or masked into a circle except the authored disc and the small indicator dots.
 
 ## Components
 
 ### Buttons
-- **Shape:** gently milled 8px corners; min-height 48px (40px for ghost).
-- **Primary:** a record-armed pad — vertical gradient from Record-Arm Bright to Record-Arm Deep, Armature Ink text, tracked uppercase 700, with a top highlight and inset bottom shadow. Used once per screen for the main action.
-- **Secondary:** a dark rubber pad — Faceplate-High gradient, hairline-strong border, cream text, same bevel. Pairs with the primary in a two-column action grid.
-- **Ghost:** transparent, muted-cream text, no border; used for low-priority controls ("Copier", "Passer") and hovers to Faceplate-High.
-- **Hover / Focus:** hover brightens the surface by one step; focus-visible is a 2px Cue Cyan outline at 2px offset; `:active` presses 1px down and swaps the bevel for an inner shadow; disabled drops to 40% opacity with no shadow.
+- **Shape:** 12px corners; min-height 48px (ghost 40px); sentence-case labels.
+- **Primary:** solid Now-Playing Green with Green Ink text; used once per screen for the main action ("Jouer en solo", "Valider", "Manche suivante").
+- **Tonal:** Plate High fill, green text, green hairline — the multiplayer "Rejoindre", so the home screen keeps a single solid primary.
+- **Secondary:** Plate High fill with a hairline-strong border and Ink text; pairs with the primary.
+- **Ghost:** transparent with muted text; low-priority controls ("Copier").
+- **Hover / Focus:** primary brightens to Green Bright; secondary lifts one tone; focus-visible is a 2px green outline at 2px offset; `:active` presses 1px down; disabled drops to 42% opacity.
 
 ### Cards / Containers
-- **Corner Style:** 14px faceplates; 10px recessed panels.
-- **Background:** Faceplate under a diagonal sheen, or Recessed Well for nested content.
-- **Shadow Strategy:** plate bevel only — see Elevation & Depth.
-- **Border:** 1px Hairline (Hairline Strong for popovers). Walnut strips and corner screws are painted as background layers of the plate.
-- **Internal Padding:** `clamp(1.35rem, 4vw, 1.9rem)` on plates, 1rem on recessed panels.
+- **Corner Style:** 18px plate; 14px nested plate.
+- **Background:** Plate, with Plate High for raised content.
+- **Shadow Strategy:** none — see Elevation & Depth.
+- **Border:** 1px Hairline.
+- **Internal Padding:** `clamp(1.5rem, 4.5vw, 2.25rem)` on plates; 1rem on stat plates.
 
 ### Inputs / Fields
-- **Style:** Recessed Well background, 1px Hairline border, 8px corners, inner recess shadow, cream text, orange caret.
-- **Focus:** border and a 0.5-alpha ring shift to Cue Cyan; the search field moves the same treatment to its wrapper on `:focus-within`.
-- **Error / Disabled:** `aria-invalid` switches border and ring to Hazard Red; disabled is 40% opacity.
-
-### Fader (volume)
-- **Style:** a 10px recessed groove with printed 12px tick marks and a metal thumb — 16×30px, 3px corners, warm-cream gradient, a dark center grip line.
-- **State:** the percentage readout is Archivo tabular in Peak Amber; the compact in-round variant shrinks the track to 8px and the cap to 13×24px.
-
-### Level Meter (round timer)
-- **Style:** a 14px Dial-Cream face with printed ink ticks and a 1px metal border, recessed; the level is an orange-red gradient whose leading edge is a 3px black pointer.
-- **State:** full track while the extract plays, emptying left-to-right; in the final 5 seconds both the readout and the fill switch to Hazard Red.
-
-### Platter (artwork)
-- **Style:** a square recessed deck (14px corners, inner vignette) holding a 96% authored SVG vinyl disc — grooved rings, an orange label, a cream index mark, a spindle hole.
-- **Behavior:** the disc rotates 360° over 5.5s while the extract plays and pauses the moment the round is revealed; the reveal fades the real cover in over it. The disc rotation is disabled under `prefers-reduced-motion`.
+- **Style:** Well background, 1px Hairline border, 12px corners, Ink text, green caret.
+- **Focus:** border and a 3px soft green ring; the guess search moves the same treatment to its wrapper on `:focus-within`.
+- **Error / Disabled:** `aria-invalid` switches border and ring to Miss Red; disabled is 42% opacity.
 
 ### Attempt Slots
-- **Style:** stacked recessed wells (6px corners) with an Archivo tabular index in muted cream.
-- **State:** wrong fills and borders tint Hazard Red; correct tint VU Green; both animate in with a 3px lift over 200ms.
+- **Style:** stacked wells (12px corners) with a Geist Mono index in Ink Dim.
+- **State:** wrong fills and borders tint Miss Red; correct tints green; both lift in over 200ms.
+
+### Clock & Progress
+- **Style:** a Geist Mono readout (clamp 2.1–2.9rem) over a 6px pill track filled with Now-Playing Green.
+- **State:** the fill scales left-to-right; in the final 5 seconds both the readout and the fill switch to Miss Red.
+
+### Artwork Stage
+- **Style:** a square 18px plate (`min(72vw, 300px)`) holding either the mystery mark or the cover. On phones it eases to `min(56vw, 230px)` at ≤560px and `min(58vw, 195px)` at ≤380px so the guess field and its action stay above the fold.
+- **Behaviour:** the mystery mark is two faint rings and a green note that rotates slowly (8s) while the extract plays, pausing on reveal; the cover scales from 1.05 to 1 as it fades in over 440ms while the mystery mark scales down and fades. Both are disabled under `prefers-reduced-motion`.
+
+### Suggestion Panel
+- **Style:** Plate High, 14px corners, 0.35rem padding, floating on the popover lift above the search field.
+- **State:** the hovered/active row tints green-soft; the matched substring is green.
+
+### Chips & Badges
+- **Style:** pills. The host badge is green text on green-soft with a green border; the personal-best chip is Recessed with muted text and an Ink numeral.
 
 ### Leaderboard Rows
-- **Style:** hairline-separated rows on a 1.9rem rank / name / score grid; rank and score in Archivo tabular, score in Peak Amber.
-- **State:** the current player's name turns Cue Cyan; the winner's rank turns Peak Amber.
+- **Style:** hairline-separated rows on a 1.9rem rank / name / score grid; rank and score in Geist Mono, rank in Ink Dim.
+- **State:** the current player's name turns green; the winner's rank turns green.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep exactly one orange-red primary action per screen; pair it with at most one secondary pad.
-- **Do** name every control with a small tracked uppercase Archivo legend.
-- **Do** sink form controls, slots and stat readouts into the plate as wells; raise only the actions and the popover.
-- **Do** set `font-variant-numeric: tabular-nums` on every number that changes (timers, scores, counts, percentages).
-- **Do** reserve Doto for large measurement displays, and fall back to Archivo beneath ~1.3rem in a busy row.
-- **Do** keep the cream inks warm and tinted — muted text is `#aaa395`, never a neutral gray.
-- **Do** disable the platter rotation, transitions and animations under `prefers-reduced-motion`.
+- **Do** keep exactly one solid green primary action per screen; pair it with at most one secondary or tonal button.
+- **Do** let album art be the only broad colour; the UI itself paints only green (action/progress/correct) and red (wrong).
+- **Do** name controls with quiet sentence-case labels at 0.82rem, not tracked uppercase legends.
+- **Do** set `font-variant-numeric: tabular-nums` on every changing number, and set measurement in Geist Mono.
+- **Do** express elevation as tone plus a 1px hairline; reserve the popover lift for the suggestion panel.
+- **Do** keep radii within 12–18px and reserve 999px pills for meters, chips and badges.
+- **Do** disable the disc rotation, the reveal scale and all transitions under `prefers-reduced-motion`.
 
 ### Don't:
-- **Don't** add glow, text-shadow halos, neon edges, glass or backdrop blur — the No-Glow Rule is absolute.
-- **Don't** put the three lamp colors on large fields, gradients or backgrounds; they exist as lamps, meter fills and marks.
-- **Don't** use pure black text, pure gray text, or any gray that is not the warm cream family.
-- **Don't** add an outer drop shadow to a panel, button, input or card; use an inset bevel.
-- **Don't** nest a card inside a card; interior groups are recessed wells.
-- **Don't** use gradient text, pills, or radii above 16px.
-- **Don't** add an eyebrow or kicker above a heading, or section numbers; the legend above a control is the only label a section gets.
-- **Don't** replace the authored SVG icons and vinyl disc with emoji or unicode glyphs.
+- **Don't** add texture, bevels, screws, walnut, brushed metal, or any skeuomorphic hardware — the analogue-console world is retired.
+- **Don't** add glow, neon, backdrop blur, glass, or gradient text.
+- **Don't** introduce a third signal colour; a new hue means the surface is off-system.
+- **Don't** tint scores, ranks or the leaderboard with the accent except for the current player and the winner.
+- **Don't** use pure black or pure gray ink; every neutral is warm.
+- **Don't** set words in Geist Mono, or write an uppercase eyebrow/kicker above a heading.
+- **Don't** nest a card inside a card; interior groups are flat tone changes or wells.
+- **Don't** replace the authored SVG icons, the mystery mark, or the music-note favicon with emoji or unicode glyphs.

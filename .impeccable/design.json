@@ -4,47 +4,38 @@
   "title": "Design System: Blindtest",
   "extensions": {
     "colorMeta": {
-      "void": { "role": "neutral", "displayName": "Room Void", "canonical": "#08090a", "tonalRamp": ["#040405", "#08090a", "#0c0d0f", "#111216", "#17181c", "#212228", "#33353c", "#565963"] },
-      "chassis": { "role": "neutral", "displayName": "Chassis", "canonical": "#101114", "tonalRamp": ["#050506", "#0a0b0c", "#101114", "#16171b", "#1e1f24", "#2a2b31", "#3a3c44", "#6b6d78"] },
-      "plate": { "role": "neutral", "displayName": "Faceplate", "canonical": "#17181c", "tonalRamp": ["#0a0a0c", "#101114", "#17181c", "#1e1f24", "#2a2b31", "#3a3c44", "#6b6d78", "#b9bbc4"] },
-      "plate-high": { "role": "neutral", "displayName": "Faceplate High", "canonical": "#1e1f24", "tonalRamp": ["#0c0d0f", "#141519", "#1e1f24", "#282a30", "#343740", "#454954", "#6f7480", "#b9bbc4"] },
-      "well": { "role": "neutral", "displayName": "Recessed Well", "canonical": "#0d0e11", "tonalRamp": ["#060607", "#0a0b0d", "#0d0e11", "#131418", "#1a1b1f", "#26272d", "#3a3c44", "#6b6d78"] },
-      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#2a2b31", "tonalRamp": ["#101114", "#17181c", "#202127", "#2a2b31", "#3a3c44", "#555863", "#7c8089", "#b9bbc4"] },
-      "hairline-strong": { "role": "neutral", "displayName": "Hairline Strong", "canonical": "#3a3c44", "tonalRamp": ["#141519", "#1e1f24", "#282a30", "#3a3c44", "#4d5059", "#6b6f79", "#9498a2", "#c8cad0"] },
-      "cream": { "role": "neutral", "displayName": "Screen-Print Cream", "canonical": "#ede6d6", "tonalRamp": ["#3a352c", "#5c564a", "#7d7768", "#a09a8a", "#c3bdad", "#dbd2bf", "#ede6d6", "#f7f3ea"] },
-      "cream-muted": { "role": "neutral", "displayName": "Screen-Print Muted", "canonical": "#aaa395", "tonalRamp": ["#2f2b24", "#48443a", "#645e50", "#807a6d", "#948d7f", "#aaa395", "#c8c2b3", "#e0dbcd"] },
-      "cream-dim": { "role": "neutral", "displayName": "Screen-Print Dim", "canonical": "#807a6d", "tonalRamp": ["#26231d", "#3a362e", "#534e43", "#6a6558", "#807a6d", "#9c9686", "#bcb6a5", "#dbd5c7"] },
-      "signal": { "role": "primary", "displayName": "Record-Arm Orange", "canonical": "#f0522f", "tonalRamp": ["#3a1206", "#5c1c0a", "#82280f", "#a83313", "#c23b1b", "#f0522f", "#f57f5f", "#fbc4b2"] },
-      "signal-bright": { "role": "primary", "displayName": "Record-Arm Bright", "canonical": "#ff6c48", "tonalRamp": ["#3f0f04", "#651c0a", "#8e2a12", "#b83a1b", "#dd4c27", "#ff6c48", "#ff9d80", "#ffd3c6"] },
-      "signal-deep": { "role": "primary", "displayName": "Record-Arm Deep", "canonical": "#c23b1b", "tonalRamp": ["#2d0c04", "#4a1608", "#6b220e", "#8f2d13", "#a83313", "#c23b1b", "#dd6647", "#efa691"] },
-      "signal-ink": { "role": "primary", "displayName": "Armature Ink", "canonical": "#180a05", "tonalRamp": ["#0b0402", "#110703", "#180a05", "#21100a", "#2d1810", "#43261b", "#5f392a", "#855743"] },
-      "cue-cyan": { "role": "secondary", "displayName": "Cue Cyan", "canonical": "#5ec8d6", "tonalRamp": ["#062a30", "#0a4650", "#0e6b78", "#1493a3", "#2fb2c2", "#5ec8d6", "#93e0e9", "#cdf3f7"] },
-      "vu-green": { "role": "secondary", "displayName": "VU Green", "canonical": "#79c98d", "tonalRamp": ["#0c2413", "#123a1e", "#1a5529", "#247338", "#389c4e", "#79c98d", "#a8ddb5", "#d5f0dc"] },
-      "hazard-red": { "role": "tertiary", "displayName": "Hazard Red", "canonical": "#dd4b57", "tonalRamp": ["#310a0e", "#4d1116", "#6f1a20", "#94242c", "#bd333d", "#dd4b57", "#ea8a91", "#f6cfd3"] },
-      "peak-amber": { "role": "tertiary", "displayName": "Peak Amber", "canonical": "#efb64a", "tonalRamp": ["#3a2606", "#5c3d09", "#80550d", "#a66f13", "#cc8e1c", "#efb64a", "#f5d089", "#fae9c6"] },
-      "dial-cream": { "role": "neutral", "displayName": "Dial Cream", "canonical": "#ded5c2", "tonalRamp": ["#3a352a", "#574f40", "#756b58", "#948a76", "#bab098", "#ded5c2", "#eae3d4", "#f5f1e8"] },
-      "walnut-high": { "role": "neutral", "displayName": "Walnut High", "canonical": "#6b4a32", "tonalRamp": ["#20150e", "#392519", "#4f3423", "#6b4a32", "#8a6446", "#a9825f", "#c9a888", "#e6d2be"] },
-      "walnut-deep": { "role": "neutral", "displayName": "Walnut Deep", "canonical": "#392519", "tonalRamp": ["#110b06", "#20150e", "#2c1d13", "#392519", "#4a3020", "#5f3f2a", "#7d573a", "#a0754f"] }
+      "room-black": { "role": "neutral", "displayName": "Room Black", "canonical": "#0c0a09", "tonalRamp": ["#0c0a09", "#15110f", "#211a17", "#302622", "#473a33", "#766156", "#ab9a91", "#e4dfdd"] },
+      "recessed": { "role": "neutral", "displayName": "Recessed", "canonical": "#131110", "tonalRamp": ["#0b0a09", "#131110", "#1f1b19", "#2d2725", "#433b37", "#6f635d", "#a69b96", "#e3e0de"] },
+      "plate": { "role": "neutral", "displayName": "Plate", "canonical": "#171412", "tonalRamp": ["#0c0a09", "#171412", "#201b18", "#2f2823", "#463b34", "#746358", "#aa9c93", "#e4e0dd"] },
+      "plate-high": { "role": "neutral", "displayName": "Plate High", "canonical": "#1e1a17", "tonalRamp": ["#0c0a09", "#15110f", "#1e1a17", "#2f2822", "#473c34", "#756457", "#ab9c91", "#e4e0dd"] },
+      "well": { "role": "neutral", "displayName": "Well", "canonical": "#100e0d", "tonalRamp": ["#0c0a09", "#100e0d", "#201b18", "#2e2724", "#453b36", "#71625b", "#a89b94", "#e3e0de"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#2a2623", "tonalRamp": ["#0b0a09", "#141210", "#1f1c19", "#2a2623", "#443c36", "#70655c", "#a79d95", "#e3e0de"] },
+      "hairline-strong": { "role": "neutral", "displayName": "Hairline Strong", "canonical": "#3a352f", "tonalRamp": ["#0b0a09", "#141210", "#201c19", "#2e2924", "#3a352f", "#72675a", "#a99f94", "#e3e1dd"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#f4f1ec", "tonalRamp": ["#393123", "#594c36", "#7a6748", "#9c8359", "#b29c75", "#c6b395", "#e0d5c3", "#f4f1ec"] },
+      "ink-muted": { "role": "neutral", "displayName": "Ink Muted", "canonical": "#a8a29a", "tonalRamp": ["#312e2a", "#4d4842", "#696259", "#857c70", "#9e958a", "#a8a29a", "#d5d2cd", "#f1f0ee"] },
+      "ink-dim": { "role": "neutral", "displayName": "Ink Dim", "canonical": "#8a847c", "tonalRamp": ["#312e2b", "#4c4843", "#68625a", "#8a847c", "#9c958c", "#b3aea8", "#d4d2ce", "#f1f0ef"] },
+      "now-playing-green": { "role": "primary", "displayName": "Now-Playing Green", "canonical": "#31d982", "tonalRamp": ["#0c502d", "#107f45", "#12b05e", "#31d982", "#3aee91", "#6cefab", "#aef4d0", "#e5fbef"] },
+      "green-bright": { "role": "primary", "displayName": "Green Bright", "canonical": "#4be495", "tonalRamp": ["#0b512d", "#0e8146", "#0fb35e", "#0ee677", "#4be495", "#65f6ab", "#abf8d0", "#e4fcef"] },
+      "green-ink": { "role": "primary", "displayName": "Green Ink", "canonical": "#04160c", "tonalRamp": ["#04160c", "#032110", "#043419", "#074b25", "#0c6e38", "#1ab25e", "#5ddf97", "#cff2de"] },
+      "miss-red": { "role": "secondary", "displayName": "Miss Red", "canonical": "#ff6b6b", "tonalRamp": ["#5b0101", "#8f0000", "#c20000", "#f50000", "#ff2929", "#ff6b6b", "#ffa3a3", "#ffe0e0"] }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Home wordmark only." },
       "headline": { "displayName": "Headline", "purpose": "Screen headings: question, result, lobby, interrupted." },
       "title": { "displayName": "Title", "purpose": "Section headings and card-scale titles." },
-      "body": { "displayName": "Body", "purpose": "Descriptions and status copy." },
-      "label": { "displayName": "Legend", "purpose": "Tracked uppercase screen-print legends naming every control." },
-      "counter": { "displayName": "Counter", "purpose": "Large dot-matrix measurement: round timer, room code, best score, peak stat." }
+      "body": { "displayName": "Body", "purpose": "Descriptions, status copy, suggestion rows." },
+      "label": { "displayName": "Label", "purpose": "Sentence-case field labels and quiet section labels." },
+      "numeric": { "displayName": "Numeric", "purpose": "Geist Mono timecode/measurement: round timer, room code, scores, ranks, percentages." }
     },
     "shadows": [
-      { "name": "plate-bevel", "value": "inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.55)", "purpose": "Every faceplate surface." },
-      { "name": "pad-light", "value": "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -3px 5px rgba(0,0,0,0.28)", "purpose": "Raised primary and secondary button pads." },
-      { "name": "well-recess", "value": "inset 0 2px 6px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.03)", "purpose": "Inputs, selects, attempt slots, stat panels." },
-      { "name": "popover-lift", "value": "0 22px 44px -16px rgba(0,0,0,0.85)", "purpose": "Autocomplete suggestion list only." },
-      { "name": "plate-sheen", "value": "linear-gradient(103deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 22%, rgba(255,255,255,0) 72%, rgba(255,255,255,0.022) 100%)", "purpose": "Brushed-aluminium sheen, top background layer of every faceplate." }
+      { "name": "popover-lift", "value": "0 24px 48px -12px rgba(0,0,0,0.78)", "purpose": "The guess suggestion panel only; the sole floating surface." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(49,217,130,0.18)", "purpose": "Inputs and the search field on focus, paired with a green border." },
+      { "name": "error-ring", "value": "0 0 0 3px rgba(255,107,107,0.16)", "purpose": "Invalid fields, paired with a Miss Red border." }
     ],
     "motion": [
-      { "name": "ease-panel", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default state-transition easing (150ms)." },
-      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Slot fill (200ms) and round reveal (220ms)." },
-      { "name": "platter-spin", "value": "platter 5.5s linear infinite", "purpose": "Signature motion: the vinyl disc rotates while the extract plays, paused on reveal and under reduced motion." }
+      { "name": "ease-panel", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default state-transition easing (160ms)." },
+      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Slot fill (200ms), round reveal (240ms), cover unmask (440ms)." },
+      { "name": "disc-spin", "value": "platter 8s linear infinite", "purpose": "The mystery mark rotates while the extract plays, paused on reveal and under reduced motion." }
     ],
     "breakpoints": [
       { "name": "shell", "value": "560px" },
@@ -53,113 +44,113 @@
   },
   "components": [
     {
-      "name": "Primary Pad",
+      "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The single record-armed action per screen.",
-      "html": "<button class=\"ds-pad-primary\">Jouer en solo</button>",
-      "css": ".ds-pad-primary { min-height: 48px; padding: 0.75rem 1.25rem; border: 1px solid transparent; border-radius: 8px; font: 700 0.86rem/1.2 Archivo, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; color: #180a05; background: linear-gradient(180deg, #ff6c48 0%, #f0522f 62%, #c23b1b 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -3px 5px rgba(0,0,0,0.28); transition: background-color 150ms cubic-bezier(0.22,1,0.36,1), transform 150ms cubic-bezier(0.22,1,0.36,1), box-shadow 150ms cubic-bezier(0.22,1,0.36,1); } .ds-pad-primary:hover { background: linear-gradient(180deg, #ff7a58 0%, #ff6c48 62%, #f0522f 100%); } .ds-pad-primary:active { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); } .ds-pad-primary:focus-visible { outline: 2px solid #5ec8d6; outline-offset: 2px; } .ds-pad-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }"
+      "description": "The single solid green action per screen: Jouer en solo, Valider, Manche suivante.",
+      "html": "<button class=\"ds-btn-primary\">Jouer en solo</button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 0.75rem 1.15rem; border: 1px solid transparent; border-radius: 12px; font: 600 0.95rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; letter-spacing: 0.005em; cursor: pointer; color: #04160c; background: #31d982; transition: background-color 160ms cubic-bezier(0.22,1,0.36,1), transform 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #4be495; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.42; cursor: not-allowed; }"
     },
     {
-      "name": "Secondary Pad",
+      "name": "Tonal Button",
+      "kind": "button",
+      "refersTo": "button-tonal",
+      "description": "Green text on a green-soft fill; keeps the home screen to one solid primary (Rejoindre).",
+      "html": "<button class=\"ds-btn-tonal\">Rejoindre</button>",
+      "css": ".ds-btn-tonal { min-height: 48px; padding: 0.75rem 1.15rem; border: 1px solid rgba(49,217,130,0.38); border-radius: 12px; font: 600 0.95rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; cursor: pointer; color: #31d982; background: rgba(49,217,130,0.12); transition: background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-tonal:hover { background: rgba(49,217,130,0.2); } .ds-btn-tonal:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; } .ds-btn-tonal:disabled { opacity: 0.42; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "The paired low-priority action; a dark rubber pad.",
-      "html": "<button class=\"ds-pad-secondary\">Créer une partie</button>",
-      "css": ".ds-pad-secondary { min-height: 48px; padding: 0.75rem 1.25rem; border: 1px solid #3a3c44; border-radius: 8px; font: 700 0.86rem/1.2 Archivo, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; color: #ede6d6; background: linear-gradient(180deg, #23242a 0%, #1a1b1f 70%, #151619 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.4); transition: background-color 150ms cubic-bezier(0.22,1,0.36,1), border-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-pad-secondary:hover { border-color: #4a4c56; background: linear-gradient(180deg, #2a2b32 0%, #202127 70%, #1a1b1f 100%); } .ds-pad-secondary:focus-visible { outline: 2px solid #5ec8d6; outline-offset: 2px; } .ds-pad-secondary:disabled { opacity: 0.4; cursor: not-allowed; }"
+      "description": "The paired low-priority action on Plate High (Créer une partie, Retour à l'accueil).",
+      "html": "<button class=\"ds-btn-secondary\">Créer une partie</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; padding: 0.75rem 1.15rem; border: 1px solid #3a352f; border-radius: 12px; font: 600 0.95rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; cursor: pointer; color: #f4f1ec; background: #1e1a17; transition: background-color 160ms cubic-bezier(0.22,1,0.36,1), border-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { border-color: #463f38; background: #262019; } .ds-btn-secondary:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.42; cursor: not-allowed; }"
     },
     {
-      "name": "Ghost Control",
+      "name": "Ghost Button",
       "kind": "button",
       "refersTo": "button-ghost",
       "description": "Low-priority text control: Copier, Passer.",
-      "html": "<button class=\"ds-ghost\">Copier</button>",
-      "css": ".ds-ghost { min-height: 40px; padding: 0.35rem 0.7rem; border: 1px solid transparent; border-radius: 8px; font: 700 0.86rem/1.2 Archivo, system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; color: #aaa395; background: transparent; transition: color 150ms cubic-bezier(0.22,1,0.36,1), background-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-ghost:hover { color: #ede6d6; background: #1e1f24; } .ds-ghost:focus-visible { outline: 2px solid #5ec8d6; outline-offset: 2px; }"
+      "html": "<button class=\"ds-btn-ghost\">Copier</button>",
+      "css": ".ds-btn-ghost { min-height: 40px; padding: 0.4rem 0.7rem; border: 1px solid transparent; border-radius: 12px; font: 500 0.9rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; cursor: pointer; color: #a8a29a; background: transparent; transition: color 160ms cubic-bezier(0.22,1,0.36,1), background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { color: #f4f1ec; background: #1e1a17; } .ds-btn-ghost:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; }"
     },
     {
-      "name": "Field Well",
+      "name": "Text Field",
       "kind": "input",
       "refersTo": "field",
-      "description": "Recessed text input / select with a screen-print legend above.",
-      "html": "<label class=\"ds-field\"><span class=\"ds-field__legend\">Pseudo</span><input class=\"ds-field__input\" type=\"text\" placeholder=\"Ton pseudo\" /></label>",
-      "css": ".ds-field { display: grid; gap: 0.5rem; font-family: Archivo, system-ui, sans-serif; } .ds-field__legend { color: #aaa395; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; } .ds-field__input { width: 100%; min-height: 48px; padding: 0.7rem 0.85rem; border: 1px solid #2a2b31; border-radius: 8px; color: #ede6d6; caret-color: #f0522f; background: #0d0e11; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.03); font: 400 0.95rem/1.4 Archivo, system-ui, sans-serif; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1), box-shadow 150ms cubic-bezier(0.22,1,0.36,1); } .ds-field__input::placeholder { color: #aaa395; } .ds-field__input:hover { border-color: #3a3c44; } .ds-field__input:focus-visible { outline: none; border-color: #5ec8d6; box-shadow: inset 0 2px 6px rgba(0,0,0,0.55), 0 0 0 1px rgba(94,200,214,0.45); }"
+      "description": "A sunken input or select with a quiet sentence-case label above.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">Pseudo</span><input class=\"ds-field__input\" type=\"text\" placeholder=\"Ton pseudo\" /></label>",
+      "css": ".ds-field { display: grid; gap: 0.5rem; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-field__label { color: #a8a29a; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.01em; } .ds-field__input { width: 100%; min-height: 50px; padding: 0.7rem 0.85rem; border: 1px solid #2a2623; border-radius: 12px; color: #f4f1ec; caret-color: #31d982; background: #100e0d; font: 400 0.95rem/1.4 \"Schibsted Grotesk\", system-ui, sans-serif; transition: border-color 160ms cubic-bezier(0.22,1,0.36,1), box-shadow 160ms cubic-bezier(0.22,1,0.36,1); } .ds-field__input::placeholder { color: #a8a29a; } .ds-field__input:hover { border-color: #3a352f; } .ds-field__input:focus-visible { outline: none; border-color: #31d982; box-shadow: 0 0 0 3px rgba(49,217,130,0.18); }"
     },
     {
-      "name": "Faceplate",
+      "name": "Plate",
       "kind": "card",
-      "refersTo": "faceplate",
-      "description": "The panel surface: graphite metal, walnut cheeks, corner screws, diagonal sheen.",
-      "html": "<section class=\"ds-faceplate\"><h2 class=\"ds-faceplate__title\">Lobby</h2><p class=\"ds-faceplate__body\">Prêt à commencer.</p></section>",
-      "css": ".ds-faceplate { position: relative; max-width: 540px; padding: 1.6rem; border: 1px solid #2a2b31; border-radius: 14px; color: #ede6d6; background-color: #17181c; background-image: linear-gradient(103deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 22%, rgba(255,255,255,0) 72%, rgba(255,255,255,0.022) 100%), radial-gradient(circle at 15px 15px, #4a4b54 0 1.5px, #232429 1.5px 2.4px, transparent 2.4px), radial-gradient(circle at calc(100% - 15px) 15px, #4a4b54 0 1.5px, #232429 1.5px 2.4px, transparent 2.4px), radial-gradient(circle at 15px calc(100% - 15px), #4a4b54 0 1.5px, #232429 1.5px 2.4px, transparent 2.4px), radial-gradient(circle at calc(100% - 15px) calc(100% - 15px), #4a4b54 0 1.5px, #232429 1.5px 2.4px, transparent 2.4px), linear-gradient(90deg, #6b4a32 0 8px, #392519 8px 12px, transparent 12px), linear-gradient(270deg, #6b4a32 0 8px, #392519 8px 12px, transparent 12px), linear-gradient(155deg, #1c1d22 0%, #16171b 46%, #101114 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.55); font-family: Archivo, system-ui, sans-serif; } .ds-faceplate::after { content: \"\"; position: absolute; right: 0; bottom: 0.5rem; left: 0; height: 1px; background: #2a2b31; opacity: 0.6; } .ds-faceplate__title { margin: 0 0 0.5rem; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.025em; } .ds-faceplate__body { margin: 0; color: #aaa395; font-size: 0.9rem; line-height: 1.45; }"
-    },
-    {
-      "name": "Fader",
-      "kind": "input",
-      "refersTo": "field",
-      "description": "Volume fader: recessed groove with printed ticks and a metal cap.",
-      "html": "<div class=\"ds-fader\"><input class=\"ds-fader__input\" type=\"range\" min=\"0\" max=\"100\" value=\"50\" /><span class=\"ds-fader__value\">50 %</span></div>",
-      "css": ".ds-fader { display: flex; align-items: center; gap: 0.75rem; min-height: 48px; font-family: Archivo, system-ui, sans-serif; } .ds-fader__input { flex: 1 1 auto; width: 100%; min-height: 40px; margin: 0; padding: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; } .ds-fader__input::-webkit-slider-runnable-track { height: 10px; border: 1px solid #2a2b31; border-radius: 4px; background-color: #0d0e11; background-image: repeating-linear-gradient(90deg, rgba(236,229,213,0.16) 0 1px, transparent 1px 12px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), inset 0 -1px 0 rgba(255,255,255,0.04); } .ds-fader__input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 30px; margin-top: -11px; border: 1px solid #4f4a3e; border-radius: 3px; background-color: #cfc7b4; background-image: linear-gradient(#3f3b31, #3f3b31), linear-gradient(180deg, #efe8d8 0%, #c2baa7 55%, #a59d8a 100%); background-size: 62% 2px, 100% 100%; background-position: center, center; background-repeat: no-repeat; box-shadow: 0 2px 4px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.75); } .ds-fader__value { flex: 0 0 auto; min-width: 3.6em; color: #efb64a; font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }"
-    },
-    {
-      "name": "Level Meter",
-      "kind": "custom",
-      "refersTo": "level-meter-track",
-      "description": "The round clock: a cream-faced meter with printed ticks and a black pointer at the fill edge.",
-      "html": "<div class=\"ds-meter\"><p class=\"ds-meter__readout\">10.5 s</p><div class=\"ds-meter__track\"><div class=\"ds-meter__level\"></div></div></div>",
-      "css": ".ds-meter { display: grid; gap: 0.5rem; width: 300px; font-family: Archivo, system-ui, sans-serif; } .ds-meter__readout { margin: 0; color: #ede6d6; font: 900 3rem/1 Doto, Archivo, system-ui, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; } .ds-meter__track { height: 14px; overflow: hidden; border: 1px solid #6f6a5c; border-radius: 3px; background-color: #ded5c2; background-image: repeating-linear-gradient(90deg, rgba(20,21,26,0.55) 0 1px, transparent 1px 10%); box-shadow: inset 0 2px 3px rgba(0,0,0,0.45), inset 0 -1px 0 rgba(255,255,255,0.5); } .ds-meter__level { width: 65%; height: 100%; border-right: 3px solid #14151a; background: linear-gradient(90deg, #b23a1a, #ff6c48); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35); }"
+      "refersTo": "plate",
+      "description": "The flat bordered surface every screen lives on.",
+      "html": "<section class=\"ds-plate\"><h2 class=\"ds-plate__title\">Lobby</h2><p class=\"ds-plate__body\">Prêt à commencer.</p></section>",
+      "css": ".ds-plate { max-width: 560px; padding: 1.75rem; border: 1px solid #2a2623; border-radius: 18px; color: #f4f1ec; background: #171412; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-plate__title { margin: 0 0 0.5rem; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.028em; } .ds-plate__body { margin: 0; color: #a8a29a; font-size: 0.95rem; line-height: 1.5; }"
     },
     {
       "name": "Attempt Slot",
       "kind": "custom",
       "refersTo": "attempt-slot",
-      "description": "A recessed guess slot; tinted green or red once an attempt lands.",
-      "html": "<ol class=\"ds-slots\"><li class=\"ds-slot\"><span class=\"ds-slot__index\">1</span></li><li class=\"ds-slot ds-slot--correct\"><span class=\"ds-slot__index\">2</span><span class=\"ds-slot__text\">Djadja — Aya Nakamura</span></li></ol>",
-      "css": ".ds-slots { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; max-width: 420px; font-family: Archivo, system-ui, sans-serif; } .ds-slot { display: flex; align-items: baseline; gap: 0.5rem; min-height: 34px; padding: 0.42rem 0.7rem; border: 1px solid #2a2b31; border-radius: 6px; background: #0d0e11; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); color: #aaa395; font-size: 0.86rem; line-height: 1.4; } .ds-slot__index { color: #aaa395; font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; } .ds-slot--correct { border-color: #79c98d; background: rgba(121,201,141,0.1); color: #d6f2df; }"
+      "description": "A sunk guess row; tints green or red once an attempt lands.",
+      "html": "<ol class=\"ds-slots\"><li class=\"ds-slot\"><span class=\"ds-slot__index\">1</span></li><li class=\"ds-slot ds-slot--wrong\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M6.2 6.2l7.6 7.6M13.8 6.2l-7.6 7.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span class=\"ds-slot__text\">Djadja — Aya Nakamura</span></li><li class=\"ds-slot ds-slot--correct\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 10.5l3.2 3.2L15 6.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-slot__text\">La clé — Tiakola</span></li></ol>",
+      "css": ".ds-slots { display: grid; gap: 6px; max-width: 420px; margin: 0; padding: 0; list-style: none; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-slot { display: flex; align-items: baseline; gap: 0.5rem; min-height: 42px; padding: 0.6rem 0.85rem; border: 1px solid #2a2623; border-radius: 12px; background: #100e0d; color: #8a847c; font-size: 0.9rem; line-height: 1.4; } .ds-slot__index { min-width: 1rem; color: #8a847c; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 0.8rem; font-variant-numeric: tabular-nums; } .ds-slot__mark { width: 15px; height: 15px; align-self: center; } .ds-slot--wrong { border-color: rgba(255,107,107,0.42); background: rgba(255,107,107,0.1); color: #f6d7d2; } .ds-slot--wrong .ds-slot__mark { color: #ff6b6b; } .ds-slot--correct { border-color: rgba(49,217,130,0.38); background: rgba(49,217,130,0.12); color: #cdeedb; } .ds-slot--correct .ds-slot__mark { color: #31d982; }"
     },
     {
-      "name": "Platter",
+      "name": "Clock & Progress",
       "kind": "custom",
-      "refersTo": "platter",
-      "description": "Signature component: the extract as a record on a recessed deck; the disc spins while playing.",
-      "html": "<div class=\"ds-platter\"><svg class=\"ds-platter__disc\" viewBox=\"0 0 200 200\" aria-hidden=\"true\"><circle cx=\"100\" cy=\"100\" r=\"98\" fill=\"#0c0d0f\" stroke=\"#2c2d33\" stroke-width=\"2\"/><g fill=\"none\" stroke=\"#1e1f24\" stroke-width=\"1.25\"><circle cx=\"100\" cy=\"100\" r=\"91\"/><circle cx=\"100\" cy=\"100\" r=\"85\"/><circle cx=\"100\" cy=\"100\" r=\"79\"/><circle cx=\"100\" cy=\"100\" r=\"73\"/><circle cx=\"100\" cy=\"100\" r=\"67\"/><circle cx=\"100\" cy=\"100\" r=\"61\"/></g><circle cx=\"100\" cy=\"100\" r=\"34\" fill=\"#f0522f\"/><path d=\"M100 100 L100 73\" stroke=\"#f7efe0\" stroke-width=\"2.6\" stroke-linecap=\"round\"/><circle cx=\"100\" cy=\"100\" r=\"3.2\" fill=\"#0c0d0f\"/></svg></div>",
-      "css": ".ds-platter { display: grid; place-items: center; width: min(72vw, 300px); aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid #3a3c44; border-radius: 14px; background: #0d0e11; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.45), inset 0 4px 12px rgba(0,0,0,0.7); } .ds-platter__disc { width: 96%; height: 96%; animation: ds-platter-spin 5.5s linear infinite; } @keyframes ds-platter-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-platter__disc { animation: none; } }"
+      "refersTo": "progress-track",
+      "description": "The round clock: a Geist Mono readout over a green 6px fill that turns red in the final seconds.",
+      "html": "<div class=\"ds-clock\"><p class=\"ds-clock__time\">18,4 s</p><div class=\"ds-clock__track\"><div class=\"ds-clock__fill\" style=\"transform: scaleX(0.61)\"></div></div></div>",
+      "css": ".ds-clock { display: grid; gap: 0.5rem; width: 300px; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-clock__time { margin: 0; color: #f4f1ec; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 2.9rem; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; } .ds-clock__track { height: 6px; overflow: hidden; border-radius: 999px; background: #3a352f; } .ds-clock__fill { width: 100%; height: 100%; border-radius: 999px; background: #31d982; transform-origin: left center; transition: transform 100ms linear, background-color 160ms cubic-bezier(0.22,1,0.36,1); } .ds-clock--low .ds-clock__time { color: #ff6b6b; } .ds-clock--low .ds-clock__fill { background: #ff6b6b; }"
+    },
+    {
+      "name": "Artwork Stage",
+      "kind": "custom",
+      "refersTo": "plate",
+      "description": "Signature component: the square deck that holds the mystery mark, then the cover on reveal.",
+      "html": "<figure class=\"ds-stage\"><div class=\"ds-stage__frame\"><svg class=\"ds-stage__disc\" viewBox=\"0 0 200 200\" aria-hidden=\"true\"><circle cx=\"100\" cy=\"100\" r=\"72\" fill=\"none\" stroke=\"rgba(255,255,255,0.10)\" stroke-width=\"3\"/><circle cx=\"100\" cy=\"100\" r=\"46\" fill=\"none\" stroke=\"rgba(255,255,255,0.16)\" stroke-width=\"3\"/><circle cx=\"100\" cy=\"100\" r=\"13\" fill=\"#31d982\"/><path d=\"M100 100 L100 74\" stroke=\"#31d982\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg></div></figure>",
+      "css": ".ds-stage { margin: 0; } .ds-stage__frame { position: relative; display: grid; place-items: center; width: min(72vw, 300px); aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid #2a2623; border-radius: 18px; background: #100e0d; } .ds-stage__disc { width: 52%; height: 52%; animation: ds-stage-spin 8s linear infinite; } @keyframes ds-stage-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-stage__disc { animation: none; } }"
     }
   ],
   "narrative": {
-    "northStar": "The Analogue Console",
-    "overview": "Blindtest is a physical two-channel DJ console sitting in a dim living room, not a dark-mode web app. Every screen is a faceplate: brushed graphite metal with walnut end-cheeks and corner screws, cream screen-printed legends, and incandescent indicator lamps. Nothing glows, nothing is glass, and nothing floats — state is shown by a switch, a lamp, or a meter, the way it is on real hardware.\n\nThe world was chosen for a room of friends passing phones and sharing one laptop: the product is a music machine, and it should read as one before a single word is parsed. The extract is a record on a platter; the round timer is a cream-faced meter with a printed scale and a black pointer; the volume is a fader with a metal cap; the primary action is a record-armed pad. The visual identity was replaced wholesale while the screens, flows and layout were preserved exactly.\n\nDensity is low and deliberate. Large plates, generous separation between groups, and tight gaps inside a group. Type does the hierarchy work: tracked uppercase legends name every control, Archivo carries the words, and a dot-matrix face carries measurement. The charm lives in the small physical details — bevels, ticks, a spun platter, a lamp that goes dark when the round is answered.",
+    "northStar": "The Listening Room",
+    "overview": "Blindtest is a contemporary music player's now-playing screen, not a game console. Every screen is the same warm near-black room lit only by the album art: flat plates, 1px hairlines, soft radii, and a lot of quiet space. Nothing is textured, bevelled, glassy, or glowing. Where a state needs to speak - hit play, time running out, right answer, wrong answer - a single vivid green or a single red does the whole job.\n\nThe world was chosen for a room of friends passing phones and sharing one laptop: the extract is the product, so the cover is the only saturated object and the interface steps back. The mystery tile holds the secret track, the clock runs down beside it, and the real cover resolves out of the tile when the round ends. Colour is never decoration; it is either the artwork or a verdict.\n\nDensity is low and deliberate. Groups are tight, sections are generous, and the hierarchy is carried by one grotesque for words and one mono for measurement. The charm lives in restraint - a green progress line, a spinning note, a cover that arrives.",
     "keyCharacteristics": [
-      "Graphite faceplates with walnut end-cheeks, corner screws, and inset hardware bevels.",
-      "Cream screen-print ink on dark metal; no pure black text and no gray.",
-      "One saturated signal orange-red for the record-armed primary; cue-cyan for the selected/active track; VU-green correct; hazard-red wrong.",
-      "A cream-faced analogue meter as the round clock, with a black pointer.",
-      "Dot-matrix numerals reserved for large readouts: timer, room code, best score."
+      "A warm near-black ground with flat plates and 1px hairlines; no texture, bevel, glow, or hardware.",
+      "One vivid green accent for action, progress, and correct; one red for wrong. Nothing else is coloured.",
+      "Album art as the only broad source of colour, front and centre on the game stage.",
+      "Schibsted Grotesk for UI and display; Geist Mono for timecode numerals.",
+      "Soft 12-18px radii, pill-shaped meters and chips, generous whitespace."
     ],
     "rules": [
-      { "name": "The No-Glow Rule", "body": "Nothing emits light. Indicator lamps are flat filled dots; there is no text-shadow glow, no outer halo, and no neon. \"Lit\" is a saturated fill, not radiance.", "section": "colors" },
-      { "name": "The Lamp Palette Rule", "body": "Red, amber and cyan appear only as small lamps, meter fills and marks, or one primary pad — never as page-scale fields, never as background washes.", "section": "colors" },
-      { "name": "The Doto-Is-A-Display Rule", "body": "Doto is used only for a large measurement inside a display — the timer, the room code, the best score, the peak stat. Inline data (scores in the topbar and leaderboard, volume percentage, slot indices, round numbers) stays in Archivo with tabular-nums. If a Doto number would sit below ~1.3rem in a busy row, it is the wrong face.", "section": "typography" },
-      { "name": "The Legend Carries The Weight Rule", "body": "Small uppercase tracked Archivo labels name the controls; headings are never preceded by an eyebrow or kicker, because the legend already does that job.", "section": "typography" },
-      { "name": "The Milled-Not-Floating Rule", "body": "Elevation is expressed as a bevel: highlight on top, shadow inside the bottom. A raised element never adds an outer drop shadow, and a card is never a card within a card — nested surfaces are recessed wells.", "section": "elevation" }
+      { "name": "The Art-Is-The-Color Rule", "body": "Broad colour comes only from album art. The interface itself paints exactly two signals - green and red - and nothing else. If a surface wants a new hue, it is wrong.", "section": "colors" },
+      { "name": "The One-Accent Rule", "body": "Green means action, progress, or correct; red means wrong or urgent. A green element that carries none of those meanings is decoration and does not ship.", "section": "colors" },
+      { "name": "The Timecode-Is-Mono Rule", "body": "Geist Mono is reserved for measurement - timer, room code, scores, ranks, percentages. It never sets a word. If a string is prose, it is Schibsted Grotesk.", "section": "typography" },
+      { "name": "The Sentence-Case Rule", "body": "Labels are sentence case at 0.82rem, not tracked uppercase. The old screen-print legend voice is gone; a control is named quietly.", "section": "typography" },
+      { "name": "The Flat-Plate Rule", "body": "Elevation is tone plus a hairline, never a cast shadow. The only floating surface in the product is the suggestion panel; adding a shadow anywhere else is drift.", "section": "elevation" }
     ],
     "dos": [
-      "Do keep exactly one orange-red primary action per screen; pair it with at most one secondary pad.",
-      "Do name every control with a small tracked uppercase Archivo legend.",
-      "Do sink form controls, slots and stat readouts into the plate as wells; raise only the actions and the popover.",
-      "Do set font-variant-numeric: tabular-nums on every number that changes (timers, scores, counts, percentages).",
-      "Do reserve Doto for large measurement displays, and fall back to Archivo beneath ~1.3rem in a busy row.",
-      "Do keep the cream inks warm and tinted — muted text is #aaa395, never a neutral gray.",
-      "Do disable the platter rotation, transitions and animations under prefers-reduced-motion."
+      "Do keep exactly one solid green primary action per screen; pair it with at most one secondary or tonal button.",
+      "Do let album art be the only broad colour; the UI itself paints only green (action/progress/correct) and red (wrong).",
+      "Do name controls with quiet sentence-case labels at 0.82rem, not tracked uppercase legends.",
+      "Do set font-variant-numeric: tabular-nums on every changing number, and set measurement in Geist Mono.",
+      "Do express elevation as tone plus a 1px hairline; reserve the popover lift for the suggestion panel.",
+      "Do keep radii within 12-18px and reserve 999px pills for meters, chips and badges.",
+      "Do disable the disc rotation, the reveal scale and all transitions under prefers-reduced-motion."
     ],
     "donts": [
-      "Don't add glow, text-shadow halos, neon edges, glass or backdrop blur — the No-Glow Rule is absolute.",
-      "Don't put the three lamp colors on large fields, gradients or backgrounds; they exist as lamps, meter fills and marks.",
-      "Don't use pure black text, pure gray text, or any gray that is not the warm cream family.",
-      "Don't add an outer drop shadow to a panel, button, input or card; use an inset bevel.",
-      "Don't nest a card inside a card; interior groups are recessed wells.",
-      "Don't use gradient text, pills, or radii above 16px.",
-      "Don't add an eyebrow or kicker above a heading, or section numbers; the legend above a control is the only label a section gets.",
-      "Don't replace the authored SVG icons and vinyl disc with emoji or unicode glyphs."
+      "Don't add texture, bevels, screws, walnut, brushed metal, or any skeuomorphic hardware - the analogue-console world is retired.",
+      "Don't add glow, neon, backdrop blur, glass, or gradient text.",
+      "Don't introduce a third signal colour; a new hue means the surface is off-system.",
+      "Don't tint scores, ranks or the leaderboard with the accent except for the current player and the winner.",
+      "Don't use pure black or pure gray ink; every neutral is warm.",
+      "Don't set words in Geist Mono, or write an uppercase eyebrow/kicker above a heading.",
+      "Don't nest a card inside a card; interior groups are flat tone changes or wells.",
+      "Don't replace the authored SVG icons, the mystery mark, or the music-note favicon with emoji or unicode glyphs."
     ]
   }
 }

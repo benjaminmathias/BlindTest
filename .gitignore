@@ -15,6 +15,9 @@ dist-ssr
 # Impeccable review evidence (screenshots, diffs)
 .impeccable/review/
 
+# Impeccable live-mode local state
+.impeccable/live/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

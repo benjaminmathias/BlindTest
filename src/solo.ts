@@ -159,9 +159,9 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
             <p id="timer" class="progress__time">${formatRemainingTime(roundDurationMs)}</p>
             <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
           </div></div>
+          <p id="game-status" class="status" role="status" aria-live="polite">Extrait en cours...</p>
           <h1 id="question-title" class="question-title">Quel est ce titre ?</h1>
           <div data-guess-area></div>
-          <p id="game-status" class="status" role="status" aria-live="polite">Extrait en cours...</p>
           <button id="solo-play-audio-button" class="button-primary next-button" type="button"${audioBlocked ? '' : ' hidden'}>Lire l'extrait</button>
         </section>
       </main>`
