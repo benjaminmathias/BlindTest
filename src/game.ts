@@ -103,6 +103,19 @@ export function getRandomTrack(availableTracks: Track[]): Track {
   return track
 }
 
+export function pickUnplayedTrack(tracks: readonly Track[], playedTrackIds: Set<string>): Track {
+  let availableTracks = tracks.filter((track) => !playedTrackIds.has(track.id))
+
+  if (availableTracks.length === 0) {
+    playedTrackIds.clear()
+    availableTracks = [...tracks]
+  }
+
+  const track = getRandomTrack(availableTracks)
+  playedTrackIds.add(track.id)
+  return track
+}
+
 export function getAnswerTracks(allTracks: Track[], correctTrack: Track): Track[] {
   const incorrectCandidates = shuffleTracks(
     allTracks.filter((track) => track.id !== correctTrack.id),

@@ -5,6 +5,29 @@ const track = (id: number, title = `Titre ${id}`): Track => ({
   id: String(id), title, artist: 'Artiste', audioUrl: 'audio', imageUrl: 'image',
 })
 
+function createStorage(): Storage {
+  const store = new Map<string, string>()
+  return {
+    get length() { return store.size },
+    clear: () => { store.clear() },
+    getItem: (key) => store.get(key) ?? null,
+    key: (index) => [...store.keys()][index] ?? null,
+    removeItem: (key) => { store.delete(key) },
+    setItem: (key, value) => { store.set(key, value) },
+  }
+}
+
+function itunesResults(count: number, genre = 'Pop') {
+  return Array.from({ length: count }, (_, index) => ({
+    trackId: index,
+    trackName: `Titre ${index}`,
+    artistName: `Artiste ${index}`,
+    previewUrl: 'audio',
+    artworkUrl100: 'image',
+    primaryGenreName: genre,
+  }))
+}
+
 afterEach(() => {
   clearCatalogCache()
   vi.unstubAllGlobals()
@@ -57,25 +80,76 @@ describe('catalogue', () => {
       .toBe(false)
   })
 
-  it('conserve une recherche réussie quand une autre échoue et met en cache', async () => {
+  it('réessaie une recherche réseau échouée puis met en cache', async () => {
     const fetchMock = vi.fn()
       .mockRejectedValueOnce(new Error('réseau'))
-      .mockResolvedValueOnce({
+      .mockResolvedValue({
         ok: true,
-        json: async () => ({ results: Array.from({ length: 20 }, (_, index) => ({
-          trackId: index,
-          trackName: `Titre ${index}`,
-          artistName: `Artiste ${index}`,
-          previewUrl: 'audio',
-          artworkUrl100: 'image',
-          primaryGenreName: 'Pop',
-        })) }),
+        json: async () => ({ results: itunesResults(20) }),
       })
     vi.stubGlobal('fetch', fetchMock)
 
     expect(await fetchTracks('pop')).toHaveLength(20)
     expect(await fetchTracks('pop')).toHaveLength(20)
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    // Deux requêtes pop, dont une qui échoue une fois avant de réussir.
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('réessaie un statut HTTP temporaire sans abandonner', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ results: itunesResults(20, 'Hip-hop/Rap') }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchTracks('rap')).toHaveLength(20)
+  })
+
+  it('écrit le catalogue résolu dans le stockage local', async () => {
+    const storage = createStorage()
+    vi.stubGlobal('localStorage', storage)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: itunesResults(20, 'Rock') }),
+    }))
+
+    await fetchTracks('rock')
+
+    expect(storage.getItem('blindtest-catalog-v1:rock')).not.toBeNull()
+  })
+
+  it('sert un catalogue persisté sans rappeler iTunes', async () => {
+    const storage = createStorage()
+    storage.setItem('blindtest-catalog-v1:rock', JSON.stringify({
+      savedAt: Date.now(),
+      tracks: Array.from({ length: 20 }, (_, index) => track(index, `Titre ${index}`)),
+    }))
+    const fetchMock = vi.fn()
+    vi.stubGlobal('localStorage', storage)
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchTracks('rock')).toHaveLength(20)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('ignore un catalogue persisté expiré', async () => {
+    const storage = createStorage()
+    storage.setItem('blindtest-catalog-v1:rock', JSON.stringify({
+      savedAt: Date.now() - 25 * 60 * 60 * 1000,
+      tracks: Array.from({ length: 20 }, (_, index) => track(index, `Titre ${index}`)),
+    }))
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: itunesResults(20, 'Rock') }),
+    })
+    vi.stubGlobal('localStorage', storage)
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchTracks('rock')).toHaveLength(20)
+    expect(fetchMock).toHaveBeenCalled()
+    expect(storage.getItem('blindtest-catalog-v1:rock')).not.toBeNull()
   })
 
   it('refuse un catalogue final insuffisant', async () => {

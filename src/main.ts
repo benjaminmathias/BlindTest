@@ -24,7 +24,7 @@ import {
 } from './multiplayer/realtime'
 import {
   formatGuessOption,
-  getRandomTrack,
+  pickUnplayedTrack,
   isRoundCount,
   isRoundDuration,
   MAX_ATTEMPTS,
@@ -61,6 +61,7 @@ const DEFAULT_ROUND_DURATION: RoundDuration = 30
 const ROOM_CODE_CHARACTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const MULTIPLAYER_START_DELAY_MS = 3000
 const MULTIPLAYER_ROUND_TRANSITION_MS = 2000
+const MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL = 3
 
 let multiplayerTracks: Track[] = []
 let roomConnection: RoomConnection | null = null
@@ -91,6 +92,7 @@ let multiplayerRoundFinished = false
 let multiplayerTransitionId: number | null = null
 let multiplayerClockOffsetMs = 0
 let multiplayerClockSyncPromise: Promise<void> | null = null
+let multiplayerLastClockSyncRound = 0
 let multiplayerHostSeen = false
 let multiplayerHostId: string | null = null
 let multiplayerHostLeft = false
@@ -389,6 +391,7 @@ function resetMultiplayerGameState(): void {
   multiplayerRoundFinished = false
   multiplayerGameOver = false
   multiplayerLastRoundId = null
+  multiplayerLastClockSyncRound = 0
 }
 
 function renderMultiplayerLeaderboard(): void {
@@ -486,6 +489,18 @@ const soloGame = createSoloGame({
   renderHome: () => renderHome(),
 })
 
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') {
+    return
+  }
+
+  if (multiplayerIsHost || multiplayerHostLeft || multiplayerGameOver || !roomConnection) {
+    return
+  }
+
+  synchronizeMultiplayerClock(roomConnection, true)
+})
+
 function generateRoomCode(): string {
   return Array.from({ length: 4 }, () => {
     const index = Math.floor(Math.random() * ROOM_CODE_CHARACTERS.length)
@@ -569,6 +584,19 @@ function synchronizeMultiplayerClock(connection: RoomConnection, force = false):
       multiplayerClockSyncPromise = null
     }
   })
+}
+
+function maybeResynchronizeMultiplayerClock(currentRound: number): void {
+  if (multiplayerIsHost || multiplayerHostLeft || multiplayerGameOver || !roomConnection) {
+    return
+  }
+
+  if (currentRound - multiplayerLastClockSyncRound < MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL) {
+    return
+  }
+
+  multiplayerLastClockSyncRound = currentRound
+  synchronizeMultiplayerClock(roomConnection)
 }
 
 function handleMultiplayerHostLeft(): void {
@@ -831,9 +859,7 @@ async function sendNextMultiplayerRound(connection: RoomConnection): Promise<voi
   multiplayerAttempts = new Map()
   multiplayerTriedAnswerIds = new Map()
 
-  const availableTracks = multiplayerTracks.filter((track) => !multiplayerPlayedTrackIds.has(track.id))
-  const correctTrack = getRandomTrack(availableTracks)
-  multiplayerPlayedTrackIds.add(correctTrack.id)
+  const correctTrack = pickUnplayedTrack(multiplayerTracks, multiplayerPlayedTrackIds)
 
   const round: MultiplayerRound = {
     gameId: currentMultiplayerGameId,
@@ -1505,6 +1531,7 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
   multiplayerTimerId = window.setInterval(updateMultiplayerTimer, 100)
   scheduleRoundStart()
   updateMultiplayerTimer()
+  maybeResynchronizeMultiplayerClock(round.round)
 }
 
 function renderLobby(roomCode: string, isHost: boolean): void {
@@ -1664,6 +1691,7 @@ async function openRoom(roomCode: string, playerName: string, isHost: boolean): 
     multiplayerHostLeft = false
     multiplayerGameOver = false
     multiplayerLastRoundId = null
+    multiplayerLastClockSyncRound = 0
     currentMultiplayerGameId = null
     const playerId = createId()
     const startButton = document.querySelector<HTMLButtonElement>('#start-game-button')

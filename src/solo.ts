@@ -1,6 +1,6 @@
 import { fetchTracks, type MusicTheme, type Track } from './api'
 import {
-  formatGuessOption, getAttemptScore, getRandomTrack, MAX_ATTEMPTS,
+  formatGuessOption, getAttemptScore, pickUnplayedTrack, MAX_ATTEMPTS,
   type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
 } from './game'
 import {
@@ -122,14 +122,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
 
   const startRound = async (): Promise<void> => {
     stop()
-    let availableTracks = state.tracks.filter((track) => !state.playedTrackIds.has(track.id))
-    if (availableTracks.length === 0) {
-      state.playedTrackIds.clear()
-      availableTracks = state.tracks
-    }
-
-    const correctTrack = getRandomTrack(availableTracks)
-    state.playedTrackIds.add(correctTrack.id)
+    const correctTrack = pickUnplayedTrack(state.tracks, state.playedTrackIds)
     const roundDurationMs = state.roundDuration * 1000
     const audio = new Audio(correctTrack.audioUrl)
     audio.volume = options.getVolume()

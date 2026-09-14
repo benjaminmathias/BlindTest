@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Track } from './api'
 import {
   findGuessOption, formatGuessOption, getAnswerTracks, getAttemptScore, getRoundScore,
-  searchGuessOptions, shuffleTracks, type GuessOption,
+  pickUnplayedTrack, searchGuessOptions, shuffleTracks, type GuessOption,
 } from './game'
 import { isSameSong } from './song'
 
@@ -44,6 +44,24 @@ describe('game', () => {
     expect(getRoundScore(5_000, 10_000, 1000)).toBe(500)
     expect(getRoundScore(1, 10_000, 1000)).toBe(1)
     expect(getRoundScore(0, 10_000, 1000)).toBe(1)
+  })
+
+  it('tire un morceau non joué et le marque comme joué', () => {
+    const played = new Set<string>(['0', '1'])
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const track = pickUnplayedTrack(tracks, played)
+    expect(track.id).toBe('2')
+    expect(played.has('2')).toBe(true)
+    vi.restoreAllMocks()
+  })
+
+  it('réinitialise quand tous les morceaux ont été joués', () => {
+    const played = new Set(tracks.map(({ id }) => id))
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const track = pickUnplayedTrack(tracks, played)
+    expect(track.id).toBe('0')
+    expect(played.size).toBe(1)
+    vi.restoreAllMocks()
   })
 
   it('résout une suggestion en ignorant casse et accents', () => {
