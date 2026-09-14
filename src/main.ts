@@ -1104,15 +1104,6 @@ function handleRoundComplete(result: RoundComplete): void {
     revealArtwork(document, currentRoundReveal.imageUrl, `Cover de ${currentRoundReveal.title} par ${currentRoundReveal.artist}`)
   }
 
-  const timelineHost = document.querySelector<HTMLElement>('[data-round-timeline]')
-  if (timelineHost) {
-    timelineHost.innerHTML = roundTimelineMarkup(
-      currentGameRoundCount,
-      multiplayerOwnRoundHistory,
-      roundIndex,
-    )
-  }
-
   document.querySelector<HTMLFormElement>('#multiplayer-guess-form')?.querySelectorAll('input, button')
     .forEach((control) => { (control as HTMLInputElement | HTMLButtonElement).disabled = true })
 
@@ -1125,12 +1116,6 @@ function handleRoundComplete(result: RoundComplete): void {
   if (playAudioButton) {
     playAudioButton.hidden = true
     playAudioButton.disabled = true
-  }
-
-  const roundStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-round-status')
-
-  if (roundStatus) {
-    roundStatus.textContent = 'Manche terminée'
   }
 }
 
@@ -1235,9 +1220,6 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
             </div>
           </div>
         </header>
-        <div data-round-timeline class="round-timeline-host">
-          ${roundTimelineMarkup(currentGameRoundCount, multiplayerOwnRoundHistory, round.round - 1)}
-        </div>
         <div class="game-stage">
           ${renderArtworkMarkup()}
           <div class="progress">
@@ -1247,10 +1229,9 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
             </div>
           </div>
         </div>
-        <p id="multiplayer-status" class="status" role="status" aria-live="polite">Répondez lorsque la manche commence.</p>
-        <h1 id="multiplayer-question-title" class="question-title">Quel est ce titre ?</h1>
+        <p id="multiplayer-status" class="status" role="status" aria-live="polite"></p>
+        <h1 id="multiplayer-question-title" class="sr-only">Quel est ce titre ?</h1>
         <div data-guess-area></div>
-        <p id="multiplayer-round-status" class="status" role="status" aria-live="polite"></p>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
         <section class="leaderboard-section" aria-labelledby="leaderboard-title">
           <h2 id="leaderboard-title" class="leaderboard-heading">Classement</h2>
@@ -1457,7 +1438,6 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
     gameTimer.classList.remove('is-countdown')
     guessArea.setDisabled(false)
     guessArea.focusInput()
-    gameStatus.textContent = 'Extrait en cours...'
     void startAudio()
   }
 

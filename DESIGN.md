@@ -172,7 +172,7 @@ The system is a warm neutral room plus two functional signals. Album art supplie
 
 ### Hierarchy
 - **Display** (800, clamp(2.4rem, 9vw, 3.4rem), 1, -0.032em): the home wordmark only.
-- **Headline** (700, clamp(1.6rem, 5vw, 2.1rem), 1.1): screen headings ("Quel est ce titre ?", "Partie terminée", "Lobby").
+- **Headline** (700, clamp(1.6rem, 5vw, 2.1rem), 1.1): screen headings ("Partie terminée", "Lobby", "Partie interrompue").
 - **Title** (600, 1.05rem, 1.3): section headings and card-scale titles.
 - **Body** (400, 0.95rem, 1.5): descriptions, status copy, suggestion rows.
 - **Label** (500, 0.82rem, 0.01em, sentence case): field labels and quiet section labels. Labels are sentence case and untracked — never uppercase hardware legends.
@@ -187,9 +187,9 @@ The system is a warm neutral room plus two functional signals. Album art supplie
 
 Every screen is one centred column. The content column is `min(100% - 2rem, 560px)` on home, lobby, result and game — there is no wide desktop layout and no sidebar; the phone-shaped column is the product. Plates pad at `clamp(1.5rem, 4.5vw, 2.25rem)`.
 
-Spacing follows one 0.25rem-based scale (0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3rem). Groups are tight (0.5–0.75rem), sections are generous (1.5–2rem), and a heading always has more space above it than below. The game screen is a vertical stack: topbar, round timeline, stage (cover + clock), status/result, question, guess area, leaderboard, leave.
+Spacing follows one 0.25rem-based scale (0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3rem). Groups are tight (0.5–0.75rem), sections are generous (1.5–2rem), and a heading always has more space above it than below. The game screen is a deliberate vertical stack with every duplicate stripped out: topbar (round number, score, volume), stage (cover + clock), the guess area, the leaderboard, and leave. The round timeline lives only on the result screen; the status line stays empty and collapses until it has something real to say (a wrong answer, a check, an error).
 
-Responsive behaviour is two breakpoints. At **560px** the multi-column arrangements collapse to one column — the settings grid, the multiplayer form, the guess search, the action pairs, the score summary — the faceplate padding tightens to 1.35rem, and the submit button goes full width. The stage also eases to `min(56vw, 230px)` so the clock, question and guess field stay in view on a phone. At **380px** the stage tightens to `min(58vw, 195px)`, the clock drops to a 1.85rem floor, the stage's bottom margin shrinks, and the page padding tightens again — keeping both the guess field and its action above the fold down to a 360×800 phone.
+Responsive behaviour is two breakpoints. At **560px** the multi-column arrangements collapse to one column — the settings grid, the multiplayer form, the guess search, the action pairs, the score summary — the faceplate padding tightens to 1.35rem, and the submit button goes full width. The stage also eases to `min(56vw, 230px)` so the clock and guess field stay in view on a phone. At **380px** the stage tightens to `min(58vw, 195px)`, the clock drops to a 1.85rem floor, the stage's bottom margin shrinks, and the page padding tightens again — keeping both the guess field and its action above the fold down to a 360×800 phone.
 
 ## Elevation & Depth
 

@@ -154,13 +154,12 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
               <div class="game-volume"><label class="sr-only" for="volume-slider-round">Volume</label>${options.renderVolumeControlMarkup('volume-slider-round', true)}</div>
             </div>
           </header>
-          <div data-round-timeline class="round-timeline-host"></div>
           <div class="game-stage">${options.renderArtworkMarkup()}<div class="progress">
             <p id="timer" class="progress__time">${formatRemainingTime(roundDurationMs)}</p>
             <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
           </div></div>
-          <p id="game-status" class="status" role="status" aria-live="polite">Extrait en cours...</p>
-          <h1 id="question-title" class="question-title">Quel est ce titre ?</h1>
+          <p id="game-status" class="status" role="status" aria-live="polite"></p>
+          <h1 id="question-title" class="sr-only">Quel est ce titre ?</h1>
           <div data-guess-area></div>
           <button id="solo-play-audio-button" class="button-primary next-button" type="button"${audioBlocked ? '' : ' hidden'}>Lire l'extrait</button>
         </section>
@@ -172,12 +171,9 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     const progress = options.app.querySelector<HTMLDivElement>('#timer-progress')!
     const scoreDisplay = options.app.querySelector<HTMLSpanElement>('#score')!
     const playButton = options.app.querySelector<HTMLButtonElement>('#solo-play-audio-button')!
-    const timelineHost = options.app.querySelector<HTMLElement>('[data-round-timeline]')!
     const triedIds = new Set<string>()
     let attemptsUsed = 0
     let lastGuess: GuessOption | null = null
-
-    timelineHost.innerHTML = roundTimelineMarkup(state.roundCount, state.roundHistory, state.round - 1)
 
     const guessArea = createGuessArea(options.app.querySelector<HTMLElement>('[data-guess-area]')!, {
       catalog: state.tracks,
@@ -196,7 +192,6 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       try {
         await audio.play()
         playButton.hidden = true
-        status.textContent = 'Extrait en cours...'
       } catch (error) {
         console.error(error)
         status.textContent = 'Impossible de lire l’extrait audio.'
@@ -237,7 +232,6 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         attemptsUsed,
         solution: { title: correctTrack.title, artist: correctTrack.artist },
       }
-      timelineHost.innerHTML = roundTimelineMarkup(state.roundCount, state.roundHistory, state.round - 1)
       if (timedOut || outcome === 'timeout') {
         options.renderRoundResult(status, 'timeout', correctTrack.title, correctTrack.artist)
       } else if (outcome === 'skip') {

@@ -811,17 +811,6 @@ input[aria-invalid="true"] {
 
 .progress.is-low .progress__bar { background: var(--wrong); }
 
-.question-title {
-  margin: 0 0 var(--space-4);
-  font-size: clamp(1.5rem, 4.5vw, 1.9rem);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  transition: color var(--transition);
-}
-
-.round-timeline-host { margin: 0 0 var(--space-4); }
-
 .round-timeline {
   display: flex;
   gap: 6px;
@@ -1150,8 +1139,6 @@ input[aria-invalid="true"] {
   font-variant-numeric: tabular-nums;
   font-weight: 400;
 }
-
-.game-shell.is-answered .question-title { color: var(--text-2); }
 
 .round-result {
   display: grid;
