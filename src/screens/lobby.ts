@@ -1,4 +1,11 @@
-import { isMusicTheme, MUSIC_THEMES, MUSIC_THEME_LABELS } from '../api'
+import {
+  isMusicMarket,
+  isMusicTheme,
+  MUSIC_MARKET_LABELS,
+  MUSIC_MARKETS,
+  MUSIC_THEMES,
+  MUSIC_THEME_LABELS,
+} from '../api'
 import { app } from '../dom'
 import {
   isRoundCount,
@@ -30,6 +37,15 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
                     `<option value="${theme}"${theme === state.multiplayerMusicTheme ? ' selected' : ''}>${MUSIC_THEME_LABELS[theme]}</option>`,
                 ).join('')}</select>`
               : `<span id="lobby-theme-value" class="lobby-rule__value">${MUSIC_THEME_LABELS[state.multiplayerMusicTheme]}</span>`}
+          </div>
+          <div class="lobby-rule">
+            <span class="field-label">Catalogue</span>
+            ${isHost
+              ? `<select id="lobby-market-select" name="musicMarket">${MUSIC_MARKETS.map(
+                  (market) =>
+                    `<option value="${market}"${market === state.multiplayerMusicMarket ? ' selected' : ''}>${MUSIC_MARKET_LABELS[market]}</option>`,
+                ).join('')}</select>`
+              : `<span id="lobby-market-value" class="lobby-rule__value">${MUSIC_MARKET_LABELS[state.multiplayerMusicMarket]}</span>`}
           </div>
           <div class="lobby-rule">
             <span class="field-label">Manches</span>
@@ -74,12 +90,14 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
   const copyButton = document.querySelector<HTMLButtonElement>('#copy-room-code-button')!
   const lobbyStatus = document.querySelector<HTMLParagraphElement>('#lobby-status')!
   const themeSelect = document.querySelector<HTMLSelectElement>('#lobby-theme-select')
+  const marketSelect = document.querySelector<HTMLSelectElement>('#lobby-market-select')
   const roundCountSelect = document.querySelector<HTMLSelectElement>('#lobby-round-count')
   const roundDurationSelect = document.querySelector<HTMLSelectElement>('#lobby-round-duration')
 
   const pushGameSettings = (): void => {
     void state.roomConnection?.updateGameSettings({
       musicTheme: state.multiplayerMusicTheme,
+      musicMarket: state.multiplayerMusicMarket,
       roundCount: state.multiplayerRoundCount,
       roundDuration: state.multiplayerRoundDuration,
     }).catch((error) => {
@@ -96,6 +114,17 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
     }
 
     state.multiplayerMusicTheme = theme
+    pushGameSettings()
+  })
+
+  marketSelect?.addEventListener('change', () => {
+    const market = marketSelect.value
+
+    if (!isMusicMarket(market)) {
+      return
+    }
+
+    state.multiplayerMusicMarket = market
     pushGameSettings()
   })
 

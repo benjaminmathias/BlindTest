@@ -1,4 +1,4 @@
-import { fetchTracks, type MusicTheme, type Track } from './api'
+import { fetchTracks, type MusicMarket, type MusicTheme, type Track } from './api'
 import {
   formatGuessOption, getAttemptScore, pickUnplayedTrack, MAX_ATTEMPTS,
   type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
@@ -44,7 +44,12 @@ type SoloGameOptions = {
 }
 
 export type SoloGame = {
-  start: (theme: MusicTheme, roundCount: RoundCount, duration: RoundDuration) => Promise<void>
+  start: (
+    theme: MusicTheme,
+    market: MusicMarket,
+    roundCount: RoundCount,
+    duration: RoundDuration,
+  ) => Promise<void>
   stop: () => void
   setVolume: (volume: number) => void
 }
@@ -302,8 +307,8 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
   }
 
   return {
-    start: async (theme, roundCount, duration) => {
-      state.tracks = await fetchTracks(theme)
+    start: async (theme, market, roundCount, duration) => {
+      state.tracks = await fetchTracks(theme, market)
       state.round = 1
       state.roundCount = roundCount
       state.roundDuration = duration

@@ -1,13 +1,21 @@
-import { isMusicTheme, type MusicTheme } from '../api'
+import {
+  DEFAULT_MUSIC_MARKET,
+  isMusicMarket,
+  isMusicTheme,
+  type MusicMarket,
+  type MusicTheme,
+} from '../api'
 import { isRoundCount, isRoundDuration, type RoundCount, type RoundDuration } from '../game'
 
 export const HIGH_SCORE_KEY = 'blindtest-high-score'
 export const VOLUME_KEY = 'blindtest-volume'
 export const MUSIC_THEME_KEY = 'blindtest-music-theme'
+export const MUSIC_MARKET_KEY = 'blindtest-music-market'
 export const ROUND_COUNT_KEY = 'blindtest-round-count'
 export const ROUND_DURATION_KEY = 'blindtest-round-duration'
 export const DEFAULT_VOLUME = 0.5
 export const DEFAULT_MUSIC_THEME: MusicTheme = 'all'
+export { DEFAULT_MUSIC_MARKET }
 export const DEFAULT_ROUND_COUNT: RoundCount = 5
 export const DEFAULT_ROUND_DURATION: RoundDuration = 30
 
@@ -39,6 +47,16 @@ export function readStoredMusicTheme(): MusicTheme {
 
 export function storeMusicTheme(theme: MusicTheme): void {
   localStorage.setItem(MUSIC_THEME_KEY, theme)
+}
+
+export function readStoredMusicMarket(): MusicMarket {
+  const storedMarket = localStorage.getItem(MUSIC_MARKET_KEY)
+
+  return isMusicMarket(storedMarket) ? storedMarket : DEFAULT_MUSIC_MARKET
+}
+
+export function storeMusicMarket(market: MusicMarket): void {
+  localStorage.setItem(MUSIC_MARKET_KEY, market)
 }
 
 export function readStoredRoundCount(): RoundCount {

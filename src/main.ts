@@ -3,6 +3,7 @@ import { synchronizeMultiplayerClock } from './multiplayer/session'
 import { renderHome, soloGame } from './screens/home'
 import { volume } from './services'
 import {
+  readStoredMusicMarket,
   readStoredMusicTheme,
   readStoredRoundCount,
   readStoredRoundDuration,
@@ -10,6 +11,7 @@ import {
 import { state } from './state'
 
 state.selectedTheme = readStoredMusicTheme()
+state.selectedMarket = readStoredMusicMarket()
 state.selectedRoundCount = readStoredRoundCount()
 state.selectedRoundDuration = readStoredRoundDuration()
 

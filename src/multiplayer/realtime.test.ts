@@ -13,7 +13,7 @@ import {
 
 describe('validateurs Realtime', () => {
   it('accepte les payloads attendus', () => {
-    expect(isGameStart({ gameId: 'g', startedBy: 'h', musicTheme: 'pop', roundCount: 5, roundDuration: 30 })).toBe(true)
+    expect(isGameStart({ gameId: 'g', startedBy: 'h', musicTheme: 'pop', musicMarket: 'fr', roundCount: 5, roundDuration: 30 })).toBe(true)
     expect(isGameCatalog({ gameId: 'g', options: [{ id: '1', title: 'T', artist: 'A' }] })).toBe(true)
     expect(isMultiplayerRound({
       gameId: 'g', roundId: 'r', round: 1, startAt: 1, audioUrl: 'https://audio',
@@ -27,6 +27,7 @@ describe('validateurs Realtime', () => {
 
   it('rejette les payloads invalides et les secrets dans round_start', () => {
     expect(isGameStart(null)).toBe(false)
+    expect(isGameStart({ gameId: 'g', startedBy: 'h', musicTheme: 'pop', musicMarket: 'xx', roundCount: 5, roundDuration: 30 })).toBe(false)
     expect(isPlayerGuess({ roundId: 'r', guessId: 'g', playerId: '', answerId: '1' })).toBe(false)
     expect(isMultiplayerRound({
       gameId: 'g', roundId: 'r', round: 1, startAt: 1, audioUrl: 'audio',
