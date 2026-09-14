@@ -1,11 +1,7 @@
 import {
-  isMusicMarket,
   isMusicTheme,
-  MUSIC_MARKET_LABELS,
-  MUSIC_MARKETS,
   MUSIC_THEMES,
   MUSIC_THEME_LABELS,
-  type MusicMarket,
   type MusicTheme,
 } from '../api'
 import { app } from '../dom'
@@ -31,7 +27,6 @@ import {
 import {
   readHighScore,
   saveHighScoreIfNeeded,
-  storeMusicMarket,
   storeMusicTheme,
   storeRoundCount,
   storeRoundDuration,
@@ -50,20 +45,6 @@ function renderThemeSelectMarkup(selectId: string, selected: MusicTheme): string
     <div class="form-field">
       <label for="${selectId}">Thème</label>
       <select id="${selectId}" name="musicTheme">${options}</select>
-    </div>
-  `
-}
-
-function renderMarketSelectMarkup(selectId: string, selected: MusicMarket): string {
-  const options = MUSIC_MARKETS.map(
-    (market) =>
-      `<option value="${market}"${market === selected ? ' selected' : ''}>${MUSIC_MARKET_LABELS[market]}</option>`,
-  ).join('')
-
-  return `
-    <div class="form-field">
-      <label for="${selectId}">Catalogue</label>
-      <select id="${selectId}" name="musicMarket">${options}</select>
     </div>
   `
 }
@@ -136,7 +117,6 @@ export function renderHome(initialStatus = ''): void {
 
         <div class="home-settings">
           ${renderThemeSelectMarkup('solo-theme-select', state.selectedTheme)}
-          ${renderMarketSelectMarkup('solo-market-select', state.selectedMarket)}
           ${renderRoundCountSelectMarkup('solo-round-count', state.selectedRoundCount)}
           ${renderRoundDurationSelectMarkup('solo-round-duration', state.selectedRoundDuration)}
           <div class="form-field home-settings__volume">
@@ -179,7 +159,6 @@ export function renderHome(initialStatus = ''): void {
   const statusMessage = document.querySelector<HTMLParagraphElement>('#home-status')!
   const soloStatusMessage = document.querySelector<HTMLParagraphElement>('#solo-status')!
   const soloThemeSelect = document.querySelector<HTMLSelectElement>('#solo-theme-select')!
-  const soloMarketSelect = document.querySelector<HTMLSelectElement>('#solo-market-select')!
   const soloRoundCountSelect = document.querySelector<HTMLSelectElement>('#solo-round-count')!
   const soloRoundDurationSelect = document.querySelector<HTMLSelectElement>('#solo-round-duration')!
 
@@ -196,17 +175,6 @@ export function renderHome(initialStatus = ''): void {
 
     state.selectedTheme = theme
     storeMusicTheme(theme)
-  })
-
-  soloMarketSelect.addEventListener('change', () => {
-    const market = soloMarketSelect.value
-
-    if (!isMusicMarket(market)) {
-      return
-    }
-
-    state.selectedMarket = market
-    storeMusicMarket(market)
   })
 
   soloRoundCountSelect.addEventListener('change', () => {
@@ -255,7 +223,6 @@ export function renderHome(initialStatus = ''): void {
     try {
       await soloGame.start(
         state.selectedTheme,
-        state.selectedMarket,
         state.selectedRoundCount,
         state.selectedRoundDuration,
       )

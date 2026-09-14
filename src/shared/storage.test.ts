@@ -2,13 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   HIGH_SCORE_KEY,
   readHighScore,
-  readStoredMusicMarket,
   readStoredMusicTheme,
   readStoredRoundCount,
   readStoredRoundDuration,
   readStoredVolume,
   saveHighScoreIfNeeded,
-  storeMusicMarket,
   storeMusicTheme,
   storeRoundCount,
   storeRoundDuration,
@@ -44,7 +42,6 @@ describe('préférences persistées', () => {
     withStorage()
     expect(readStoredVolume()).toBe(0.5)
     expect(readStoredMusicTheme()).toBe('all')
-    expect(readStoredMusicMarket()).toBe('fr')
     expect(readStoredRoundCount()).toBe(5)
     expect(readStoredRoundDuration()).toBe(30)
   })
@@ -53,13 +50,11 @@ describe('préférences persistées', () => {
     withStorage()
     storeVolume(0.8)
     storeMusicTheme('rock')
-    storeMusicMarket('international')
     storeRoundCount(15)
     storeRoundDuration(20)
 
     expect(readStoredVolume()).toBe(0.8)
     expect(readStoredMusicTheme()).toBe('rock')
-    expect(readStoredMusicMarket()).toBe('international')
     expect(readStoredRoundCount()).toBe(15)
     expect(readStoredRoundDuration()).toBe(20)
   })
@@ -74,9 +69,6 @@ describe('préférences persistées', () => {
 
     storage.setItem('blindtest-music-theme', 'polka')
     expect(readStoredMusicTheme()).toBe('all')
-
-    storage.setItem('blindtest-music-market', 'be')
-    expect(readStoredMusicMarket()).toBe('fr')
 
     storage.setItem('blindtest-round-count', '7')
     expect(readStoredRoundCount()).toBe(5)

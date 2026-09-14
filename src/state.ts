@@ -1,4 +1,4 @@
-import type { MusicMarket, MusicTheme, Track } from './api'
+import type { MusicTheme, Track } from './api'
 import type { GuessOption, RoundCount, RoundDuration, RoundOutcome } from './game'
 import type { GuessArea, RoundRecapEntry } from './guess-ui'
 import type {
@@ -8,7 +8,6 @@ import type {
   RoundReveal,
 } from './multiplayer/realtime'
 import {
-  DEFAULT_MUSIC_MARKET,
   DEFAULT_MUSIC_THEME,
   DEFAULT_ROUND_COUNT,
   DEFAULT_ROUND_DURATION,
@@ -16,7 +15,6 @@ import {
 
 export type AppState = {
   selectedTheme: MusicTheme
-  selectedMarket: MusicMarket
   selectedRoundCount: RoundCount
   selectedRoundDuration: RoundDuration
 
@@ -61,8 +59,6 @@ export type AppState = {
   multiplayerAttemptResultHandler: ((result: AttemptResult) => void) | null
   multiplayerMusicTheme: MusicTheme
   currentGameMusicTheme: MusicTheme
-  multiplayerMusicMarket: MusicMarket
-  currentGameMusicMarket: MusicMarket
   multiplayerRoundCount: RoundCount
   currentGameRoundCount: RoundCount
   multiplayerRoundDuration: RoundDuration
@@ -71,7 +67,6 @@ export type AppState = {
 
 export const state: AppState = {
   selectedTheme: DEFAULT_MUSIC_THEME,
-  selectedMarket: DEFAULT_MUSIC_MARKET,
   selectedRoundCount: DEFAULT_ROUND_COUNT,
   selectedRoundDuration: DEFAULT_ROUND_DURATION,
 
@@ -116,8 +111,6 @@ export const state: AppState = {
   multiplayerAttemptResultHandler: null,
   multiplayerMusicTheme: DEFAULT_MUSIC_THEME,
   currentGameMusicTheme: DEFAULT_MUSIC_THEME,
-  multiplayerMusicMarket: DEFAULT_MUSIC_MARKET,
-  currentGameMusicMarket: DEFAULT_MUSIC_MARKET,
   multiplayerRoundCount: DEFAULT_ROUND_COUNT,
   currentGameRoundCount: DEFAULT_ROUND_COUNT,
   multiplayerRoundDuration: DEFAULT_ROUND_DURATION,

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { isMusicMarket, isMusicTheme, type MusicMarket, type MusicTheme } from '../api'
+import { isMusicTheme, type MusicTheme } from '../api'
 import {
   isRoundCount,
   isRoundDuration,
@@ -10,7 +10,6 @@ import {
 
 export type HostSettings = {
   musicTheme: MusicTheme
-  musicMarket: MusicMarket
   roundCount: RoundCount
   roundDuration: RoundDuration
 }
@@ -20,7 +19,6 @@ export type Player = {
   name: string
   isHost: boolean
   musicTheme?: MusicTheme
-  musicMarket?: MusicMarket
   roundCount?: RoundCount
   roundDuration?: RoundDuration
   gameStarted?: boolean
@@ -88,7 +86,6 @@ export type GameStart = {
   gameId: string
   startedBy: string
   musicTheme: MusicTheme
-  musicMarket: MusicMarket
   roundCount: RoundCount
   roundDuration: RoundDuration
 }
@@ -145,7 +142,6 @@ function isPlayer(value: unknown): value is Player {
   return isRecord(value) && isString(value.playerId) && isString(value.name)
     && typeof value.isHost === 'boolean'
     && (value.musicTheme === undefined || isMusicTheme(value.musicTheme))
-    && (value.musicMarket === undefined || isMusicMarket(value.musicMarket))
     && (value.roundCount === undefined || isRoundCount(value.roundCount))
     && (value.roundDuration === undefined || isRoundDuration(value.roundDuration))
     && (value.gameStarted === undefined || typeof value.gameStarted === 'boolean')
@@ -163,7 +159,7 @@ export function getRoomAdmissionError(players: Player[], isHost: boolean): strin
 
 export function isGameStart(value: unknown): value is GameStart {
   return isRecord(value) && isString(value.gameId) && isString(value.startedBy)
-    && isMusicTheme(value.musicTheme) && isMusicMarket(value.musicMarket)
+    && isMusicTheme(value.musicTheme)
     && isRoundCount(value.roundCount)
     && isRoundDuration(value.roundDuration)
 }
@@ -315,7 +311,6 @@ export async function joinRoom(
           name: presence.name,
           isHost: presence.isHost === true,
           musicTheme: presence.musicTheme,
-          musicMarket: presence.musicMarket,
           roundCount: presence.roundCount,
           roundDuration: presence.roundDuration,
           gameStarted: presence.gameStarted === true,
@@ -472,7 +467,6 @@ export async function joinRoom(
       name,
       isHost,
       musicTheme: currentSettings?.musicTheme,
-      musicMarket: currentSettings?.musicMarket,
       roundCount: currentSettings?.roundCount,
       roundDuration: currentSettings?.roundDuration,
       gameStarted,
@@ -515,8 +509,7 @@ export async function joinRoom(
 
       const trackingStatus = await channel.track({
         playerId, name, isHost, gameStarted,
-        musicTheme: settings.musicTheme, musicMarket: settings.musicMarket,
-        roundCount: settings.roundCount,
+        musicTheme: settings.musicTheme, roundCount: settings.roundCount,
         roundDuration: settings.roundDuration,
       })
       if (trackingStatus !== 'ok') throw new Error('Impossible de publier le démarrage')
@@ -527,7 +520,6 @@ export async function joinRoom(
           gameId,
           startedBy: playerId,
           musicTheme: settings.musicTheme,
-          musicMarket: settings.musicMarket,
           roundCount: settings.roundCount,
           roundDuration: settings.roundDuration,
         } satisfies GameStart,

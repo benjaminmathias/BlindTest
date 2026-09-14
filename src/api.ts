@@ -19,23 +19,6 @@ export type MusicTheme = (typeof MUSIC_THEMES)[number]
 
 export type ConcreteMusicTheme = Exclude<MusicTheme, 'all'>
 
-export const MUSIC_MARKETS = ['fr', 'international'] as const
-
-export type MusicMarket = (typeof MUSIC_MARKETS)[number]
-
-export const DEFAULT_MUSIC_MARKET: MusicMarket = 'fr'
-
-export const MUSIC_MARKET_LABELS: Record<MusicMarket, string> = {
-  fr: 'Français',
-  international: 'International',
-}
-
-// Seul levier « gratuit » de l'API iTunes pour changer de catalogue : le storefront.
-export const MUSIC_MARKET_COUNTRY: Record<MusicMarket, string> = {
-  fr: 'FR',
-  international: 'US',
-}
-
 export const MUSIC_THEME_LABELS: Record<MusicTheme, string> = {
   all: 'Tous',
   pop: 'Pop',
@@ -48,10 +31,6 @@ export const MUSIC_THEME_LABELS: Record<MusicTheme, string> = {
 
 export function isMusicTheme(value: unknown): value is MusicTheme {
   return typeof value === 'string' && (MUSIC_THEMES as readonly string[]).includes(value)
-}
-
-export function isMusicMarket(value: unknown): value is MusicMarket {
-  return typeof value === 'string' && (MUSIC_MARKETS as readonly string[]).includes(value)
 }
 
 type ITunesTrack = {
@@ -78,9 +57,9 @@ type StoredCatalog = {
 
 const CONCRETE_THEMES: ConcreteMusicTheme[] = ['pop', 'rock', 'rap', 'electro', 'chanson', 'funk']
 
-// Source de vérité unique, commune aux storefronts FR et US : un libellé de genre
-// iTunes normalisé est rattaché à un seul thème, quelle que soit la langue du
-// storefront (ex. « Electronic » en US, « Électronique » en FR).
+// Source de vérité unique : un libellé de genre iTunes normalisé est rattaché à
+// un seul thème. On accepte les libellés FR et EN (« Électronique » et
+// « Electronic ») pour rester robuste aux variations de nommage.
 const GENRE_TO_THEME: Record<string, ConcreteMusicTheme> = {
   pop: 'pop',
   rock: 'rock',
@@ -136,7 +115,7 @@ const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search'
 const ITUNES_LIMIT = '200'
 export const MIN_CATALOG_SIZE = 20
 
-const CATALOG_STORAGE_KEY = 'blindtest-catalog-v4'
+const CATALOG_STORAGE_KEY = 'blindtest-catalog-v5'
 const CATALOG_TTL_MS = 24 * 60 * 60 * 1000
 const FETCH_MAX_ATTEMPTS = 3
 const FETCH_RETRY_BASE_DELAY_MS = 250
@@ -209,16 +188,16 @@ function getStorage(): Storage | null {
   }
 }
 
-function catalogStorageKey(market: MusicMarket, theme: MusicTheme): string {
-  return `${CATALOG_STORAGE_KEY}:${market}:${theme}`
+function catalogStorageKey(theme: MusicTheme): string {
+  return `${CATALOG_STORAGE_KEY}:${theme}`
 }
 
-function readStoredCatalog(market: MusicMarket, theme: MusicTheme): Track[] | null {
+function readStoredCatalog(theme: MusicTheme): Track[] | null {
   const storage = getStorage()
   if (!storage) return null
 
   try {
-    const raw = storage.getItem(catalogStorageKey(market, theme))
+    const raw = storage.getItem(catalogStorageKey(theme))
     if (!raw) return null
 
     const parsed: unknown = JSON.parse(raw)
@@ -229,12 +208,12 @@ function readStoredCatalog(market: MusicMarket, theme: MusicTheme): Track[] | nu
       || !Array.isArray(parsed.tracks)
       || !parsed.tracks.every(isTrack)
     ) {
-      storage.removeItem(catalogStorageKey(market, theme))
+      storage.removeItem(catalogStorageKey(theme))
       return null
     }
 
     if (Date.now() - parsed.savedAt > CATALOG_TTL_MS) {
-      storage.removeItem(catalogStorageKey(market, theme))
+      storage.removeItem(catalogStorageKey(theme))
       return null
     }
 
@@ -244,13 +223,13 @@ function readStoredCatalog(market: MusicMarket, theme: MusicTheme): Track[] | nu
   }
 }
 
-function writeStoredCatalog(market: MusicMarket, theme: MusicTheme, tracks: Track[]): void {
+function writeStoredCatalog(theme: MusicTheme, tracks: Track[]): void {
   const storage = getStorage()
   if (!storage) return
 
   try {
     const payload: StoredCatalog = { savedAt: Date.now(), tracks }
-    storage.setItem(catalogStorageKey(market, theme), JSON.stringify(payload))
+    storage.setItem(catalogStorageKey(theme), JSON.stringify(payload))
   } catch {
     // Quota dépassé ou mode privé : le cache mémoire suffit pour la session.
   }
@@ -300,14 +279,13 @@ async function fetchJson<T>(query: string, url: URL): Promise<T> {
 async function fetchTracksForQuery(
   query: string,
   theme: ConcreteMusicTheme,
-  market: MusicMarket,
 ): Promise<Track[]> {
   const url = new URL(ITUNES_SEARCH_URL)
   url.search = new URLSearchParams({
     term: query,
     media: 'music',
     entity: 'song',
-    country: MUSIC_MARKET_COUNTRY[market],
+    country: 'FR',
     limit: ITUNES_LIMIT,
   }).toString()
 
@@ -334,16 +312,15 @@ const queryCache = new Map<string, Promise<Track[]>>()
 function fetchTracksForQueryCached(
   query: string,
   theme: ConcreteMusicTheme,
-  market: MusicMarket,
 ): Promise<Track[]> {
-  const key = `${market}|${theme}|${query}`
+  const key = `${theme}|${query}`
   const cached = queryCache.get(key)
 
   if (cached) {
     return cached
   }
 
-  const promise = fetchTracksForQuery(query, theme, market).catch((error: unknown) => {
+  const promise = fetchTracksForQuery(query, theme).catch((error: unknown) => {
     queryCache.delete(key)
     throw error
   })
@@ -351,14 +328,11 @@ function fetchTracksForQueryCached(
   return promise
 }
 
-async function fetchTracksForTheme(
-  theme: ConcreteMusicTheme,
-  market: MusicMarket,
-): Promise<Track[]> {
+async function fetchTracksForTheme(theme: ConcreteMusicTheme): Promise<Track[]> {
   const config = THEME_CONFIG[theme]
 
   const results = await Promise.allSettled(
-    config.queries.map((query) => fetchTracksForQueryCached(query, theme, market)),
+    config.queries.map((query) => fetchTracksForQueryCached(query, theme)),
   )
 
   const failures = results.filter((result) => result.status === 'rejected')
@@ -369,8 +343,8 @@ async function fetchTracksForTheme(
   return results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
 }
 
-function catalogCacheKey(market: MusicMarket, theme: MusicTheme): string {
-  return `${market}|${theme}`
+function catalogCacheKey(theme: MusicTheme): string {
+  return theme
 }
 
 const catalogCache = new Map<string, Track[]>()
@@ -382,28 +356,23 @@ export function clearCatalogCache(): void {
   const storage = getStorage()
   if (!storage) return
 
-  for (const market of MUSIC_MARKETS) {
-    for (const theme of MUSIC_THEMES) {
-      try {
-        storage.removeItem(catalogStorageKey(market, theme))
-      } catch {
-        // Ignore : un cache non supprimable ne doit pas faire échouer l'appel.
-      }
+  for (const theme of MUSIC_THEMES) {
+    try {
+      storage.removeItem(catalogStorageKey(theme))
+    } catch {
+      // Ignore : un cache non supprimable ne doit pas faire échouer l'appel.
     }
   }
 }
 
-export async function fetchTracks(
-  theme: MusicTheme = 'all',
-  market: MusicMarket = DEFAULT_MUSIC_MARKET,
-): Promise<Track[]> {
-  const cacheKey = catalogCacheKey(market, theme)
+export async function fetchTracks(theme: MusicTheme = 'all'): Promise<Track[]> {
+  const cacheKey = catalogCacheKey(theme)
   const cached = catalogCache.get(cacheKey)
   if (cached) {
     return cached
   }
 
-  const stored = readStoredCatalog(market, theme)
+  const stored = readStoredCatalog(theme)
   if (stored && isCatalogSufficient(stored)) {
     catalogCache.set(cacheKey, stored)
     return stored
@@ -411,7 +380,7 @@ export async function fetchTracks(
 
   const themesToLoad = theme === 'all' ? CONCRETE_THEMES : [theme]
   const results = await Promise.allSettled(
-    themesToLoad.map((currentTheme) => fetchTracksForTheme(currentTheme, market)),
+    themesToLoad.map((currentTheme) => fetchTracksForTheme(currentTheme)),
   )
   const failures = results.filter((result) => result.status === 'rejected')
   if (failures.length > 0) {
@@ -438,13 +407,13 @@ export async function fetchTracks(
   }
 
   catalogCache.set(cacheKey, tracks)
-  writeStoredCatalog(market, theme, tracks)
+  writeStoredCatalog(theme, tracks)
 
   if (theme === 'all') {
     for (const [currentTheme, currentTracks] of perTheme) {
       if (isCatalogSufficient(currentTracks)) {
-        catalogCache.set(catalogCacheKey(market, currentTheme), currentTracks)
-        writeStoredCatalog(market, currentTheme, currentTracks)
+        catalogCache.set(catalogCacheKey(currentTheme), currentTracks)
+        writeStoredCatalog(currentTheme, currentTracks)
       }
     }
   }

@@ -24,12 +24,12 @@ Play happens in a shared physical space — a living room, a party, a car, a sha
 
 ## Capabilities and Constraints
 
-- Solo game: configurable catalogue (French/international), theme, round count (5/10/15/20) and round duration (15/20/30 s), five typed guesses per round with autocomplete, skip, per-round score and persisted high score.
-- Multiplayer: Supabase Realtime rooms (host + joiners via code), host-controlled catalogue/theme/rounds/duration, synchronized clock, live leaderboard, per-round reveal, final ranking, rematch.
+- Solo game: configurable theme, round count (5/10/15/20) and round duration (15/20/30 s), five typed guesses per round with autocomplete, skip, per-round score and persisted high score.
+- Multiplayer: Supabase Realtime rooms (host + joiners via code), host-controlled theme/rounds/duration, synchronized clock, live leaderboard, per-round reveal, final ranking, rematch.
 - Music catalog and audio previews come from the iTunes Search API; Supabase provides realtime transport only.
 - Stack is TypeScript + Vite with no UI framework; DOM is built imperatively and styling is plain CSS.
 - Entirely French-language interface and copy.
-- Round count and duration are limited to the offered options; catalogue is French or international (iTunes storefront FR vs US); themes are all / pop / rock / rap / electro / chanson française / funk-disco.
+- Round count and duration are limited to the offered options; themes are all / pop / rock / rap / electro / chanson française / funk-disco.
 
 ## Brand Commitments
 

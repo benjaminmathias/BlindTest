@@ -117,12 +117,12 @@ describe('catalogue', () => {
 
     await fetchTracks('rock')
 
-    expect(storage.getItem('blindtest-catalog-v4:fr:rock')).not.toBeNull()
+    expect(storage.getItem('blindtest-catalog-v5:rock')).not.toBeNull()
   })
 
   it('sert un catalogue persisté sans rappeler iTunes', async () => {
     const storage = createStorage()
-    storage.setItem('blindtest-catalog-v4:fr:rock', JSON.stringify({
+    storage.setItem('blindtest-catalog-v5:rock', JSON.stringify({
       savedAt: Date.now(),
       tracks: Array.from({ length: 20 }, (_, index) => track(index, `Titre ${index}`)),
     }))
@@ -136,7 +136,7 @@ describe('catalogue', () => {
 
   it('ignore un catalogue persisté expiré', async () => {
     const storage = createStorage()
-    storage.setItem('blindtest-catalog-v4:fr:rock', JSON.stringify({
+    storage.setItem('blindtest-catalog-v5:rock', JSON.stringify({
       savedAt: Date.now() - 25 * 60 * 60 * 1000,
       tracks: Array.from({ length: 20 }, (_, index) => track(index, `Titre ${index}`)),
     }))
@@ -149,7 +149,7 @@ describe('catalogue', () => {
 
     expect(await fetchTracks('rock')).toHaveLength(20)
     expect(fetchMock).toHaveBeenCalled()
-    expect(storage.getItem('blindtest-catalog-v4:fr:rock')).not.toBeNull()
+    expect(storage.getItem('blindtest-catalog-v5:rock')).not.toBeNull()
   })
 
   it('refuse un catalogue final insuffisant', async () => {
@@ -160,35 +160,28 @@ describe('catalogue', () => {
     await expect(fetchTracks('rock')).rejects.toThrow('Catalogue insuffisant')
   })
 
-  it('accepte les libellés de genre anglais du storefront international', async () => {
+  it('accepte les libellés de genre anglais', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ results: itunesResults(20, 'Electronic') }),
     }))
 
-    expect(await fetchTracks('electro', 'international')).toHaveLength(20)
+    expect(await fetchTracks('electro')).toHaveLength(20)
   })
 
-  it('sépare les catalogues et les caches par marché', async () => {
-    const storage = createStorage()
+  it('interroge le storefront français', async () => {
     const requestedCountries: string[] = []
-    const fetchMock = vi.fn().mockImplementation((url: URL) => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: URL) => {
       requestedCountries.push(url.searchParams.get('country') ?? '')
       return Promise.resolve({
         ok: true,
         json: async () => ({ results: itunesResults(20, 'Rock') }),
       })
-    })
-    vi.stubGlobal('localStorage', storage)
-    vi.stubGlobal('fetch', fetchMock)
+    }))
 
-    await fetchTracks('rock', 'fr')
-    await fetchTracks('rock', 'international')
-    await fetchTracks('rock', 'fr')
+    await fetchTracks('rock')
 
-    expect(requestedCountries).toEqual(['FR', 'US'])
-    expect(storage.getItem('blindtest-catalog-v4:fr:rock')).not.toBeNull()
-    expect(storage.getItem('blindtest-catalog-v4:international:rock')).not.toBeNull()
+    expect(requestedCountries).toEqual(['FR'])
   })
 
   it('mappe Variété française vers la catégorie chanson', async () => {
@@ -197,16 +190,7 @@ describe('catalogue', () => {
       json: async () => ({ results: itunesResults(20, 'Variété française') }),
     }))
 
-    expect(await fetchTracks('chanson', 'fr')).toHaveLength(20)
-  })
-
-  it('mappe French Pop vers la catégorie chanson en international', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ results: itunesResults(20, 'French Pop') }),
-    }))
-
-    expect(await fetchTracks('chanson', 'international')).toHaveLength(20)
+    expect(await fetchTracks('chanson')).toHaveLength(20)
   })
 
   it('accepte le genre Funk pour la catégorie funk', async () => {
@@ -215,7 +199,7 @@ describe('catalogue', () => {
       json: async () => ({ results: itunesResults(20, 'Funk') }),
     }))
 
-    expect(await fetchTracks('funk', 'fr')).toHaveLength(20)
+    expect(await fetchTracks('funk')).toHaveLength(20)
   })
 
   it('accepte le genre Disco pour la catégorie funk', async () => {
@@ -224,6 +208,6 @@ describe('catalogue', () => {
       json: async () => ({ results: itunesResults(20, 'Disco') }),
     }))
 
-    expect(await fetchTracks('funk', 'fr')).toHaveLength(20)
+    expect(await fetchTracks('funk')).toHaveLength(20)
   })
 })

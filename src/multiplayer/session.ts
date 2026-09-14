@@ -1,4 +1,4 @@
-import { fetchTracks, isMusicMarket, isMusicTheme, MUSIC_MARKET_LABELS, MUSIC_THEME_LABELS } from '../api'
+import { fetchTracks, isMusicTheme, MUSIC_THEME_LABELS } from '../api'
 import { isRoundCount, isRoundDuration, pickUnplayedTrack, type RoundOutcome } from '../game'
 import { renderHome } from '../screens/home'
 import { renderLobby } from '../screens/lobby'
@@ -6,7 +6,6 @@ import { revealArtwork } from '../shared/artwork'
 import { createId } from '../shared/id'
 import { renderRoundResult } from '../shared/round-result'
 import {
-  DEFAULT_MUSIC_MARKET,
   DEFAULT_MUSIC_THEME,
   DEFAULT_ROUND_COUNT,
   DEFAULT_ROUND_DURATION,
@@ -201,10 +200,6 @@ function renderPlayers(players: Player[]): void {
     state.multiplayerMusicTheme = hostPlayer.musicTheme
   }
 
-  if (!state.multiplayerIsHost && hostPlayer?.musicMarket) {
-    state.multiplayerMusicMarket = hostPlayer.musicMarket
-  }
-
   if (!state.multiplayerIsHost && hostPlayer?.roundCount) {
     state.multiplayerRoundCount = hostPlayer.roundCount
   }
@@ -248,11 +243,6 @@ function renderPlayers(players: Player[]): void {
   const lobbyThemeValue = document.querySelector<HTMLElement>('#lobby-theme-value')
   if (lobbyThemeValue) {
     lobbyThemeValue.textContent = MUSIC_THEME_LABELS[state.multiplayerMusicTheme]
-  }
-
-  const lobbyMarketValue = document.querySelector<HTMLElement>('#lobby-market-value')
-  if (lobbyMarketValue) {
-    lobbyMarketValue.textContent = MUSIC_MARKET_LABELS[state.multiplayerMusicMarket]
   }
 
   const lobbyRoundCountValue = document.querySelector<HTMLElement>('#lobby-round-count-value')
@@ -334,9 +324,6 @@ function handleGameStart(gameStart: GameStart): void {
   state.currentGameMusicTheme = isMusicTheme(gameStart.musicTheme)
     ? gameStart.musicTheme
     : DEFAULT_MUSIC_THEME
-  state.currentGameMusicMarket = isMusicMarket(gameStart.musicMarket)
-    ? gameStart.musicMarket
-    : DEFAULT_MUSIC_MARKET
   state.currentGameRoundCount = isRoundCount(gameStart.roundCount)
     ? gameStart.roundCount
     : DEFAULT_ROUND_COUNT
@@ -361,19 +348,17 @@ export async function startMultiplayerGame(): Promise<void> {
 
   state.currentMultiplayerGameId = createId()
   state.currentGameMusicTheme = state.multiplayerMusicTheme
-  state.currentGameMusicMarket = state.multiplayerMusicMarket
   state.currentGameRoundCount = state.multiplayerRoundCount
   state.currentGameRoundDuration = state.multiplayerRoundDuration
   resetMultiplayerGameState()
   showGameStarting()
   await connection.startGame(state.currentMultiplayerGameId, {
     musicTheme: state.currentGameMusicTheme,
-    musicMarket: state.currentGameMusicMarket,
     roundCount: state.currentGameRoundCount,
     roundDuration: state.currentGameRoundDuration,
   })
 
-  state.multiplayerTracks = await fetchTracks(state.currentGameMusicTheme, state.currentGameMusicMarket)
+  state.multiplayerTracks = await fetchTracks(state.currentGameMusicTheme)
   state.multiplayerCatalog = state.multiplayerTracks.map(({ id, title, artist }) => ({ id, title, artist }))
   await connection.sendCatalog({ gameId: state.currentMultiplayerGameId, options: state.multiplayerCatalog })
 
@@ -517,8 +502,6 @@ export async function leaveMultiplayerRoom(initialStatus = ''): Promise<void> {
   state.currentMultiplayerGameId = null
   state.multiplayerTracks = []
   state.currentGameMusicTheme = DEFAULT_MUSIC_THEME
-  state.currentGameMusicMarket = DEFAULT_MUSIC_MARKET
-  state.multiplayerMusicMarket = DEFAULT_MUSIC_MARKET
   state.currentGameRoundCount = DEFAULT_ROUND_COUNT
   state.multiplayerRoundCount = DEFAULT_ROUND_COUNT
   state.currentGameRoundDuration = DEFAULT_ROUND_DURATION
@@ -691,7 +674,6 @@ function handleRoundComplete(result: RoundComplete): void {
 export async function openRoom(roomCode: string, playerName: string, isHost: boolean): Promise<void> {
   try {
     state.multiplayerMusicTheme = DEFAULT_MUSIC_THEME
-    state.multiplayerMusicMarket = DEFAULT_MUSIC_MARKET
     state.multiplayerRoundCount = DEFAULT_ROUND_COUNT
     state.multiplayerRoundDuration = DEFAULT_ROUND_DURATION
     renderLobby(roomCode, isHost)
@@ -718,7 +700,6 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
       isHost,
       {
         musicTheme: state.multiplayerMusicTheme,
-        musicMarket: state.multiplayerMusicMarket,
         roundCount: state.multiplayerRoundCount,
         roundDuration: state.multiplayerRoundDuration,
       },

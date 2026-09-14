@@ -99,7 +99,7 @@ describe('protocole multijoueur intégré', () => {
     const guestResults: AttemptResult[] = []
     const guestReveals: RoundReveal[] = []
     const noop = (): void => undefined
-    const settings = { musicTheme: 'pop' as const, musicMarket: 'fr' as const, roundCount: 5 as const, roundDuration: 30 as const }
+    const settings = { musicTheme: 'pop' as const, roundCount: 5 as const, roundDuration: 30 as const }
 
     const host = await joinRoom(
       'TEST', 'host', 'Host', true, settings,
@@ -141,7 +141,7 @@ describe('protocole multijoueur intégré', () => {
   it('propage le départ de l’hôte au client restant', async () => {
     const snapshots: Player[][] = []
     const noop = (): void => undefined
-    const settings = { musicTheme: 'rock' as const, musicMarket: 'fr' as const, roundCount: 5 as const, roundDuration: 30 as const }
+    const settings = { musicTheme: 'rock' as const, roundCount: 5 as const, roundDuration: 30 as const }
     const host = await joinRoom(
       'LEFT', 'host', 'Host', true, settings,
       noop, noop, noop, noop, noop, noop, noop, noop, noop, noop,
@@ -158,7 +158,7 @@ describe('protocole multijoueur intégré', () => {
 
   it('ne conserve qu’un hôte lors d’une collision simultanée', async () => {
     const noop = (): void => undefined
-    const settings = { musicTheme: 'all' as const, musicMarket: 'international' as const, roundCount: 5 as const, roundDuration: 30 as const }
+    const settings = { musicTheme: 'all' as const, roundCount: 5 as const, roundDuration: 30 as const }
     const connectHost = (playerId: string) => joinRoom(
       'RACE', playerId, playerId, true, settings,
       noop, noop, noop, noop, noop, noop, noop, noop, noop, noop,
