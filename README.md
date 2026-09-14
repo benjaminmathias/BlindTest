@@ -1,53 +1,122 @@
-# Blindtest
+# BlindTest
 
-Joue à un blindtest musical en solo ou entre amis : devine le titre à partir d'un court extrait.
+Blindtest musical jouable en solo ou en multijoueur temps réel.
+
+Devine le titre à partir d’un extrait audio, avec autocomplete, cinq essais maximum et score basé sur le temps et le nombre de tentatives.
+
+**Live :** https://blind-test-neon.vercel.app/
 
 ## Fonctionnalités
 
-- Réponse par saisie avec suggestions et cinq essais par manche ;
-- Mode solo avec possibilité de passer un titre ;
-- Multijoueur temps réel via Supabase Realtime ;
-- Thèmes musicaux (tous, pop, rock, rap / hip-hop, électro, chanson française, funk / disco) ;
-- Choix du nombre de manches : 5, 10, 15 ou 20 ;
-- Durée des manches réglable : 15, 20 ou 30 secondes ;
-- Classement en direct et classement final ;
-- Revanche entre joueurs ;
-- Volume réglable et mémorisé localement.
+- Solo et multijoueur temps réel
+- Autocomplete par titre ou artiste
+- 5 essais maximum par manche
+- Score basé sur le temps restant et le numéro de tentative
+- Timeline et récapitulatif des manches
+- Classement en direct et classement final
+- Revanche multijoueur
+- Durée des manches : 15, 20 ou 30 secondes
+- Parties de 5, 10, 15 ou 20 manches
+- Thèmes :
+  - Tous
+  - Pop
+  - Rock
+  - Rap / Hip-Hop
+  - Électro
+  - Chanson française
+  - Funk / Disco
+- Volume mémorisé localement
+
+## Multijoueur
+
+Le multijoueur repose sur Supabase Realtime.
+
+L’hôte fait autorité sur la partie :
+
+- sélection du morceau ;
+- démarrage des manches ;
+- validation des réponses ;
+- calcul des scores ;
+- progression et fin de partie.
+
+Les clients envoient uniquement l’identifiant de leur réponse. Le résultat est validé côté hôte avant d’être renvoyé au joueur.
+
+Une synchronisation d’horloge permet aux joueurs de démarrer chaque extrait au même moment malgré la latence réseau.
+
+## Catalogue musical
+
+Les morceaux et extraits audio proviennent de l’iTunes Search API.
+
+Le catalogue est :
+
+- filtré par thème ;
+- dédupliqué ;
+- nettoyé de certaines versions parasites ;
+- normalisé pour regrouper les éditions équivalentes d’un même morceau.
+
+Par exemple :
+
+`Wonderwall` et `Wonderwall (2014 Remaster)` sont considérés comme la même chanson.
+
+Le catalogue est mis en cache en mémoire et dans `localStorage` pendant 24 heures. Les erreurs réseau temporaires sont automatiquement retentées.
 
 ## Stack
 
 - TypeScript
+- HTML / CSS
 - Vite
 - Supabase Realtime
 - iTunes Search API
+- Vitest
+- happy-dom
+- Vercel
 
-## Lancer localement
+Aucun framework frontend.
 
-```sh
-npm install
-cp .env.example .env.local
-npm run dev
-```
+## Structure
 
-Renseigne ensuite dans `.env.local` les deux variables d'environnement nécessaires :
+    src/
+    ├── api.ts                  # iTunes, catalogue, cache et retry
+    ├── game.ts                 # règles du jeu, scoring et autocomplete
+    ├── song.ts                 # identité et canonicalisation des morceaux
+    ├── solo.ts                 # orchestration du mode solo
+    ├── guess-ui.ts             # UI de saisie et historique des essais
+    ├── ui.ts                   # helpers UI
+    ├── multiplayer/
+    │   ├── game.ts             # validation et scoring côté hôte
+    │   ├── game-ui.ts          # classement multijoueur
+    │   └── realtime.ts         # Supabase Presence / Broadcast / clock sync
+    ├── main.ts                 # navigation et orchestration principale
+    └── style.css
 
-- `VITE_SUPABASE_URL` : URL de ton projet Supabase ;
-- `VITE_SUPABASE_PUBLISHABLE_KEY` : clé publishable Supabase (utilisable côté client).
+## Lancer le projet
 
-## Build
+    git clone https://github.com/benjaminmathias/BlindTest.git
+    cd BlindTest
+    npm install
+    cp .env.example .env.local
 
-```sh
-npm run build
-```
+Configurer ensuite :
 
-## Source audio
+    VITE_SUPABASE_URL=
+    VITE_SUPABASE_PUBLISHABLE_KEY=
 
-Les métadonnées des morceaux et les extraits audio proviennent de l'iTunes Search API.
-Les previews sont utilisées dans le cadre de ce projet de démonstration.
+Puis :
 
-## Catalogue
+    npm run dev
 
-- Le catalogue est construit à partir de l'iTunes Search API, par thème.
-- Les résultats sont mis en cache en mémoire pour la session et dans `localStorage` pour 24 h.
-- Les erreurs réseau transitoires (408, 425, 429, 5xx) sont retentées automatiquement.
-- Un chargement partiel est accepté tant que le catalogue reste suffisant pour lancer une partie.
+## Tests
+
+    npm test
+
+Vérification TypeScript + tests :
+
+    npm run check
+
+Build de production :
+
+    npm run build
+
+## Audio
+
+Les métadonnées et extraits audio sont fournis par l’iTunes Search API et utilisés dans le cadre de ce projet de démonstration.
