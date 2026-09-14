@@ -234,8 +234,7 @@ h2 {
 .round-label,
 .leaderboard-heading,
 .round-recap__heading,
-.stat__label,
-.round-result__status {
+.stat__label {
   color: var(--text-2);
   font-size: 0.82rem;
   font-weight: 500;
@@ -1198,24 +1197,18 @@ input[aria-invalid="true"] {
   min-width: 0;
 }
 
-.round-result--correct .round-result__status { color: var(--accent); }
-.round-result--wrong .round-result__status { color: var(--wrong); }
-
-.round-result__status {
-  flex: none;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
 .round-result__track {
+  display: -webkit-box;
   min-width: 0;
   color: var(--text);
   font-size: 1rem;
   line-height: 1.3;
   font-weight: 600;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .round-result__artist {
@@ -1388,14 +1381,32 @@ input[aria-invalid="true"] {
   .multiplayer-form,
   .home-settings,
   .lobby-rules,
-  .guess-search,
   .score-summary,
   .multiplayer-actions,
   .result-actions,
   .lobby-actions { grid-template-columns: 1fr; }
 
-  .guess-search__submit { width: 100%; }
   .game-shell { padding-inline: 1rem; }
+}
+
+/* Keep the search field and its action on one line on ordinary phones; only the
+   narrowest viewports stack them. */
+@media (max-width: 400px) {
+  .guess-search { grid-template-columns: minmax(0, 1fr); }
+
+  .guess-search__submit { width: 100%; }
+
+  .round-recap__item {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 2px;
+  }
+
+  .round-recap__time { grid-column: 2; }
+}
+
+@media (max-width: 430px) {
+  .game-topbar { flex-wrap: wrap; row-gap: var(--space-2); }
+  .game-topbar__right { flex-wrap: wrap; }
 }
 
 @media (max-width: 380px) {

@@ -189,7 +189,7 @@ Every screen is one centred column. The content column is `min(100% - 2rem, 560p
 
 Spacing follows one 0.25rem-based scale (0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 / 3rem). Groups are tight (0.5–0.75rem), sections are generous (1.5–2rem), and a heading always has more space above it than below. The game screen is a deliberate vertical stack with every duplicate stripped out: topbar (round number, score, volume), stage (cover + clock), the guess area, the leaderboard, and leave. The round timeline lives only on the result screen; the status line stays empty and collapses until it has something real to say (a wrong answer, a check, an error). On reveal the round result takes the clock's place in the same fixed slot — the clock hides, the card appears, and nothing below moves — and the guess field is replaced in place by the round's primary action, so the bottom slot always holds "what happens next".
 
-Responsive behaviour is two breakpoints. At **560px** the multi-column arrangements collapse to one column — the settings grid, the multiplayer form, the guess search, the action pairs, the score summary — the faceplate padding tightens to 1.35rem, and the submit button goes full width. The stage also eases to `min(56vw, 230px)` so the clock and guess field stay in view on a phone. At **380px** the stage tightens to `min(58vw, 195px)`, the clock drops to a 1.85rem floor, the stage's bottom margin shrinks, and the page padding tightens again — keeping both the guess field and its action above the fold down to a 360×800 phone.
+Responsive behaviour is driven by a few narrow breakpoints. At **560px** the multi-column arrangements collapse to one column — the settings grid, the multiplayer form, the action pairs, the score summary — the faceplate padding tightens to 1.35rem, and the stage eases to `min(56vw, 230px)` so the clock and guess field stay in view on a phone. The guess field and its submit keep sharing one line down to about **400px**, where they finally stack. Around **430px** the game topbar is allowed to wrap so the round label, score and volume never overflow. At **380px** the stage tightens to `min(58vw, 195px)`, the clock drops to a 1.85rem floor, the stage's bottom margin shrinks, and the page padding tightens again — the intent being to keep both the guess field and its action above the fold on common phones (around 360×800), though this depends on the browser's viewport and zoom.
 
 ## Elevation & Depth
 
@@ -237,7 +237,7 @@ Corners are soft and modern, never pill-shaped for containers. Plates and the ar
 - **State:** the fill scales left-to-right; in the final 5 seconds both the readout and the fill switch to Miss Red.
 
 ### Artwork Stage
-- **Style:** a square 18px plate (`min(72vw, 300px)`) holding either the mystery mark or the cover. On phones it eases to `min(56vw, 230px)` at ≤560px and `min(58vw, 195px)` at ≤380px so the guess field and its action stay above the fold.
+- **Style:** a square 18px plate (`min(72vw, 300px)`) holding either the mystery mark or the cover. On phones it eases to `min(56vw, 230px)` at ≤560px and `min(58vw, 195px)` at ≤380px to help keep the guess field and its action in view.
 - **Behaviour:** the mystery mark is two faint rings and a green note that rotates slowly (8s) while the extract plays, pausing on reveal; the cover scales from 1.05 to 1 as it fades in over 440ms while the mystery mark scales down and fades. Both are disabled under `prefers-reduced-motion`.
 
 ### Suggestion Panel

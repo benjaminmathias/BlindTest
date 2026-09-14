@@ -4,6 +4,7 @@ import { createGuessArea } from '../guess-ui'
 import { volume } from '../services'
 import { renderArtworkMarkup } from '../shared/artwork'
 import { createId } from '../shared/id'
+import { getCanonicalSongKey } from '../song'
 import { state } from '../state'
 import { focusScreenHeading, formatRemainingTime } from '../ui'
 import { renderMultiplayerLeaderboard } from './leaderboard'
@@ -33,7 +34,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   state.multiplayerCurrentRoundNumber = round.round
   state.finishedPlayerIds = new Set()
   state.multiplayerAttempts = new Map()
-  state.multiplayerTriedAnswerIds = new Map()
+  state.multiplayerTriedAnswerKeys = new Map()
   state.multiplayerRoundFinished = false
   state.multiplayerLastOwnGuess = null
   state.multiplayerLastOwnElapsedMs = 0
@@ -60,7 +61,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
           ${renderArtworkMarkup()}
           <div class="stage-readout">
             <div class="progress">
-              <p id="multiplayer-timer" class="progress__time is-countdown">La manche commence...</p>
+              <p id="multiplayer-timer" class="progress__time is-countdown" role="timer">La manche commence...</p>
               <div class="progress__track" aria-hidden="true">
                 <div id="multiplayer-timer-progress" class="progress__bar"></div>
               </div>
@@ -69,6 +70,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
           </div>
         </div>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite"></p>
+        <p id="multiplayer-timer-status" class="sr-only" role="status" aria-live="polite"></p>
         <p id="multiplayer-sync-note" class="status" role="status" aria-live="polite" hidden>Synchronisation de l’horloge…</p>
         <h1 id="multiplayer-question-title" class="sr-only">Quel est ce titre ?</h1>
         <div data-guess-area></div>
@@ -88,6 +90,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')!
   const syncNote = document.querySelector<HTMLParagraphElement>('#multiplayer-sync-note')!
   const gameTimer = document.querySelector<HTMLParagraphElement>('#multiplayer-timer')!
+  const timerStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-timer-status')!
   const timerProgress = document.querySelector<HTMLDivElement>('#multiplayer-timer-progress')!
   const roundProgress = gameTimer.parentElement
   const leaveButton = document.querySelector<HTMLButtonElement>('#leave-multiplayer-round-button')!
@@ -97,7 +100,8 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   let audioHasStarted = false
   let audioStartAttempted = false
   let waitingForResult = false
-  const triedIds = new Set<string>()
+  let announcedTimerThreshold = 0
+  const triedKeys = new Set<string>()
   const roundDurationMs = state.currentGameRoundDuration * 1000
 
   volume.setupControls()
@@ -112,7 +116,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   const form = guessArea.form
   state.multiplayerGuessArea = guessArea
   guessArea.setDisabled(true)
-  guessArea.setExcludedIds(triedIds)
+  guessArea.setExcludedKeys(triedKeys)
 
   const isCurrentRound = (): boolean =>
     state.currentMultiplayerRound?.roundId === round.roundId
@@ -143,7 +147,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
       state.multiplayerLastOwnGuess ? formatGuessOption(state.multiplayerLastOwnGuess) : '',
     )
     guessArea.announceRemaining(result.attemptsRemaining)
-    guessArea.setExcludedIds(triedIds)
+    guessArea.setExcludedKeys(triedKeys)
     if (result.finished) {
       state.multiplayerLastOwnElapsedMs = Math.min(
         roundDurationMs,
@@ -166,14 +170,15 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
       guessArea.showError('Choisis un titre dans les suggestions.')
       return
     }
-    if (triedIds.has(answer.id)) {
+    const answerKey = getCanonicalSongKey(answer)
+    if (triedKeys.has(answerKey)) {
       guessArea.showError('Ce titre a déjà été essayé.')
       return
     }
 
     guessArea.clearError()
-    triedIds.add(answer.id)
-    guessArea.setExcludedIds(triedIds)
+    triedKeys.add(answerKey)
+    guessArea.setExcludedKeys(triedKeys)
     state.multiplayerLastOwnGuess = answer
     waitingForResult = true
     guessArea.setDisabled(true)
@@ -343,6 +348,14 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     gameTimer.textContent = formatRemainingTime(remainingTime)
     timerProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, remainingTime / roundDurationMs))})`
     roundProgress?.classList.toggle('is-low', remainingTime > 0 && remainingTime <= 5000)
+
+    if (remainingTime <= 10_000 && remainingTime > 5_000 && announcedTimerThreshold < 10) {
+      announcedTimerThreshold = 10
+      timerStatus.textContent = 'Il reste 10 secondes.'
+    } else if (remainingTime <= 5_000 && remainingTime > 0 && announcedTimerThreshold < 5) {
+      announcedTimerThreshold = 5
+      timerStatus.textContent = 'Il reste 5 secondes.'
+    }
 
     if (remainingTime <= 0) {
       if (!hasFinished) {

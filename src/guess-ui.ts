@@ -1,5 +1,6 @@
 import {
   formatGuessOption,
+  MAX_SUGGESTIONS,
   normalizeSearchText,
   searchGuessOptions,
   type GuessOption,
@@ -148,7 +149,7 @@ export type GuessArea = {
   setDisabled: (disabled: boolean) => void
   setSubmitHidden: (hidden: boolean) => void
   focusInput: () => void
-  setExcludedIds: (ids: Iterable<string>) => void
+  setExcludedKeys: (keys: Iterable<string>) => void
   showError: (message: string) => void
   clearError: () => void
   announceRemaining: (remaining: number) => void
@@ -258,6 +259,8 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
   const uid = guessAreaCounter
   const listboxId = `guess-suggestions-${uid}`
   const announcerId = `guess-attempts-${uid}`
+  const errorId = `guess-error-${uid}`
+  const emptyAnnouncerId = `guess-empty-${uid}`
 
   const submitLabel = config.submitLabel ?? 'Valider'
   const skipLabel = config.skipLabel ?? 'Passer'
@@ -268,7 +271,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
   let selectedOption: GuessOption | null = null
   let selectedText = ''
-  let excludedIds = new Set<string>()
+  let excludedKeys = new Set<string>()
   let suggestions: GuessOption[] = []
   let activeIndex = -1
   let buttonMode: 'validate' | 'skip' = canSkip ? 'skip' : 'validate'
@@ -367,6 +370,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
   const error = document.createElement('p')
   error.className = 'guess-search__error'
+  error.id = errorId
   error.hidden = true
 
   const announcer = document.createElement('p')
@@ -375,7 +379,13 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
   announcer.setAttribute('role', 'status')
   announcer.setAttribute('aria-live', 'polite')
 
-  form.append(slotsElement, search, error, announcer)
+  const emptyAnnouncer = document.createElement('p')
+  emptyAnnouncer.className = 'sr-only'
+  emptyAnnouncer.id = emptyAnnouncerId
+  emptyAnnouncer.setAttribute('role', 'status')
+  emptyAnnouncer.setAttribute('aria-live', 'polite')
+
+  form.append(slotsElement, search, error, announcer, emptyAnnouncer)
   container.append(form)
 
   const closeList = (): void => {
@@ -383,6 +393,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
     listbox.replaceChildren()
     suggestions = []
     activeIndex = -1
+    emptyAnnouncer.textContent = ''
     input.setAttribute('aria-expanded', 'false')
     input.removeAttribute('aria-activedescendant')
   }
@@ -403,11 +414,27 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
     }
   }
 
+  const clearErrorState = (): void => {
+    error.hidden = true
+    error.textContent = ''
+    input.removeAttribute('aria-invalid')
+    input.removeAttribute('aria-errormessage')
+    input.setAttribute('aria-describedby', announcerId)
+  }
+
+  const showErrorState = (message: string): void => {
+    error.textContent = message
+    error.hidden = false
+    input.setAttribute('aria-invalid', 'true')
+    input.setAttribute('aria-errormessage', errorId)
+    input.setAttribute('aria-describedby', `${announcerId} ${errorId}`)
+  }
+
   const chooseOption = (option: GuessOption): void => {
     selectedOption = option
     selectedText = formatGuessOption(option)
     input.value = selectedText
-    input.removeAttribute('aria-invalid')
+    clearErrorState()
     closeList()
     updateButtonMode()
     input.focus()
@@ -426,14 +453,18 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
       const empty = document.createElement('li')
       empty.className = 'guess-suggestions__empty'
+      empty.setAttribute('aria-hidden', 'true')
       empty.textContent = 'Aucun morceau trouvé'
       listbox.append(empty)
       listbox.hidden = false
       activeIndex = -1
+      emptyAnnouncer.textContent = 'Aucun morceau trouvé'
       input.setAttribute('aria-expanded', 'true')
       input.removeAttribute('aria-activedescendant')
       return
     }
+
+    emptyAnnouncer.textContent = ''
 
     const items = suggestions.map((option, index) => {
       const item = document.createElement('li')
@@ -469,8 +500,12 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
   }
 
   const refreshSuggestions = (): void => {
-    suggestions = searchGuessOptions(config.catalog, input.value)
-      .filter((option) => !excludedIds.has(option.id))
+    suggestions = searchGuessOptions(
+      config.catalog,
+      input.value,
+      MAX_SUGGESTIONS,
+      excludedKeys,
+    )
     activeIndex = -1
     renderListbox()
   }
@@ -495,8 +530,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       selectedOption = null
       selectedText = ''
     }
-    error.hidden = true
-    input.removeAttribute('aria-invalid')
+    clearErrorState()
     updateButtonMode()
     refreshSuggestions()
   }, { signal })
@@ -575,6 +609,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       input.value = ''
       selectedOption = null
       selectedText = ''
+      clearErrorState()
       closeList()
       updateButtonMode()
     },
@@ -589,21 +624,17 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       submit.hidden = hidden
     },
     focusInput: () => input.focus(),
-    setExcludedIds: (ids) => {
-      excludedIds = new Set(ids)
+    setExcludedKeys: (keys) => {
+      excludedKeys = new Set(keys)
       if (!listbox.hidden) {
         refreshSuggestions()
       }
     },
     showError: (message) => {
-      error.textContent = message
-      error.hidden = false
-      input.setAttribute('aria-invalid', 'true')
+      showErrorState(message)
     },
     clearError: () => {
-      error.hidden = true
-      error.textContent = ''
-      input.removeAttribute('aria-invalid')
+      clearErrorState()
     },
     announceRemaining: (remaining) => {
       announcer.textContent = `${remaining} essai${remaining === 1 ? '' : 's'} restant${remaining === 1 ? '' : 's'}`

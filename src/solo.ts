@@ -6,7 +6,7 @@ import {
 import {
   createGuessArea, roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry,
 } from './guess-ui'
-import { isSameSong } from './song'
+import { getCanonicalSongKey, isSameSong } from './song'
 import { focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
 const MAX_ROUND_SCORE = 1000
@@ -148,10 +148,11 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
             </div>
           </header>
           <div class="game-stage">${options.renderArtworkMarkup()}<div class="stage-readout"><div class="progress">
-            <p id="timer" class="progress__time">${formatRemainingTime(roundDurationMs)}</p>
+            <p id="timer" class="progress__time" role="timer">${formatRemainingTime(roundDurationMs)}</p>
             <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
           </div><p id="game-reveal" class="round-result-slot" role="status" aria-live="polite"></p></div></div>
           <p id="game-status" class="status" role="status" aria-live="polite"></p>
+          <p id="solo-timer-status" class="sr-only" role="status" aria-live="polite"></p>
           <h1 id="question-title" class="sr-only">Quel est ce titre ?</h1>
           <div data-guess-area></div>
           <button id="solo-play-audio-button" class="button-primary next-button" type="button"${audioBlocked ? '' : ' hidden'}>Lire l'extrait</button>
@@ -162,10 +163,11 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     const status = options.app.querySelector<HTMLParagraphElement>('#game-status')!
     const revealCard = options.app.querySelector<HTMLParagraphElement>('#game-reveal')!
     const timer = options.app.querySelector<HTMLParagraphElement>('#timer')!
+    const timerStatus = options.app.querySelector<HTMLParagraphElement>('#solo-timer-status')!
     const progress = options.app.querySelector<HTMLDivElement>('#timer-progress')!
     const scoreDisplay = options.app.querySelector<HTMLSpanElement>('#score')!
     const playButton = options.app.querySelector<HTMLButtonElement>('#solo-play-audio-button')!
-    const triedIds = new Set<string>()
+    const triedKeys = new Set<string>()
     let attemptsUsed = 0
     let lastGuess: GuessOption | null = null
 
@@ -177,7 +179,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       onSkip: () => finish(null, 'skip'),
     })
     const form = guessArea.form
-    guessArea.setExcludedIds(triedIds)
+    guessArea.setExcludedKeys(triedKeys)
 
     options.setupVolumeControls()
 
@@ -194,10 +196,21 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
 
     guessArea.focusInput()
     const remaining = (): number => Math.max(0, roundDurationMs - (performance.now() - roundStartedAt))
+    let announcedTimerThreshold = 0
+    const announceTimerThreshold = (value: number): void => {
+      if (value <= 10_000 && value > 5_000 && announcedTimerThreshold < 10) {
+        announcedTimerThreshold = 10
+        timerStatus.textContent = 'Il reste 10 secondes.'
+      } else if (value <= 5_000 && value > 0 && announcedTimerThreshold < 5) {
+        announcedTimerThreshold = 5
+        timerStatus.textContent = 'Il reste 5 secondes.'
+      }
+    }
     const updateTimer = (value: number): void => {
       timer.textContent = formatRemainingTime(value)
       progress.style.transform = `scaleX(${Math.max(0, Math.min(1, value / roundDurationMs))})`
       timer.parentElement?.classList.toggle('is-low', value > 0 && value <= 5000)
+      announceTimerThreshold(value)
     }
     const finish = (selected: GuessOption | null, outcome?: 'timeout' | 'skip'): void => {
       if (hasAnswered) return
@@ -273,14 +286,15 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         guessArea.focusInput()
         return
       }
-      if (triedIds.has(guess.id)) {
+      const guessKey = getCanonicalSongKey(guess)
+      if (triedKeys.has(guessKey)) {
         guessArea.showError('Cette réponse a déjà été essayée.')
         guessArea.focusInput()
         return
       }
       guessArea.clearError()
-      triedIds.add(guess.id)
-      guessArea.setExcludedIds(triedIds)
+      triedKeys.add(guessKey)
+      guessArea.setExcludedKeys(triedKeys)
       lastGuess = guess
       attemptsUsed += 1
       const isCorrect = isSameSong(guess, correctTrack)

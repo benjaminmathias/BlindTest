@@ -82,7 +82,7 @@ export function resetMultiplayerGameState(): void {
   state.ownAnswerResult = null
   state.finishedPlayerIds = new Set()
   state.multiplayerAttempts = new Map()
-  state.multiplayerTriedAnswerIds = new Map()
+  state.multiplayerTriedAnswerKeys = new Map()
   state.multiplayerCatalog = []
   state.multiplayerScores = new Map()
   state.multiplayerCurrentRoundNumber = 0
@@ -379,7 +379,7 @@ async function sendNextMultiplayerRound(connection: NonNullable<typeof state.roo
   state.currentHostTrack = null
   state.finishedPlayerIds = new Set()
   state.multiplayerAttempts = new Map()
-  state.multiplayerTriedAnswerIds = new Map()
+  state.multiplayerTriedAnswerKeys = new Map()
 
   const correctTrack = pickUnplayedTrack(state.multiplayerTracks, state.multiplayerPlayedTrackIds)
 
@@ -534,7 +534,7 @@ function handlePlayerGuess(guess: PlayerGuess): void {
     activePlayerIds: state.multiplayerRoundPlayerIds,
     finishedPlayerIds: state.finishedPlayerIds,
     attempts: state.multiplayerAttempts,
-    triedAnswerIds: state.multiplayerTriedAnswerIds,
+    triedAnswerKeys: state.multiplayerTriedAnswerKeys,
     scores: state.multiplayerScores,
     guess,
     now: Date.now(),

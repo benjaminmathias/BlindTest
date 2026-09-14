@@ -32,7 +32,7 @@ export type AppState = {
   ownAnswerResult: AttemptResult | null
   finishedPlayerIds: Set<string>
   multiplayerAttempts: Map<string, number>
-  multiplayerTriedAnswerIds: Map<string, Set<string>>
+  multiplayerTriedAnswerKeys: Map<string, Set<string>>
   multiplayerCatalog: GuessOption[]
   multiplayerScores: Map<string, number>
   multiplayerPlayerNames: Map<string, string>
@@ -84,7 +84,7 @@ export const state: AppState = {
   ownAnswerResult: null,
   finishedPlayerIds: new Set(),
   multiplayerAttempts: new Map(),
-  multiplayerTriedAnswerIds: new Map(),
+  multiplayerTriedAnswerKeys: new Map(),
   multiplayerCatalog: [],
   multiplayerScores: new Map(),
   multiplayerPlayerNames: new Map(),

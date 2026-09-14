@@ -38,9 +38,9 @@ export function renderRoundResult(
   const body = document.createElement('span')
   body.className = 'round-result__body'
 
-  const statusLabel = document.createElement('span')
-  statusLabel.className = 'round-result__status'
-  statusLabel.textContent = ROUND_RESULT_LABELS[result]
+  const outcome = document.createElement('span')
+  outcome.className = 'sr-only'
+  outcome.textContent = ROUND_RESULT_LABELS[result]
 
   const track = document.createElement('span')
   track.className = 'round-result__track'
@@ -51,7 +51,7 @@ export function renderRoundResult(
   artistElement.textContent = ` — ${artist}`
   track.append(artistElement)
 
-  body.append(statusLabel, track)
+  body.append(outcome, track)
   status.append(badge, body)
 
   if (result !== 'timeout' && result !== 'skip') {

@@ -1,5 +1,5 @@
 import { getAttemptScore, MAX_ATTEMPTS } from '../game'
-import { isSameSong, type SongIdentity } from '../song'
+import { getCanonicalSongKey, isSameSong, type SongIdentity } from '../song'
 import type { AttemptResult, MultiplayerRound, PlayerGuess } from './realtime'
 
 type ScoreGuessOptions = {
@@ -10,7 +10,7 @@ type ScoreGuessOptions = {
   activePlayerIds: Set<string>
   finishedPlayerIds: Set<string>
   attempts: Map<string, number>
-  triedAnswerIds: Map<string, Set<string>>
+  triedAnswerKeys: Map<string, Set<string>>
   scores: Map<string, number>
   guess: PlayerGuess
   now: number
@@ -20,25 +20,26 @@ type ScoreGuessOptions = {
 
 export function scorePlayerGuess(options: ScoreGuessOptions): AttemptResult | null {
   const { guess, round } = options
-  const tried = options.triedAnswerIds.get(guess.playerId) ?? new Set<string>()
   if (!options.isHost || !round || !options.correctTrack
     || guess.roundId !== round.roundId
+    || options.now < round.startAt
     || options.finishedPlayerIds.has(guess.playerId)
     || !options.activePlayerIds.has(guess.playerId)
-    || !options.catalog.has(guess.answerId)
-    || tried.has(guess.answerId)) {
+    || !options.catalog.has(guess.answerId)) {
     return null
   }
 
   const answer = options.catalog.get(guess.answerId)!
+  const answerKey = getCanonicalSongKey(answer)
+  const tried = options.triedAnswerKeys.get(guess.playerId) ?? new Set<string>()
+  if (tried.has(answerKey)) return null
 
-  tried.add(guess.answerId)
-  options.triedAnswerIds.set(guess.playerId, tried)
+  tried.add(answerKey)
+  options.triedAnswerKeys.set(guess.playerId, tried)
   const attemptsUsed = (options.attempts.get(guess.playerId) ?? 0) + 1
   options.attempts.set(guess.playerId, attemptsUsed)
   const remainingTime = Math.max(0, round.startAt + options.roundDurationMs - options.now)
-  const isCorrect = options.now >= round.startAt && remainingTime > 0
-    && isSameSong(answer, options.correctTrack)
+  const isCorrect = remainingTime > 0 && isSameSong(answer, options.correctTrack)
   const finished = isCorrect || attemptsUsed >= MAX_ATTEMPTS || remainingTime <= 0
   if (finished) options.finishedPlayerIds.add(guess.playerId)
   const addedScore = isCorrect

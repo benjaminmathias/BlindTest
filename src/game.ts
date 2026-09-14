@@ -47,6 +47,7 @@ export function searchGuessOptions(
   options: readonly GuessOption[],
   query: string,
   limit = MAX_SUGGESTIONS,
+  excludedKeys: ReadonlySet<string> = new Set<string>(),
 ): GuessOption[] {
   const needle = normalizeSearchText(query)
 
@@ -77,7 +78,7 @@ export function searchGuessOptions(
     }
 
     const key = getCanonicalSongKey({ title: option.title, artist: option.artist })
-    if (seenKeys.has(key)) {
+    if (excludedKeys.has(key) || seenKeys.has(key)) {
       return
     }
 
@@ -116,62 +117,22 @@ export function pickUnplayedTrack(tracks: readonly Track[], playedTrackIds: Set<
   return track
 }
 
-export function getAnswerTracks(allTracks: Track[], correctTrack: Track): Track[] {
-  const incorrectCandidates = shuffleTracks(
-    allTracks.filter((track) => track.id !== correctTrack.id),
-  )
-  const usedIds = new Set([correctTrack.id])
-  const usedTitles = new Set([correctTrack.title.trim().toLowerCase()])
-  const incorrectTracks: Track[] = []
-
-  for (const track of incorrectCandidates) {
-    const normalizedTitle = track.title.trim().toLowerCase()
-
-    if (usedIds.has(track.id) || usedTitles.has(normalizedTitle)) {
-      continue
-    }
-
-    usedIds.add(track.id)
-    usedTitles.add(normalizedTitle)
-    incorrectTracks.push(track)
-
-    if (incorrectTracks.length === 3) {
-      break
-    }
-  }
-
-  if (incorrectTracks.length < 3) {
-    throw new Error('Pas assez de morceaux pour créer les réponses')
-  }
-
-  return shuffleTracks([correctTrack, ...incorrectTracks])
-}
-
-export function shuffleTracks(tracksToShuffle: Track[]): Track[] {
-  const shuffled = [...tracksToShuffle]
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1))
-    const currentTrack = shuffled[index]
-    const randomTrack = shuffled[randomIndex]
-    if (!currentTrack || !randomTrack) {
-      continue
-    }
-    shuffled[index] = randomTrack
-    shuffled[randomIndex] = currentTrack
-  }
-
-  return shuffled
-}
-
 export function getRoundScore(
   remainingTime: number,
   roundDurationMs: number,
   maxRoundScore: number,
 ): number {
-  if (roundDurationMs <= 0 || maxRoundScore <= 0 || !Number.isFinite(remainingTime)) {
+  if (
+    !Number.isFinite(remainingTime)
+    || !Number.isFinite(roundDurationMs)
+    || !Number.isFinite(maxRoundScore)
+    || roundDurationMs <= 0
+    || maxRoundScore <= 0
+    || remainingTime <= 0
+  ) {
     return 0
   }
+
   const ratio = remainingTime / roundDurationMs
   return Math.max(1, Math.min(maxRoundScore, Math.floor(maxRoundScore * ratio)))
 }
