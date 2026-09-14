@@ -229,6 +229,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         outcome: roundOutcome,
         guess: selected ?? lastGuess,
         attemptsUsed,
+        elapsedMs: Math.min(roundDurationMs, Math.max(0, roundDurationMs - time)),
         solution: { title: correctTrack.title, artist: correctTrack.artist },
       }
       status.textContent = ''
@@ -294,7 +295,6 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         finish(guess)
         return
       }
-      status.textContent = 'Mauvaise réponse.'
       guessArea.clearInput()
       guessArea.focusInput()
     })

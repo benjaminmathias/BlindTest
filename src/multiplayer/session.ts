@@ -605,7 +605,7 @@ export function handleAttemptResult(result: AttemptResult): void {
 
   gameStatus.textContent = result.isCorrect
     ? 'Bonne réponse ! Résultat à venir…'
-    : result.finished ? 'Plus aucun essai. Résultat à venir…' : 'Mauvaise réponse, réessaie.'
+    : result.finished ? 'Plus aucun essai. Résultat à venir…' : ''
 
   state.multiplayerAttemptResultHandler?.(result)
 }
@@ -664,6 +664,7 @@ function handleRoundComplete(result: RoundComplete): void {
       outcome: localOutcome,
       guess: state.multiplayerLastOwnGuess,
       attemptsUsed: state.ownAnswerResult?.attemptsUsed ?? 0,
+      elapsedMs: state.multiplayerLastOwnElapsedMs,
       solution,
     }
   }

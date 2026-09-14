@@ -42,6 +42,7 @@ export type AppState = {
   multiplayerOwnRoundHistory: (RoundOutcome | undefined)[]
   multiplayerOwnRoundRecap: (RoundRecapEntry | undefined)[]
   multiplayerLastOwnGuess: GuessOption | null
+  multiplayerLastOwnElapsedMs: number
   multiplayerGuessArea: GuessArea | null
   multiplayerPlayedTrackIds: Set<string>
   multiplayerRoundPlayerIds: Set<string>
@@ -96,6 +97,7 @@ export const state: AppState = {
   multiplayerOwnRoundHistory: [],
   multiplayerOwnRoundRecap: [],
   multiplayerLastOwnGuess: null,
+  multiplayerLastOwnElapsedMs: 0,
   multiplayerGuessArea: null,
   multiplayerPlayedTrackIds: new Set(),
   multiplayerRoundPlayerIds: new Set(),

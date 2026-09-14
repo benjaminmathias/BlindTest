@@ -54,11 +54,16 @@ export type RoundRecapEntry = {
   outcome: RoundOutcome
   guess: GuessOption | null
   attemptsUsed: number
+  elapsedMs: number
   solution: Pick<GuessOption, 'title' | 'artist'>
 }
 
 function formatAttempt(attempt: number): string {
   return attempt <= 1 ? '1er' : `${attempt}e`
+}
+
+function formatElapsedSeconds(elapsedMs: number): string {
+  return `${(Math.max(0, elapsedMs) / 1000).toFixed(1).replace('.', ',')} s`
 }
 
 export function roundRecapMarkup(
@@ -76,12 +81,13 @@ export function roundRecapMarkup(
     ? `${correctCount} bonne${correctCount > 1 ? 's' : ''} réponse${correctCount > 1 ? 's' : ''} sur ${total}`
     : `${correctCount} sur ${played.length} manche${played.length > 1 ? 's' : ''} jouée${played.length > 1 ? 's' : ''}`
 
-  const items = entries.map((entry, index) => {
+  const items = entries.map((entry) => {
     if (!entry) {
       return ''
     }
 
     const solutionLabel = `${escapeHtml(getDisplaySongTitle(entry.solution.title))} — ${escapeHtml(entry.solution.artist)}`
+    const elapsedLabel = formatElapsedSeconds(entry.elapsedMs)
     let answer: string
     let meta: string
 
@@ -105,7 +111,7 @@ export function roundRecapMarkup(
         <span class="round-recap__answer">${answer}</span>
         <span class="round-recap__meta">${meta}</span>
       </span>
-      <span class="round-recap__round">${index + 1}</span>
+      <span class="round-recap__time" aria-label="Temps mis : ${elapsedLabel}">${elapsedLabel}</span>
     </li>`
   }).join('')
 

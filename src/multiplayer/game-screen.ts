@@ -36,6 +36,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   state.multiplayerTriedAnswerIds = new Map()
   state.multiplayerRoundFinished = false
   state.multiplayerLastOwnGuess = null
+  state.multiplayerLastOwnElapsedMs = 0
 
   for (const playerId of state.multiplayerPlayerNames.keys()) {
     if (!state.multiplayerScores.has(playerId)) {
@@ -144,6 +145,10 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     guessArea.announceRemaining(result.attemptsRemaining)
     guessArea.setExcludedIds(triedIds)
     if (result.finished) {
+      state.multiplayerLastOwnElapsedMs = Math.min(
+        roundDurationMs,
+        Math.max(0, getEstimatedHostNow() - round.startAt),
+      )
       finishOwnRound(result.isCorrect ? 'Bonne réponse ! Résultat à venir…' : 'Plus aucun essai. Résultat à venir…')
     } else {
       guessArea.clearInput()
@@ -342,6 +347,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     if (remainingTime <= 0) {
       if (!hasFinished) {
         state.ownAnswerResult = null
+        state.multiplayerLastOwnElapsedMs = roundDurationMs
         finishOwnRound('Temps écoulé. Résultat à venir…')
       }
       if (state.multiplayerIsHost) {

@@ -1151,12 +1151,13 @@ input[aria-invalid="true"] {
   overflow-wrap: anywhere;
 }
 
-.round-recap__round {
+.round-recap__time {
   color: var(--text-3);
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .round-result {
