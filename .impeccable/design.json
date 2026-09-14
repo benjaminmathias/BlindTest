@@ -28,13 +28,13 @@
       "numeric": { "displayName": "Numeric", "purpose": "Geist Mono timecode/measurement: round timer, room code, scores, ranks, percentages." }
     },
     "shadows": [
-      { "name": "popover-lift", "value": "0 24px 48px -12px rgba(0,0,0,0.78)", "purpose": "The guess suggestion panel only; the sole floating surface." },
+      { "name": "popover-lift", "value": "0 24px 48px -12px rgba(0,0,0,0.78)", "purpose": "The guess suggestion panel and the in-game volume popover." },
       { "name": "focus-ring", "value": "0 0 0 3px rgba(49,217,130,0.18)", "purpose": "Inputs and the search field on focus, paired with a green border." },
       { "name": "error-ring", "value": "0 0 0 3px rgba(255,107,107,0.16)", "purpose": "Invalid fields, paired with a Miss Red border." }
     ],
     "motion": [
       { "name": "ease-panel", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default state-transition easing (160ms)." },
-      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Slot fill (200ms), round reveal (240ms), cover unmask (440ms)." },
+      { "name": "ease-reveal", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Slot fill (200ms), round reveal (240ms), points pop (320ms), score count-up (400ms), cover unmask (380ms), attempts blur (200ms)." },
       { "name": "disc-spin", "value": "platter 8s linear infinite", "purpose": "The mystery mark rotates while the extract plays, paused on reveal and under reduced motion." }
     ],
     "breakpoints": [
@@ -49,7 +49,7 @@
       "refersTo": "button-primary",
       "description": "The single solid green action per screen: Jouer en solo, Valider, Manche suivante.",
       "html": "<button class=\"ds-btn-primary\">Jouer en solo</button>",
-      "css": ".ds-btn-primary { min-height: 48px; padding: 0.75rem 1.15rem; border: 1px solid transparent; border-radius: 12px; font: 600 0.95rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; letter-spacing: 0.005em; cursor: pointer; color: #04160c; background: #31d982; transition: background-color 160ms cubic-bezier(0.22,1,0.36,1), transform 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #4be495; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.42; cursor: not-allowed; }"
+      "css": ".ds-btn-primary { min-height: 48px; padding: 0.75rem 1.15rem; border: 1px solid transparent; border-radius: 12px; font: 600 0.95rem/1.2 \"Schibsted Grotesk\", system-ui, sans-serif; letter-spacing: 0.005em; cursor: pointer; color: #04160c; background: #31d982; transition: background-color 160ms cubic-bezier(0.22,1,0.36,1), transform 160ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #4be495; } .ds-btn-primary:active { transform: translateY(1px) scale(0.96); } .ds-btn-primary:focus-visible { outline: 2px solid #31d982; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.42; cursor: not-allowed; }"
     },
     {
       "name": "Tonal Button",
@@ -95,9 +95,25 @@
       "name": "Attempt Slot",
       "kind": "custom",
       "refersTo": "attempt-slot",
-      "description": "A sunk guess row; tints green or red once an attempt lands.",
-      "html": "<ol class=\"ds-slots\"><li class=\"ds-slot\"><span class=\"ds-slot__index\">1</span></li><li class=\"ds-slot ds-slot--wrong\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M6.2 6.2l7.6 7.6M13.8 6.2l-7.6 7.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span class=\"ds-slot__text\">Djadja — Aya Nakamura</span></li><li class=\"ds-slot ds-slot--correct\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 10.5l3.2 3.2L15 6.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-slot__text\">La clé — Tiakola</span></li></ol>",
-      "css": ".ds-slots { display: grid; gap: 6px; max-width: 420px; margin: 0; padding: 0; list-style: none; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-slot { display: flex; align-items: baseline; gap: 0.5rem; min-height: 42px; padding: 0.6rem 0.85rem; border: 1px solid #2a2623; border-radius: 12px; background: #100e0d; color: #8a847c; font-size: 0.9rem; line-height: 1.4; } .ds-slot__index { min-width: 1rem; color: #8a847c; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 0.8rem; font-variant-numeric: tabular-nums; } .ds-slot__mark { width: 15px; height: 15px; align-self: center; } .ds-slot--wrong { border-color: rgba(255,107,107,0.42); background: rgba(255,107,107,0.1); color: #f6d7d2; } .ds-slot--wrong .ds-slot__mark { color: #ff6b6b; } .ds-slot--correct { border-color: rgba(49,217,130,0.38); background: rgba(49,217,130,0.12); color: #cdeedb; } .ds-slot--correct .ds-slot__mark { color: #31d982; }"
+      "description": "A compact sunk guess row with a faint em-dash placeholder and a mono index; tints green or red once an attempt lands. On reveal the whole stack softens with blur(2px) at 50% opacity.",
+      "html": "<ol class=\"ds-slots\"><li class=\"ds-slot\"><span class=\"ds-slot__index\">1</span><span class=\"ds-slot__placeholder\">—</span></li><li class=\"ds-slot ds-slot--wrong\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M6.2 6.2l7.6 7.6M13.8 6.2l-7.6 7.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><span class=\"ds-slot__text\">Djadja — Aya Nakamura</span></li><li class=\"ds-slot ds-slot--correct\"><svg class=\"ds-slot__mark\" viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 10.5l3.2 3.2L15 6.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-slot__text\">La clé — Tiakola</span></li></ol>",
+      "css": ".ds-slots { display: grid; gap: 6px; max-width: 420px; margin: 0; padding: 0; list-style: none; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-slots { transition: filter 200ms cubic-bezier(0.16,1,0.3,1), opacity 200ms cubic-bezier(0.16,1,0.3,1); } .ds-slot { display: flex; align-items: baseline; gap: 0.5rem; min-height: 36px; padding: 0.45rem 0.75rem; border: 1px solid #2a2623; border-radius: 12px; background: #100e0d; color: #8a847c; font-size: 0.9rem; line-height: 1.4; } .ds-slot__placeholder { color: #3a352f; } .ds-slots--answered { filter: blur(2px); opacity: 0.5; pointer-events: none; } .ds-slot__index { min-width: 1rem; color: #8a847c; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 0.8rem; font-variant-numeric: tabular-nums; } .ds-slot__mark { width: 15px; height: 15px; align-self: center; } .ds-slot--wrong { border-color: rgba(255,107,107,0.42); background: rgba(255,107,107,0.1); color: #f6d7d2; } .ds-slot--wrong .ds-slot__mark { color: #ff6b6b; } .ds-slot--correct { border-color: rgba(49,217,130,0.38); background: rgba(49,217,130,0.12); color: #cdeedb; } .ds-slot--correct .ds-slot__mark { color: #31d982; }"
+    },
+    {
+      "name": "Volume",
+      "kind": "custom",
+      "refersTo": "button-tonal",
+      "description": "Inline fader on the home screen; during a round it collapses to a 44px speaker icon that opens the same fader in a popover. The icon swaps to a muted mark at 0%.",
+      "html": "<div class=\"ds-volume\"><button class=\"ds-volume__button\" aria-expanded=\"false\" aria-label=\"Volume\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\" style=\"width:20px;height:20px\"><path d=\"M3.5 7.4h2.9L10 4.6v10.8L6.4 12.6H3.5z\" fill=\"currentColor\"/><path d=\"M12.4 7.6a3.4 3.4 0 0 1 0 4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M14.6 5.6a6 6 0 0 1 0 8.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg></button><div class=\"ds-volume__panel\"><input type=\"range\" value=\"50\"/><span class=\"ds-volume__value\">50 %</span></div></div>",
+      "css": ".ds-volume { position: relative; } .ds-volume__button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid #2a2623; border-radius: 12px; color: #a8a29a; background: #100e0d; cursor: pointer; } .ds-volume__panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 30; display: flex; align-items: center; gap: 0.5rem; min-width: 190px; padding: 0.6rem 0.75rem; border: 1px solid #2a2623; border-radius: 14px; background: #1e1a17; box-shadow: 0 24px 48px -12px rgba(0,0,0,0.78); } .ds-volume__value { min-width: 3.6em; color: #a8a29a; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 0.85rem; font-variant-numeric: tabular-nums; text-align: right; }"
+    },
+    {
+      "name": "Round Result",
+      "kind": "custom",
+      "refersTo": "attempt-slot",
+      "description": "The full-width verdict bar that takes the clock's slot on reveal; a 26px chip holds the mark, then track — artist, with the awarded points in Geist Mono. It stays under the clock's height so nothing below moves.",
+      "html": "<p class=\"ds-result ds-result--correct\"><span class=\"ds-result__chip\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 10.5l3.2 3.2L15 6.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-result__body\"><strong>Sweet Home Alabama</strong><span> — Lynyrd Skynyrd</span></span><span class=\"ds-result__points\">+803</span></p>",
+      "css": ".ds-result { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 0.75rem; padding: 0.45rem 0.8rem; border: 1px solid #3a352f; border-radius: 14px; background: #1e1a17; font-family: \"Schibsted Grotesk\", system-ui, sans-serif; } .ds-result__chip { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid #3a352f; border-radius: 9px; color: #a8a29a; background: #100e0d; } .ds-result__chip svg { width: 15px; height: 15px; } .ds-result__body { display: flex; gap: 0.5rem; min-width: 0; color: #f4f1ec; } .ds-result__body span { color: #a8a29a; font-weight: 400; font-size: 0.86rem; } .ds-result__points { color: #31d982; font-family: \"Geist Mono\", ui-monospace, monospace; font-size: 0.95rem; font-variant-numeric: tabular-nums; font-weight: 500; } .ds-result--correct { border-color: rgba(49,217,130,0.38); } .ds-result--correct .ds-result__chip { border-color: rgba(49,217,130,0.38); color: #31d982; background: rgba(49,217,130,0.12); } .ds-result--wrong { border-color: rgba(255,107,107,0.42); } .ds-result--wrong .ds-result__chip { border-color: rgba(255,107,107,0.42); color: #ff6b6b; background: rgba(255,107,107,0.1); }"
     },
     {
       "name": "Clock & Progress",
@@ -131,14 +147,14 @@
       { "name": "The One-Accent Rule", "body": "Green means action, progress, or correct; red means wrong or urgent. A green element that carries none of those meanings is decoration and does not ship.", "section": "colors" },
       { "name": "The Timecode-Is-Mono Rule", "body": "Geist Mono is reserved for measurement - timer, room code, scores, ranks, percentages. It never sets a word. If a string is prose, it is Schibsted Grotesk.", "section": "typography" },
       { "name": "The Sentence-Case Rule", "body": "Labels are sentence case at 0.82rem, not tracked uppercase. The old screen-print legend voice is gone; a control is named quietly.", "section": "typography" },
-      { "name": "The Flat-Plate Rule", "body": "Elevation is tone plus a hairline, never a cast shadow. The only floating surface in the product is the suggestion panel; adding a shadow anywhere else is drift.", "section": "elevation" }
+      { "name": "The Flat-Plate Rule", "body": "Elevation is tone plus a hairline, never a cast shadow. The floating surfaces in the product are the suggestion panel and the in-game volume popover; adding a shadow anywhere else is drift.", "section": "elevation" }
     ],
     "dos": [
       "Do keep exactly one solid green primary action per screen; pair it with at most one secondary or tonal button.",
       "Do let album art be the only broad colour; the UI itself paints only green (action/progress/correct) and red (wrong).",
       "Do name controls with quiet sentence-case labels at 0.82rem, not tracked uppercase legends.",
       "Do set font-variant-numeric: tabular-nums on every changing number, and set measurement in Geist Mono.",
-      "Do express elevation as tone plus a 1px hairline; reserve the popover lift for the suggestion panel.",
+      "Do express elevation as tone plus a 1px hairline; reserve the popover lift for the suggestion panel and the in-game volume popover.",
       "Do keep radii within 12-18px and reserve 999px pills for meters, chips and badges.",
       "Do disable the disc rotation, the reveal scale and all transitions under prefers-reduced-motion."
     ],
