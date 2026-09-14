@@ -154,10 +154,10 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
               <div class="game-volume"><label class="sr-only" for="volume-slider-round">Volume</label>${options.renderVolumeControlMarkup('volume-slider-round', true)}</div>
             </div>
           </header>
-          <div class="game-stage">${options.renderArtworkMarkup()}<div class="progress">
+          <div class="game-stage">${options.renderArtworkMarkup()}<div class="stage-readout"><div class="progress">
             <p id="timer" class="progress__time">${formatRemainingTime(roundDurationMs)}</p>
             <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
-          </div></div>
+          </div><p id="game-reveal" class="round-result-slot" role="status" aria-live="polite"></p></div></div>
           <p id="game-status" class="status" role="status" aria-live="polite"></p>
           <h1 id="question-title" class="sr-only">Quel est ce titre ?</h1>
           <div data-guess-area></div>
@@ -167,6 +167,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     focusScreenHeading(options.app)
 
     const status = options.app.querySelector<HTMLParagraphElement>('#game-status')!
+    const revealCard = options.app.querySelector<HTMLParagraphElement>('#game-reveal')!
     const timer = options.app.querySelector<HTMLParagraphElement>('#timer')!
     const progress = options.app.querySelector<HTMLDivElement>('#timer-progress')!
     const scoreDisplay = options.app.querySelector<HTMLSpanElement>('#score')!
@@ -232,17 +233,18 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         attemptsUsed,
         solution: { title: correctTrack.title, artist: correctTrack.artist },
       }
+      status.textContent = ''
       if (timedOut || outcome === 'timeout') {
-        options.renderRoundResult(status, 'timeout', correctTrack.title, correctTrack.artist)
+        options.renderRoundResult(revealCard, 'timeout', correctTrack.title, correctTrack.artist)
       } else if (outcome === 'skip') {
-        options.renderRoundResult(status, 'skip', correctTrack.title, correctTrack.artist)
+        options.renderRoundResult(revealCard, 'skip', correctTrack.title, correctTrack.artist)
       } else if (isCorrect) {
         const points = getAttemptScore(time, roundDurationMs, MAX_ROUND_SCORE, attemptsUsed)
         state.score += points
         scoreDisplay.textContent = formatScore(state.score)
-        options.renderRoundResult(status, 'correct', correctTrack.title, correctTrack.artist, points)
+        options.renderRoundResult(revealCard, 'correct', correctTrack.title, correctTrack.artist, points)
       } else {
-        options.renderRoundResult(status, 'wrong', correctTrack.title, correctTrack.artist)
+        options.renderRoundResult(revealCard, 'wrong', correctTrack.title, correctTrack.artist)
       }
 
       const next = document.createElement('button')

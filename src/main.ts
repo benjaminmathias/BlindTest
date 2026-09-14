@@ -1054,16 +1054,18 @@ function handleRoundReveal(reveal: RoundReveal): void {
   if (!currentMultiplayerRound || reveal.roundId !== currentMultiplayerRound.roundId) return
   currentRoundReveal = reveal
   revealArtwork(document, reveal.imageUrl, `Cover de ${reveal.title} par ${reveal.artist}`)
-  const status = document.querySelector<HTMLParagraphElement>('#multiplayer-status')
-  if (status) {
+  const revealCard = document.querySelector<HTMLParagraphElement>('#multiplayer-reveal')
+  if (revealCard) {
     renderRoundResult(
-      status,
+      revealCard,
       ownAnswerResult ? (ownAnswerResult.isCorrect ? 'correct' : 'wrong') : 'timeout',
       reveal.title,
       reveal.artist,
       ownAnswerResult?.isCorrect ? ownAnswerResult.addedScore : 0,
     )
   }
+  const status = document.querySelector<HTMLParagraphElement>('#multiplayer-status')
+  if (status) status.textContent = ''
 }
 
 function handleRoundComplete(result: RoundComplete): void {
@@ -1222,11 +1224,14 @@ function renderMultiplayerRound(round: MultiplayerRound): void {
         </header>
         <div class="game-stage">
           ${renderArtworkMarkup()}
-          <div class="progress">
-            <p id="multiplayer-timer" class="progress__time is-countdown">La manche commence...</p>
-            <div class="progress__track" aria-hidden="true">
-              <div id="multiplayer-timer-progress" class="progress__bar"></div>
+          <div class="stage-readout">
+            <div class="progress">
+              <p id="multiplayer-timer" class="progress__time is-countdown">La manche commence...</p>
+              <div class="progress__track" aria-hidden="true">
+                <div id="multiplayer-timer-progress" class="progress__bar"></div>
+              </div>
             </div>
+            <p id="multiplayer-reveal" class="round-result-slot" role="status" aria-live="polite"></p>
           </div>
         </div>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite"></p>

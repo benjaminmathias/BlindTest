@@ -723,6 +723,25 @@ input[aria-invalid="true"] {
   margin: var(--space-2) 0 var(--space-5);
 }
 
+/* The clock and the round result share one stable slot: the result takes the
+   clock's place on reveal, so nothing below it ever moves. */
+.stage-readout {
+  position: relative;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+}
+
+.stage-readout > * { grid-area: 1 / 1; }
+
+.stage-readout > .round-result {
+  width: 100%;
+  margin: 0;
+}
+
+.game-shell.is-answered .progress { visibility: hidden; }
+
 /* The stage */
 .artwork { margin: 0; }
 
