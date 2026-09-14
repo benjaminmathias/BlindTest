@@ -66,17 +66,17 @@ export function handleGameOver(gameOver: GameOver): void {
     <main class="welcome welcome--result">
       <section class="welcome__content result-shell surface" aria-labelledby="multiplayer-result-title">
         <h1 id="multiplayer-result-title">Partie terminée</h1>
-        <div class="result-progress">
-          ${roundTimelineMarkup(state.currentGameRoundCount, state.multiplayerOwnRoundHistory, -1)}
-          ${roundRecapMarkup(state.multiplayerOwnRoundRecap, state.currentGameRoundCount)}
-        </div>
         <section class="leaderboard-section" aria-labelledby="multiplayer-final-title">
           <h2 id="multiplayer-final-title" class="leaderboard-heading">Classement final</h2>
           <ol id="multiplayer-final-leaderboard" class="leaderboard"></ol>
         </section>
+        <div class="result-progress">
+          ${roundTimelineMarkup(state.currentGameRoundCount, state.multiplayerOwnRoundHistory, -1)}
+          ${roundRecapMarkup(state.multiplayerOwnRoundRecap, state.currentGameRoundCount)}
+        </div>
         ${state.multiplayerIsHost
           ? '<p id="lobby-status" class="status" role="status" aria-live="polite"></p><div class="result-actions"><button id="replay-multiplayer-button" class="button-primary" type="button">Rejouer</button><button id="return-home-button" type="button" class="button-secondary">Retour à l\'accueil</button></div>'
-          : '<p id="lobby-status" class="status" role="status" aria-live="polite">En attente de l\'hôte...</p><button id="return-home-button" class="button-secondary full-width" type="button">Retour à l\'accueil</button>'}
+          : '<p id="lobby-status" class="status" role="status" aria-live="polite">En attente de l\'hôte…</p><button id="return-home-button" class="button-secondary full-width" type="button">Retour à l\'accueil</button>'}
       </section>
     </main>
   `

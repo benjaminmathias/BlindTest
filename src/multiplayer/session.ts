@@ -34,6 +34,30 @@ const MULTIPLAYER_START_DELAY_MS = 3000
 const MULTIPLAYER_ROUND_TRANSITION_MS = 2000
 const MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL = 3
 
+const ADMISSION_ERRORS = new Set([
+  'Partie introuvable.',
+  'Cette partie a déjà commencé.',
+  'Ce code de partie est déjà utilisé.',
+])
+
+function toFriendlyRoomError(error: unknown): string {
+  if (error instanceof Error) {
+    if (ADMISSION_ERRORS.has(error.message)) {
+      return error.message
+    }
+
+    if (/délai/i.test(error.message)) {
+      return 'La connexion a pris trop de temps. Réessaie.'
+    }
+
+    if (/supabase|presence|canal privé/i.test(error.message)) {
+      return 'Multijoueur indisponible pour le moment.'
+    }
+  }
+
+  return 'Impossible de rejoindre cette partie.'
+}
+
 export function stopMultiplayerAudio(): void {
   if (state.multiplayerAudio) {
     state.multiplayerAudio.pause()
@@ -129,8 +153,11 @@ export function synchronizeMultiplayerClock(
 
       if (result.rttMs > 0) {
         state.multiplayerClockOffsetMs = result.offsetMs
-        state.multiplayerClockSynced = true
       }
+      // Une synchronisation sans échantillon exploitable retombe sur l'horloge
+      // locale : on marque quand même la tentative comme terminée pour ne pas
+      // laisser « Synchronisation… » affiché indéfiniment.
+      state.multiplayerClockSynced = true
     })
     .catch((error) => {
       console.error(error)
@@ -262,9 +289,9 @@ function renderPlayers(players: Player[]): void {
   if (lobbyStatus) {
     lobbyStatus.textContent = state.multiplayerIsHost
       ? players.length < 2
-        ? 'En attente d\'un autre joueur...'
+        ? 'En attente d\'un autre joueur…'
         : 'Prêt à commencer.'
-      : 'En attente du lancement par l\'hôte...'
+      : 'En attente du lancement par l\'hôte…'
   }
 
   const displayPlayers = [...players].sort((firstPlayer, secondPlayer) =>
@@ -298,7 +325,7 @@ function showGameStarting(): void {
   const startButton = document.querySelector<HTMLButtonElement>('#start-game-button')
 
   if (lobbyStatus) {
-    lobbyStatus.textContent = 'La partie va commencer...'
+    lobbyStatus.textContent = 'La partie va commencer…'
   }
 
   if (startButton) {
@@ -459,7 +486,7 @@ async function completeMultiplayerRound(round: MultiplayerRound): Promise<void> 
     console.error(error)
 
     if (state.roomConnection === connection) {
-      void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
+      void leaveMultiplayerRoom('Connexion interrompue.')
     }
   }
 }
@@ -502,6 +529,7 @@ export async function leaveMultiplayerRoom(initialStatus = ''): Promise<void> {
   state.currentMultiplayerGameId = null
   state.multiplayerTracks = []
   state.currentGameMusicTheme = DEFAULT_MUSIC_THEME
+  state.multiplayerMusicTheme = DEFAULT_MUSIC_THEME
   state.currentGameRoundCount = DEFAULT_ROUND_COUNT
   state.multiplayerRoundCount = DEFAULT_ROUND_COUNT
   state.currentGameRoundDuration = DEFAULT_ROUND_DURATION
@@ -553,7 +581,7 @@ function handlePlayerGuess(guess: PlayerGuess): void {
       checkMultiplayerRoundCompletion()
     })().catch((error) => {
         console.error(error)
-        void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
+        void leaveMultiplayerRoom('Connexion interrompue.')
     })
     return
   }
@@ -737,6 +765,6 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
     state.multiplayerGameOver = false
     state.multiplayerLastRoundId = null
     state.currentMultiplayerGameId = null
-    renderHome(error instanceof Error ? error.message : 'Impossible de rejoindre cette partie.')
+    renderHome(toFriendlyRoomError(error))
   }
 }

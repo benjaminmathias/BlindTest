@@ -1387,6 +1387,13 @@ input[aria-invalid="true"] {
   .lobby-actions { grid-template-columns: 1fr; }
 
   .game-shell { padding-inline: 1rem; }
+
+  .attempt-slots { gap: 4px; }
+
+  .attempt-slot {
+    min-height: 36px;
+    padding: 0.45rem 0.7rem;
+  }
 }
 
 /* Keep the search field and its action on one line on ordinary phones; only the

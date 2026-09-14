@@ -52,6 +52,17 @@ describe('game', () => {
     expect(exhausted.size).toBe(1)
   })
 
+  it('privilégie un artiste non encore joué avant de répéter', () => {
+    const repeatedArtist: Track[] = [
+      { id: '1', title: 'A1', artist: 'A', audioUrl: 'a1', imageUrl: 'i1' },
+      { id: '2', title: 'A2', artist: 'A', audioUrl: 'a2', imageUrl: 'i2' },
+      { id: '3', title: 'B1', artist: 'B', audioUrl: 'b1', imageUrl: 'i3' },
+    ]
+
+    expect(withRandom(0, () => pickUnplayedTrack(repeatedArtist, new Set(['1']))).id).toBe('3')
+    expect(withRandom(0, () => pickUnplayedTrack(repeatedArtist, new Set(['1', '3']))).id).toBe('2')
+  })
+
   it('résout une suggestion en ignorant casse et accents', () => {
     expect(formatGuessOption(tracks[0]!)).toBe('Titre 0 — Artiste 0')
     expect(findGuessOption([{ ...tracks[0]!, title: 'Été' }], ' ete — ARTISTE 0 ')?.id).toBe('0')

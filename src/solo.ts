@@ -126,6 +126,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     const roundDurationMs = state.roundDuration * 1000
     const audio = new Audio(correctTrack.audioUrl)
     audio.volume = options.getVolume()
+    audio.preload = 'auto'
     state.audio = audio
     let audioBlocked = false
     try {
@@ -185,11 +186,13 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
 
     if (audioBlocked) status.textContent = 'Lecture audio bloquée par le navigateur.'
     playButton.addEventListener('click', async () => {
+      playButton.disabled = true
       try {
         await audio.play()
         playButton.hidden = true
       } catch (error) {
         console.error(error)
+        playButton.disabled = false
         status.textContent = 'Impossible de lire l’extrait audio.'
       }
     })
@@ -218,6 +221,8 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       const timedOut = time <= 0
       hasAnswered = true
       stop()
+      playButton.hidden = true
+      playButton.disabled = true
       updateTimer(time)
       guessArea.setDisabled(true)
       guessArea.setSubmitHidden(true)

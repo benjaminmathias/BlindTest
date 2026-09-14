@@ -409,6 +409,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
     const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
     if (activeItem?.id) {
       input.setAttribute('aria-activedescendant', activeItem.id)
+      activeItem.scrollIntoView?.({ block: 'nearest' })
     } else {
       input.removeAttribute('aria-activedescendant')
     }

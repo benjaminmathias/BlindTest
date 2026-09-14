@@ -202,17 +202,19 @@ export function renderHome(initialStatus = ''): void {
     playerNameInput.disabled = disabled
     createRoomButton.disabled = disabled
     joinButton.disabled = disabled
-    createRoomButton.textContent = disabled ? 'Connexion...' : 'Créer une partie'
-    joinButton.textContent = disabled ? 'Connexion...' : 'Rejoindre'
+    createRoomButton.textContent = disabled ? 'Connexion…' : 'Créer une partie'
+    joinButton.textContent = disabled ? 'Connexion…' : 'Rejoindre'
   }
 
   roomCodeInput.addEventListener('input', () => {
     roomCodeInput.value = normalizeRoomCode(roomCodeInput.value).slice(0, 4)
     roomCodeInput.removeAttribute('aria-invalid')
+    roomCodeInput.removeAttribute('aria-describedby')
   })
 
   playerNameInput.addEventListener('input', () => {
     playerNameInput.removeAttribute('aria-invalid')
+    playerNameInput.removeAttribute('aria-describedby')
   })
 
   startButton.addEventListener('click', async () => {
@@ -246,6 +248,7 @@ export function renderHome(initialStatus = ''): void {
     if (!isValidPlayerName(playerName)) {
       setStatusMessage(statusMessage, 'Le pseudo doit contenir entre 2 et 20 caractères.', true)
       playerNameInput.setAttribute('aria-invalid', 'true')
+      playerNameInput.setAttribute('aria-describedby', 'home-status')
       playerNameInput.focus()
       return
     }
@@ -267,6 +270,7 @@ export function renderHome(initialStatus = ''): void {
     if (!isValidPlayerName(playerName)) {
       setStatusMessage(statusMessage, 'Le pseudo doit contenir entre 2 et 20 caractères.', true)
       playerNameInput.setAttribute('aria-invalid', 'true')
+      playerNameInput.setAttribute('aria-describedby', 'home-status')
       playerNameInput.focus()
       return
     }
@@ -274,6 +278,7 @@ export function renderHome(initialStatus = ''): void {
     if (!isValidRoomCode(roomCode)) {
       setStatusMessage(statusMessage, 'Code de partie invalide.', true)
       roomCodeInput.setAttribute('aria-invalid', 'true')
+      roomCodeInput.setAttribute('aria-describedby', 'home-status')
       roomCodeInput.focus()
       return
     }

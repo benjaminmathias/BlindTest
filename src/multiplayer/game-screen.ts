@@ -71,7 +71,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
         </div>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite"></p>
         <p id="multiplayer-timer-status" class="sr-only" role="status" aria-live="polite"></p>
-        <p id="multiplayer-sync-note" class="status" role="status" aria-live="polite" hidden>Synchronisation de l’horloge…</p>
+        <p id="multiplayer-sync-note" class="status" role="status" aria-live="polite" hidden>Synchronisation…</p>
         <h1 id="multiplayer-question-title" class="sr-only">Quel est ce titre ?</h1>
         <div data-guess-area></div>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
@@ -135,6 +135,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     hasFinished = true
     guessArea.setDisabled(true)
     guessArea.setSubmitHidden(true)
+    playAudioButton.hidden = true
     gameStatus.textContent = message
   }
 
@@ -186,7 +187,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     void state.roomConnection?.sendGuess({ roundId: round.roundId, guessId: createId(), answerId: answer.id })
       .catch((error) => {
         console.error(error)
-        void leaveMultiplayerRoom('La connexion multijoueur a été interrompue.')
+        void leaveMultiplayerRoom('Connexion interrompue.')
       })
   })
 

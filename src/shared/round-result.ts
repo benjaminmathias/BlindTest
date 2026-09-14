@@ -54,10 +54,10 @@ export function renderRoundResult(
   body.append(outcome, track)
   status.append(badge, body)
 
-  if (result !== 'timeout' && result !== 'skip') {
+  if (result === 'correct') {
     const pointsElement = document.createElement('span')
     pointsElement.className = 'round-result__points'
-    pointsElement.textContent = result === 'correct' ? `+${formatScore(points)}` : '0'
+    pointsElement.textContent = `+${formatScore(points)}`
     status.append(pointsElement)
   }
 

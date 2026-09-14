@@ -22,7 +22,7 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
 
         <div class="lobby-code">
           <span id="room-code-display" class="room-code-value">${roomCode}</span>
-          <button id="copy-room-code-button" class="button-ghost" type="button">Copier</button>
+          <button id="copy-room-code-button" class="button-ghost" type="button" aria-label="Copier le code de la partie">Copier</button>
         </div>
 
         <div class="lobby-rules">
@@ -57,10 +57,10 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
         <h2 class="lobby-heading lobby-players-heading">Joueurs <span id="players-count" class="player-count"></span></h2>
 
         <ul id="players-list" class="players-list" aria-live="polite">
-          <li>Connexion...</li>
+          <li>Connexion…</li>
         </ul>
 
-        <p id="lobby-status" class="status" role="status" aria-live="polite">Connexion à la partie...</p>
+        <p id="lobby-status" class="status" role="status" aria-live="polite">Connexion à la partie…</p>
 
         <div class="lobby-actions${isHost ? '' : ' lobby-actions--single'}">
           ${isHost ? '<button id="start-game-button" class="button-primary start-game-button" type="button" disabled>Commencer la partie</button>' : ''}

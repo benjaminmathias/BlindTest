@@ -112,7 +112,19 @@ export function pickUnplayedTrack(tracks: readonly Track[], playedTrackIds: Set<
     availableTracks = [...tracks]
   }
 
-  const track = getRandomTrack(availableTracks)
+  // Privilégie un artiste pas encore entendu dans la partie pour éviter les
+  // répétitions ; si le catalogue ne le permet pas, on retombe sur tous les
+  // morceaux non joués.
+  const playedArtists = new Set(
+    tracks
+      .filter((track) => playedTrackIds.has(track.id))
+      .map((track) => normalizeComparableText(track.artist)),
+  )
+  const freshArtistTracks = availableTracks.filter(
+    (track) => !playedArtists.has(normalizeComparableText(track.artist)),
+  )
+  const track = getRandomTrack(freshArtistTracks.length > 0 ? freshArtistTracks : availableTracks)
+
   playedTrackIds.add(track.id)
   return track
 }
