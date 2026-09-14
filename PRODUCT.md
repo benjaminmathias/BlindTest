@@ -29,7 +29,7 @@ Play happens in a shared physical space — a living room, a party, a car, a sha
 - Music catalog and audio previews come from the iTunes Search API; Supabase provides realtime transport only.
 - Stack is TypeScript + Vite with no UI framework; DOM is built imperatively and styling is plain CSS.
 - Entirely French-language interface and copy.
-- Round count and duration are limited to the offered options; catalogue is French or international (iTunes storefront FR vs US); themes are all / pop / rock / rap / electro.
+- Round count and duration are limited to the offered options; catalogue is French or international (iTunes storefront FR vs US); themes are all / pop / rock / rap / electro / chanson française / funk-disco.
 
 ## Brand Commitments
 

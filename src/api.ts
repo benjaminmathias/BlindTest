@@ -13,7 +13,7 @@ export type Track = {
   imageUrl: string
 }
 
-export const MUSIC_THEMES = ['all', 'pop', 'rock', 'rap', 'electro'] as const
+export const MUSIC_THEMES = ['all', 'pop', 'rock', 'rap', 'electro', 'chanson', 'funk'] as const
 
 export type MusicTheme = (typeof MUSIC_THEMES)[number]
 
@@ -42,6 +42,8 @@ export const MUSIC_THEME_LABELS: Record<MusicTheme, string> = {
   rock: 'Rock',
   rap: 'Rap / Hip-Hop',
   electro: 'Électro',
+  chanson: 'Chanson française',
+  funk: 'Funk / Disco',
 }
 
 export function isMusicTheme(value: unknown): value is MusicTheme {
@@ -74,7 +76,7 @@ type StoredCatalog = {
   tracks: Track[]
 }
 
-const CONCRETE_THEMES: ConcreteMusicTheme[] = ['pop', 'rock', 'rap', 'electro']
+const CONCRETE_THEMES: ConcreteMusicTheme[] = ['pop', 'rock', 'rap', 'electro', 'chanson', 'funk']
 
 // Source de vérité unique, commune aux storefronts FR et US : un libellé de genre
 // iTunes normalisé est rattaché à un seul thème, quelle que soit la langue du
@@ -97,6 +99,16 @@ const GENRE_TO_THEME: Record<string, ConcreteMusicTheme> = {
   house: 'electro',
   techno: 'electro',
   trance: 'electro',
+  'variete francaise': 'chanson',
+  'chanson francaise': 'chanson',
+  chanson: 'chanson',
+  'french pop': 'chanson',
+  'pop francaise': 'chanson',
+  francais: 'chanson',
+  funk: 'funk',
+  disco: 'funk',
+  'baile funk': 'funk',
+  motown: 'funk',
 }
 
 const THEME_CONFIG: Record<ConcreteMusicTheme, ThemeConfig> = {
@@ -112,13 +124,19 @@ const THEME_CONFIG: Record<ConcreteMusicTheme, ThemeConfig> = {
   electro: {
     queries: ['electronic', 'dance', 'house'],
   },
+  chanson: {
+    queries: ['variete francaise', 'chanson francaise'],
+  },
+  funk: {
+    queries: ['funk', 'disco', 'disco funk'],
+  },
 }
 
 const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search'
 const ITUNES_LIMIT = '200'
 export const MIN_CATALOG_SIZE = 20
 
-const CATALOG_STORAGE_KEY = 'blindtest-catalog-v2'
+const CATALOG_STORAGE_KEY = 'blindtest-catalog-v4'
 const CATALOG_TTL_MS = 24 * 60 * 60 * 1000
 const FETCH_MAX_ATTEMPTS = 3
 const FETCH_RETRY_BASE_DELAY_MS = 250
