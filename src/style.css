@@ -1231,6 +1231,8 @@ input[aria-invalid="true"] {
 
 .next-button { margin-top: var(--space-4); }
 
+.guess-area > .next-button { margin-top: 0; }
+
 .leaderboard-section {
   margin-top: var(--space-6);
   padding-top: var(--space-4);

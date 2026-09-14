@@ -261,7 +261,12 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
           next.disabled = false
         }
       })
-      status.insertAdjacentElement('afterend', next)
+      const searchRow = options.app.querySelector('.guess-search')
+      if (searchRow) {
+        searchRow.replaceWith(next)
+      } else {
+        status.insertAdjacentElement('afterend', next)
+      }
     }
 
     form.addEventListener('submit', (event) => {
