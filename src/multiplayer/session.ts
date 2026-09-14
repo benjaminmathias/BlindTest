@@ -94,6 +94,7 @@ export function resetMultiplayerGameState(): void {
   state.multiplayerRoundFinished = false
   state.multiplayerGameOver = false
   state.multiplayerLastRoundId = null
+  state.multiplayerClockSynced = false
   state.multiplayerLastClockSyncRound = 0
 }
 
@@ -128,6 +129,7 @@ export function synchronizeMultiplayerClock(
 
       if (result.rttMs > 0) {
         state.multiplayerClockOffsetMs = result.offsetMs
+        state.multiplayerClockSynced = true
       }
     })
     .catch((error) => {
@@ -495,6 +497,7 @@ export async function leaveMultiplayerRoom(initialStatus = ''): Promise<void> {
   state.multiplayerHostLeft = false
   state.multiplayerGameOver = false
   state.multiplayerLastRoundId = null
+  state.multiplayerClockSynced = false
   state.multiplayerLastClockSyncRound = 0
   state.currentMultiplayerGameId = null
   state.multiplayerTracks = []
@@ -680,6 +683,7 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
     state.multiplayerHostLeft = false
     state.multiplayerGameOver = false
     state.multiplayerLastRoundId = null
+    state.multiplayerClockSynced = false
     state.multiplayerLastClockSyncRound = 0
     state.currentMultiplayerGameId = null
     const playerId = createId()

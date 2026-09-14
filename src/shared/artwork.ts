@@ -1,16 +1,32 @@
+const ARTWORK_SIZE_PATTERN = /100x100bb/
+
+function artworkVariant(imageUrl: string, size: number): string {
+  return imageUrl.replace(ARTWORK_SIZE_PATTERN, `${size}x${size}bb`)
+}
+
 export function getArtworkUrl(imageUrl: string): string {
   if (!imageUrl) {
     return ''
   }
 
-  return imageUrl.replace(/100x100bb/, '600x600bb')
+  return artworkVariant(imageUrl, 600)
+}
+
+export function getArtworkSrcSet(imageUrl: string): string {
+  if (!imageUrl || !ARTWORK_SIZE_PATTERN.test(imageUrl)) {
+    return ''
+  }
+
+  return [200, 400, 600]
+    .map((size) => `${artworkVariant(imageUrl, size)} ${size}w`)
+    .join(', ')
 }
 
 export function renderArtworkMarkup(): string {
   return `
     <figure class="artwork">
       <div class="artwork__frame">
-        <img class="artwork__image" data-artwork-image alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+        <img class="artwork__image" data-artwork-image alt="" decoding="async" sizes="(max-width: 380px) 195px, (max-width: 560px) 230px, 300px" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
         <span class="artwork__mystery" data-artwork-placeholder aria-hidden="true">
           <svg class="artwork__disc" viewBox="0 0 200 200" focusable="false">
             <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="3" />
@@ -54,5 +70,10 @@ export function revealArtwork(root: ParentNode, imageUrl: string, alt: string): 
     image.removeEventListener('load', onLoad)
     image.removeAttribute('data-revealed')
   }, { once: true })
+
+  const srcSet = getArtworkSrcSet(imageUrl)
+  if (srcSet) {
+    image.srcset = srcSet
+  }
   image.src = src
 }

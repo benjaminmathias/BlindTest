@@ -68,6 +68,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
           </div>
         </div>
         <p id="multiplayer-status" class="status" role="status" aria-live="polite"></p>
+        <p id="multiplayer-sync-note" class="status" role="status" aria-live="polite" hidden>Synchronisation de l’horloge…</p>
         <h1 id="multiplayer-question-title" class="sr-only">Quel est ce titre ?</h1>
         <div data-guess-area></div>
         <button id="play-audio-button" class="button-primary next-button" type="button" hidden>Lire l'extrait</button>
@@ -84,6 +85,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   focusScreenHeading(app)
 
   const gameStatus = document.querySelector<HTMLParagraphElement>('#multiplayer-status')!
+  const syncNote = document.querySelector<HTMLParagraphElement>('#multiplayer-sync-note')!
   const gameTimer = document.querySelector<HTMLParagraphElement>('#multiplayer-timer')!
   const timerProgress = document.querySelector<HTMLDivElement>('#multiplayer-timer-progress')!
   const roundProgress = gameTimer.parentElement
@@ -181,11 +183,24 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
   const audio = new Audio(round.audioUrl)
   audio.volume = volume.get()
   audio.preload = 'auto'
+  let audioReloadCount = 0
   audio.addEventListener('error', () => {
-    if (isCurrentRound() && !hasFinished) {
-      gameStatus.textContent = 'Impossible de charger l’extrait audio.'
-      playAudioButton.hidden = false
+    if (!isCurrentRound() || hasFinished) {
+      return
     }
+
+    if (audioReloadCount < 1) {
+      audioReloadCount += 1
+      window.setTimeout(() => {
+        if (isCurrentRound() && audio.readyState < 3) {
+          audio.load()
+        }
+      }, 1000)
+      return
+    }
+
+    gameStatus.textContent = 'Impossible de charger l’extrait audio.'
+    playAudioButton.hidden = false
   })
 
   try {
@@ -298,6 +313,8 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     if (!isCurrentRound()) {
       return
     }
+
+    syncNote.hidden = state.multiplayerIsHost || state.multiplayerClockSynced
 
     const now = getEstimatedHostNow()
 

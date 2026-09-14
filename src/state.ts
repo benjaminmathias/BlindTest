@@ -43,6 +43,7 @@ export type AppState = {
   multiplayerTransitionId: number | null
   multiplayerClockOffsetMs: number
   multiplayerClockSyncPromise: Promise<void> | null
+  multiplayerClockSynced: boolean
   multiplayerLastClockSyncRound: number
   multiplayerHostSeen: boolean
   multiplayerHostId: string | null
@@ -93,6 +94,7 @@ export const state: AppState = {
   multiplayerTransitionId: null,
   multiplayerClockOffsetMs: 0,
   multiplayerClockSyncPromise: null,
+  multiplayerClockSynced: false,
   multiplayerLastClockSyncRound: 0,
   multiplayerHostSeen: false,
   multiplayerHostId: null,
