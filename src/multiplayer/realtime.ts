@@ -88,6 +88,7 @@ export type GameStart = {
   musicTheme: MusicTheme
   roundCount: RoundCount
   roundDuration: RoundDuration
+  catalog: GuessOption[]
 }
 
 export type ClockSyncResult = {
@@ -96,7 +97,7 @@ export type ClockSyncResult = {
 }
 
 export type RoomConnection = {
-  startGame: (gameId: string, settings: HostSettings) => Promise<void>
+  startGame: (gameId: string, settings: HostSettings, catalog: GuessOption[]) => Promise<void>
   updateGameSettings: (settings: HostSettings) => Promise<void>
   sendCatalog: (catalog: GameCatalog) => Promise<void>
   sendRound: (round: MultiplayerRound) => Promise<void>
@@ -157,18 +158,25 @@ export function getRoomAdmissionError(players: Player[], isHost: boolean): strin
   return null
 }
 
+function isGuessOption(value: unknown): value is GuessOption {
+  return isRecord(value) && isString(value.id)
+    && isString(value.title) && isString(value.artist)
+}
+
+function isGuessOptionList(value: unknown): value is GuessOption[] {
+  return Array.isArray(value) && value.length > 0 && value.every(isGuessOption)
+}
+
 export function isGameStart(value: unknown): value is GameStart {
   return isRecord(value) && isString(value.gameId) && isString(value.startedBy)
     && isMusicTheme(value.musicTheme)
     && isRoundCount(value.roundCount)
     && isRoundDuration(value.roundDuration)
+    && isGuessOptionList(value.catalog)
 }
 
 export function isGameCatalog(value: unknown): value is GameCatalog {
-  return isRecord(value) && isString(value.gameId) && Array.isArray(value.options)
-    && value.options.length > 0
-    && value.options.every((option) => isRecord(option) && isString(option.id)
-      && isString(option.title) && isString(option.artist))
+  return isRecord(value) && isString(value.gameId) && isGuessOptionList(value.options)
 }
 
 export function isMultiplayerRound(value: unknown): value is MultiplayerRound {
@@ -499,7 +507,7 @@ export async function joinRoom(
   }
 
   return {
-    startGame: async (gameId, settings) => {
+    startGame: async (gameId, settings, catalog) => {
       if (!isHost) {
         throw new Error('Seul l’hôte peut commencer la partie')
       }
@@ -522,6 +530,7 @@ export async function joinRoom(
           musicTheme: settings.musicTheme,
           roundCount: settings.roundCount,
           roundDuration: settings.roundDuration,
+          catalog,
         } satisfies GameStart,
         'Impossible d’envoyer le démarrage de la partie',
       )

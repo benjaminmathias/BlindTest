@@ -359,6 +359,7 @@ function handleGameStart(gameStart: GameStart): void {
     : DEFAULT_ROUND_DURATION
   state.currentMultiplayerGameId = gameStart.gameId
   resetMultiplayerGameState()
+  state.multiplayerCatalog = gameStart.catalog
   showGameStarting()
 }
 
@@ -382,14 +383,15 @@ export async function startMultiplayerGame(): Promise<void> {
   state.currentGameRoundDuration = state.multiplayerRoundDuration
   resetMultiplayerGameState()
   showGameStarting()
+
+  state.multiplayerTracks = await fetchTracks(state.currentGameMusicTheme)
+  state.multiplayerCatalog = state.multiplayerTracks.map(({ id, title, artist }) => ({ id, title, artist }))
+
   await connection.startGame(state.currentMultiplayerGameId, {
     musicTheme: state.currentGameMusicTheme,
     roundCount: state.currentGameRoundCount,
     roundDuration: state.currentGameRoundDuration,
-  })
-
-  state.multiplayerTracks = await fetchTracks(state.currentGameMusicTheme)
-  state.multiplayerCatalog = state.multiplayerTracks.map(({ id, title, artist }) => ({ id, title, artist }))
+  }, state.multiplayerCatalog)
   await connection.sendCatalog({ gameId: state.currentMultiplayerGameId, options: state.multiplayerCatalog })
 
   state.multiplayerCurrentRoundNumber = 1

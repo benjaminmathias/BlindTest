@@ -100,6 +100,10 @@ describe('protocole multijoueur intégré', () => {
     const guestReveals: RoundReveal[] = []
     const noop = (): void => undefined
     const settings = { musicTheme: 'pop' as const, roundCount: 5 as const, roundDuration: 30 as const }
+    const catalog = [
+      { id: 'correct', title: 'Titre', artist: 'Artiste' },
+      { id: 'other', title: 'Autre', artist: 'Artiste' },
+    ]
 
     const host = await joinRoom(
       'TEST', 'host', 'Host', true, settings,
@@ -111,13 +115,14 @@ describe('protocole multijoueur intégré', () => {
       (result) => guestResults.push(result), noop, (reveal) => guestReveals.push(reveal), noop, noop,
     )
 
-    await host.startGame('game', settings)
+    await host.startGame('game', settings, catalog)
     const round: MultiplayerRound = {
       gameId: 'game', roundId: 'round', round: 1, startAt: Date.now(), audioUrl: 'audio',
     }
     await host.sendRound(round)
     expect(JSON.stringify(round)).not.toContain('correctTrackId')
     expect(guestStarts).toHaveLength(1)
+    expect(guestStarts[0]?.catalog).toEqual(catalog)
 
     await guest.sendGuess({ roundId: 'round', guessId: 'guess', answerId: 'correct' })
     expect(hostAnswers).toHaveLength(1)
