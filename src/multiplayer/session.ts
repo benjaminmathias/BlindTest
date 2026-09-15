@@ -31,7 +31,7 @@ import { handleGameOver, handleMultiplayerHostLeft } from './result-screens'
 
 export const MAX_ROUND_SCORE = 1000
 const MULTIPLAYER_START_DELAY_MS = 3000
-const MULTIPLAYER_ROUND_TRANSITION_MS = 2000
+const MULTIPLAYER_ROUND_TRANSITION_MS = 4000
 const MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL = 3
 
 const ADMISSION_ERRORS = new Set([
@@ -363,7 +363,10 @@ function handleGameStart(gameStart: GameStart): void {
 }
 
 function handleGameCatalog(catalog: GameCatalog): void {
-  if (catalog.gameId === state.currentMultiplayerGameId) state.multiplayerCatalog = catalog.options
+  if (catalog.gameId === state.currentMultiplayerGameId) {
+    state.multiplayerCatalog = catalog.options
+    state.multiplayerGuessArea?.setCatalog(catalog.options)
+  }
 }
 
 export async function startMultiplayerGame(): Promise<void> {

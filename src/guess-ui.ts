@@ -149,6 +149,7 @@ export type GuessArea = {
   setDisabled: (disabled: boolean) => void
   setSubmitHidden: (hidden: boolean) => void
   focusInput: () => void
+  setCatalog: (catalog: readonly GuessOption[]) => void
   setExcludedKeys: (keys: Iterable<string>) => void
   showError: (message: string) => void
   clearError: () => void
@@ -271,6 +272,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
   let selectedOption: GuessOption | null = null
   let selectedText = ''
+  let catalog = config.catalog
   let excludedKeys = new Set<string>()
   let suggestions: GuessOption[] = []
   let activeIndex = -1
@@ -507,7 +509,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
 
   const refreshSuggestions = (): void => {
     suggestions = searchGuessOptions(
-      config.catalog,
+      catalog,
       input.value,
       MAX_SUGGESTIONS,
       excludedKeys,
@@ -630,6 +632,12 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       submit.hidden = hidden
     },
     focusInput: () => input.focus(),
+    setCatalog: (nextCatalog) => {
+      catalog = nextCatalog
+      if (!listbox.hidden) {
+        refreshSuggestions()
+      }
+    },
     setExcludedKeys: (keys) => {
       excludedKeys = new Set(keys)
       if (!listbox.hidden) {

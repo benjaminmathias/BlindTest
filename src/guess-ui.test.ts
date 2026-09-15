@@ -170,6 +170,29 @@ describe('état', () => {
   })
 })
 
+describe('catalogue', () => {
+  it('prend en compte un catalogue fourni après la création de la zone', () => {
+    const lateContainer = document.createElement('div')
+    document.body.append(lateContainer)
+    const lateArea = createGuessArea(lateContainer, {
+      catalog: [], maxAttempts: 5, canSkip: false,
+    })
+
+    lateArea.input.value = 'wonder'
+    lateArea.input.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(lateContainer.querySelectorAll('.guess-suggestion')).toHaveLength(0)
+
+    lateArea.setCatalog(catalog)
+
+    const lateItems = [...lateContainer.querySelectorAll<HTMLLIElement>('.guess-suggestion')]
+    expect(lateItems).toHaveLength(1)
+    expect(lateItems[0]!.textContent).toContain('Wonderwall')
+
+    lateArea.destroy()
+    lateContainer.remove()
+  })
+})
+
 describe('accessibilité', () => {
   it('relie le message d’erreur et l’état d’invalidité', () => {
     area.showError('Choisis une suggestion dans la liste.')
