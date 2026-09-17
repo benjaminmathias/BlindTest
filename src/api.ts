@@ -1,3 +1,4 @@
+import { oneOf } from './shared/validate'
 import {
   canonicalizeSongTitle,
   getCanonicalSongKey,
@@ -29,9 +30,8 @@ export const MUSIC_THEME_LABELS: Record<MusicTheme, string> = {
   funk: 'Funk / Disco',
 }
 
-export function isMusicTheme(value: unknown): value is MusicTheme {
-  return typeof value === 'string' && (MUSIC_THEMES as readonly string[]).includes(value)
-}
+export const isMusicTheme = (value: unknown): value is MusicTheme =>
+  oneOf(value, MUSIC_THEMES)
 
 type ITunesTrack = {
   trackId: number

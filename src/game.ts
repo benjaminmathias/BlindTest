@@ -1,4 +1,5 @@
 import type { Track } from './api'
+import { oneOf } from './shared/validate'
 import { getCanonicalSongKey, getDisplaySongTitle, normalizeComparableText } from './song'
 
 export const ROUND_COUNT_OPTIONS = [5, 10, 15, 20] as const
@@ -15,14 +16,11 @@ export type RoundOutcome = 'correct' | 'failed' | 'timeout' | 'skipped'
 export const MIN_SEARCH_LENGTH = 2
 export const MAX_SUGGESTIONS = 5
 
-export function isRoundCount(value: unknown): value is RoundCount {
-  return typeof value === 'number' && (ROUND_COUNT_OPTIONS as readonly number[]).includes(value)
-}
+export const isRoundCount = (value: unknown): value is RoundCount =>
+  oneOf(value, ROUND_COUNT_OPTIONS)
 
-export function isRoundDuration(value: unknown): value is RoundDuration {
-  return typeof value === 'number'
-    && (ROUND_DURATION_OPTIONS as readonly number[]).includes(value)
-}
+export const isRoundDuration = (value: unknown): value is RoundDuration =>
+  oneOf(value, ROUND_DURATION_OPTIONS)
 
 export function formatGuessOption(track: GuessOption): string {
   return `${getDisplaySongTitle(track.title)} — ${track.artist}`
