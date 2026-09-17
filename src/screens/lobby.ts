@@ -8,12 +8,8 @@ import { asValid } from '../shared/validate'
 import { state } from '../state'
 import { focusScreenHeading } from '../ui'
 
-const hostSelect = (
-  id: string,
-  name: string,
-  options: readonly SelectOption[],
-  selected: string | number,
-): string => `<select id="${id}" name="${name}">${renderOptions(options, selected)}</select>`
+const hostSelect = (id: string, name: string, options: readonly SelectOption[], selected: string | number): string =>
+  `<select id="${id}" name="${name}">${renderOptions(options, selected)}</select>`
 
 const guestValue = (id: string, value: string): string =>
   `<span id="${id}" class="lobby-rule__value">${value}</span>`
@@ -59,8 +55,7 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
           </button>
         </div>
       </section>
-    </main>
-  `
+    </main>`
   focusScreenHeading(app)
 
   const startButton = qs<HTMLButtonElement>('#start-game-button')
@@ -94,7 +89,6 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
 
   copyButton.addEventListener('click', async () => {
     copyButton.disabled = true
-
     try {
       if (!navigator.clipboard) throw new Error('Clipboard indisponible')
       await navigator.clipboard.writeText(roomCode)
@@ -109,14 +103,12 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
 
   startButton?.addEventListener('click', async () => {
     startButton.disabled = true
-
     try {
       await startMultiplayerGame()
     } catch (error) {
       console.error(error)
-      await leaveMultiplayerRoom(
-        error instanceof Error ? error.message : 'Impossible de charger la partie.',
-      )
+      await leaveMultiplayerRoom(error instanceof Error
+        ? error.message : 'Impossible de charger la partie.')
     }
   })
 

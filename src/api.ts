@@ -24,31 +24,11 @@ type ThemeDefinition = {
 // lui correspondent et les requêtes de recherche qui l'alimentent.
 export const THEMES: Record<ConcreteMusicTheme, ThemeDefinition> = {
   pop: { label: 'Pop', genres: ['pop'], queries: ['pop', 'pop music'] },
-  rock: {
-    label: 'Rock',
-    genres: ['rock', 'alternative', 'hard rock', 'rock independant', 'indie rock'],
-    queries: ['rock'],
-  },
-  rap: {
-    label: 'Rap / Hip-Hop',
-    genres: ['hip-hop', 'hip-hop/rap', 'hip hop', 'rap', 'rap francais'],
-    queries: ['hip hop', 'rap'],
-  },
-  electro: {
-    label: 'Électro',
-    genres: ['dance', 'electronic', 'electronique', 'house', 'techno', 'trance'],
-    queries: ['electronic', 'dance', 'house'],
-  },
-  chanson: {
-    label: 'Chanson française',
-    genres: ['variete francaise', 'chanson francaise', 'chanson', 'french pop', 'pop francaise', 'francais'],
-    queries: ['variete francaise', 'chanson francaise'],
-  },
-  funk: {
-    label: 'Funk / Disco',
-    genres: ['funk', 'disco', 'baile funk', 'motown'],
-    queries: ['funk', 'disco', 'disco funk'],
-  },
+  rock: { label: 'Rock', genres: ['rock', 'alternative', 'hard rock', 'rock independant', 'indie rock'], queries: ['rock'] },
+  rap: { label: 'Rap / Hip-Hop', genres: ['hip-hop', 'hip-hop/rap', 'hip hop', 'rap', 'rap francais'], queries: ['hip hop', 'rap'] },
+  electro: { label: 'Électro', genres: ['dance', 'electronic', 'electronique', 'house', 'techno', 'trance'], queries: ['electronic', 'dance', 'house'] },
+  chanson: { label: 'Chanson française', genres: ['variete francaise', 'chanson francaise', 'chanson', 'french pop', 'pop francaise', 'francais'], queries: ['variete francaise', 'chanson francaise'] },
+  funk: { label: 'Funk / Disco', genres: ['funk', 'disco', 'baile funk', 'motown'], queries: ['funk', 'disco', 'disco funk'] },
 }
 
 const CONCRETE_THEMES = Object.keys(THEMES) as ConcreteMusicTheme[]

@@ -4,17 +4,11 @@ import { escapeHtml } from '../shared/markup'
 import { getDisplaySongTitle } from '../song'
 
 const OUTCOME_MARK: Record<RoundOutcome, RoundMarkName> = {
-  correct: 'correct',
-  failed: 'wrong',
-  timeout: 'timeout',
-  skipped: 'skip',
+  correct: 'correct', failed: 'wrong', timeout: 'timeout', skipped: 'skip',
 }
 
 const TIMELINE_LABELS: Record<RoundOutcome, string> = {
-  correct: 'bonne réponse',
-  failed: 'raté',
-  timeout: 'temps écoulé',
-  skipped: 'passé',
+  correct: 'bonne réponse', failed: 'raté', timeout: 'temps écoulé', skipped: 'passé',
 }
 
 export function roundTimelineMarkup(
@@ -26,7 +20,7 @@ export function roundTimelineMarkup(
     const outcome = outcomes[index]
     const state = outcome ?? (index === currentIndex ? 'current' : 'pending')
     const label = outcome
-      ? `${TIMELINE_LABELS[outcome]}`
+      ? TIMELINE_LABELS[outcome]
       : index === currentIndex ? 'en cours' : 'à venir'
     return `<li class="round-timeline__item round-timeline__item--${state}"><span class="sr-only">Manche ${index + 1} : ${label}</span></li>`
   }).join('')
@@ -43,7 +37,6 @@ export type RoundRecapEntry = {
 }
 
 const formatAttempt = (attempt: number): string => (attempt <= 1 ? '1er' : `${attempt}e`)
-
 const formatElapsedSeconds = (elapsedMs: number): string =>
   `${(Math.max(0, elapsedMs) / 1000).toFixed(1).replace('.', ',')} s`
 
@@ -56,7 +49,6 @@ function recapCopy(entry: RoundRecapEntry, solutionLabel: string): { answer: str
       meta: `Trouvé au ${formatAttempt(entry.attemptsUsed)} essai`,
     }
   }
-
   if (entry.outcome === 'skipped' && !guessLabel) {
     return { answer: 'Manche passée', meta: `Bonne réponse : ${solutionLabel}` }
   }

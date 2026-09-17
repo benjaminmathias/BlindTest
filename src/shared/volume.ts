@@ -29,17 +29,14 @@ export function createVolumeManager(): VolumeManager {
   const applyVolume = (volume: number): void => {
     currentVolume = Math.min(1, Math.max(0, volume))
     storeVolume(currentVolume)
-
     const percent = Math.round(currentVolume * 100)
-    document.querySelectorAll<HTMLSpanElement>('[data-volume-value]').forEach((label) => {
-      label.textContent = `${percent} %`
-    })
-    document.querySelectorAll<HTMLInputElement>('[data-volume-slider]').forEach((element) => {
-      element.value = String(percent)
-    })
-    document.querySelectorAll<HTMLElement>('[data-volume-toggle]').forEach((toggle) => {
-      toggle.classList.toggle('is-muted', currentVolume === 0)
-    })
+
+    document.querySelectorAll<HTMLSpanElement>('[data-volume-value]')
+      .forEach((label) => { label.textContent = `${percent} %` })
+    document.querySelectorAll<HTMLInputElement>('[data-volume-slider]')
+      .forEach((element) => { element.value = String(percent) })
+    document.querySelectorAll<HTMLElement>('[data-volume-toggle]')
+      .forEach((toggle) => { toggle.classList.toggle('is-muted', currentVolume === 0) })
 
     for (const listener of listeners) listener(currentVolume)
   }
@@ -49,9 +46,7 @@ export function createVolumeManager(): VolumeManager {
     const slider = `<input id="${id}" data-volume-slider type="range" min="0" max="100" step="5" value="${percent}" />`
     const label = `<span class="volume-value" data-volume-value>${percent} %</span>`
 
-    if (!compact) {
-      return `<div class="volume-control">${slider}${label}</div>`
-    }
+    if (!compact) return `<div class="volume-control">${slider}${label}</div>`
 
     return `<div class="volume-control volume-control--popover">
         <button id="${id}-toggle" class="volume-button${currentVolume === 0 ? ' is-muted' : ''}" data-volume-toggle type="button" aria-expanded="false" aria-controls="${id}-panel" aria-label="Volume">${SPEAKER_ICON}${SPEAKER_MUTED_ICON}</button>
@@ -70,7 +65,6 @@ export function createVolumeManager(): VolumeManager {
 
     document.addEventListener('pointerdown', (event) => {
       const target = event.target as Node | null
-
       document.querySelectorAll<HTMLButtonElement>('[data-volume-toggle]').forEach((toggle) => {
         const panel = document.getElementById(toggle.getAttribute('aria-controls') ?? '')
         if (!panel || panel.hidden) return

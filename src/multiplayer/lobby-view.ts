@@ -16,7 +16,6 @@ function playerElement(player: Player): HTMLLIElement {
     badge.textContent = 'Hôte'
     element.append(badge)
   }
-
   return element
 }
 
@@ -24,7 +23,6 @@ function playerElement(player: Player): HTMLLIElement {
 // liste des joueurs. Retombe sur le classement quand le lobby n'est plus là.
 export function renderLobbyPlayers(players: Player[]): void {
   const playersList = qs<HTMLUListElement>('#players-list')
-
   if (!playersList) {
     renderMultiplayerLeaderboard()
     return
@@ -35,16 +33,13 @@ export function renderLobbyPlayers(players: Player[]): void {
   setText('#lobby-round-count-value', String(state.multiplayerRoundCount))
   setText('#lobby-round-duration-value', `${state.multiplayerRoundDuration} s`)
   setDisabled('#start-game-button', players.length < 2)
-
   setText('#lobby-status', state.multiplayerIsHost
     ? players.length < 2 ? 'En attente d\'un autre joueur…' : 'Prêt à commencer.'
     : 'En attente du lancement par l\'hôte…')
 
   const elements = [...players]
     .sort((first, second) =>
-      Number(second.isHost) - Number(first.isHost)
-      || first.name.localeCompare(second.name),
-    )
+      Number(second.isHost) - Number(first.isHost) || first.name.localeCompare(second.name))
     .map(playerElement)
 
   playersList.replaceChildren(...elements)

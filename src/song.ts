@@ -1,15 +1,8 @@
-export type SongIdentity = {
-  title: string
-  artist: string
-}
+export type SongIdentity = { title: string; artist: string }
 
 export function normalizeComparableText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 // Normalisation caractère par caractère : renvoie le texte comparable et, pour
@@ -53,23 +46,14 @@ function isRemasterMarker(content: string): boolean {
   if (tokens.length === 0 || tokens.length > 2) return false
 
   let hasRemaster = false
-
   for (const word of tokens) {
-    if (REMASTER_WORDS.has(word)) {
-      hasRemaster = true
-    } else if (!YEAR_PATTERN.test(word)) {
-      return false
-    }
+    if (REMASTER_WORDS.has(word)) hasRemaster = true
+    else if (!YEAR_PATTERN.test(word)) return false
   }
-
   return hasRemaster
 }
 
-type MarkerSegment = {
-  start: number
-  end: number
-  content: string
-}
+type MarkerSegment = { start: number; end: number; content: string }
 
 function findBracketSegments(title: string): MarkerSegment[] {
   const pattern = /\s*(?:\(([^()]*)\)|\[([^\[\]]*)\])/g
@@ -78,24 +62,17 @@ function findBracketSegments(title: string): MarkerSegment[] {
 
   while ((match = pattern.exec(title)) !== null) {
     segments.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      content: match[1] ?? match[2] ?? '',
+      start: match.index, end: match.index + match[0].length, content: match[1] ?? match[2] ?? '',
     })
   }
-
   return segments
 }
 
 function findDashSegment(title: string): MarkerSegment | null {
   const match = /\s[-–—]\s*([^-–—]+)$/.exec(title)
-  if (!match) return null
-
-  return {
-    start: match.index,
-    end: match.index + match[0].length,
-    content: match[1] ?? '',
-  }
+  return match
+    ? { start: match.index, end: match.index + match[0].length, content: match[1] ?? '' }
+    : null
 }
 
 export function canonicalizeSongTitle(title: string): string {
@@ -123,13 +100,11 @@ export function canonicalizeSongTitle(title: string): string {
 export const getDisplaySongTitle = canonicalizeSongTitle
 
 const PARASITE_WORDS = new Set(['karaoke', 'tribute', 'cover', 'instrumental'])
-
 const hasParasiteWord = (content: string): boolean =>
   words(content).some((word) => PARASITE_WORDS.has(word))
 
 export function isParasiteVersion(title: string): boolean {
   if (findBracketSegments(title).some((segment) => hasParasiteWord(segment.content))) return true
-
   const dashSegment = findDashSegment(title)
   return dashSegment !== null && hasParasiteWord(dashSegment.content)
 }

@@ -13,29 +13,18 @@ export type RoundDuration = (typeof ROUND_DURATION_OPTIONS)[number]
 export type GuessOption = Pick<Track, 'id' | 'title' | 'artist'>
 export type RoundOutcome = 'correct' | 'failed' | 'timeout' | 'skipped'
 
-export const isRoundCount = (value: unknown): value is RoundCount =>
-  oneOf(value, ROUND_COUNT_OPTIONS)
-
-export const isRoundDuration = (value: unknown): value is RoundDuration =>
-  oneOf(value, ROUND_DURATION_OPTIONS)
-
+export const isRoundCount = (value: unknown): value is RoundCount => oneOf(value, ROUND_COUNT_OPTIONS)
+export const isRoundDuration = (value: unknown): value is RoundDuration => oneOf(value, ROUND_DURATION_OPTIONS)
+export const normalizeSearchText = normalizeComparableText
 export const formatGuessOption = (track: GuessOption): string =>
   `${getDisplaySongTitle(track.title)} — ${track.artist}`
 
-export const normalizeSearchText = normalizeComparableText
-
 export function findGuessOption(options: GuessOption[], value: string): GuessOption | null {
   const normalized = normalizeSearchText(value)
-  return options.find(
-    (option) => normalizeSearchText(formatGuessOption(option)) === normalized,
-  ) ?? null
+  return options.find((option) => normalizeSearchText(formatGuessOption(option)) === normalized) ?? null
 }
 
-type RankedGuess = {
-  option: GuessOption
-  score: number
-  order: number
-}
+type RankedGuess = { option: GuessOption; score: number; order: number }
 
 export function searchGuessOptions(
   options: readonly GuessOption[],
@@ -60,7 +49,6 @@ export function searchGuessOptions(
         : title.includes(needle) ? 2
           : artist.includes(needle) ? 3
             : -1
-
     if (score === -1) return
 
     const key = getCanonicalSongKey({ title: option.title, artist: option.artist })
@@ -94,8 +82,7 @@ export function pickUnplayedTrack(tracks: readonly Track[], playedTrackIds: Set<
   // Privilégie un artiste pas encore entendu dans la partie ; sinon retombe sur
   // tous les morceaux non joués.
   const playedArtists = new Set(
-    tracks
-      .filter((track) => playedTrackIds.has(track.id))
+    tracks.filter((track) => playedTrackIds.has(track.id))
       .map((track) => normalizeComparableText(track.artist)),
   )
   const freshArtistTracks = availableTracks.filter(
@@ -112,14 +99,9 @@ export function getRoundScore(
   roundDurationMs: number,
   maxRoundScore: number,
 ): number {
-  if (
-    !Number.isFinite(remainingTime)
-    || !Number.isFinite(roundDurationMs)
-    || !Number.isFinite(maxRoundScore)
-    || roundDurationMs <= 0
-    || maxRoundScore <= 0
-    || remainingTime <= 0
-  ) {
+  if (!Number.isFinite(remainingTime) || !Number.isFinite(roundDurationMs)
+    || !Number.isFinite(maxRoundScore) || roundDurationMs <= 0 || maxRoundScore <= 0
+    || remainingTime <= 0) {
     return 0
   }
 

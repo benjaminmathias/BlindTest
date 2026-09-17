@@ -63,7 +63,6 @@ export function createRoundTimer(options: RoundTimerOptions): RoundTimer {
     }
 
     options.onTick?.(remaining)
-
     if (remaining <= 0) options.onExpire()
   }
 

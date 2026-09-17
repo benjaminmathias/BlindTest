@@ -2,15 +2,9 @@ import type { MusicTheme, Track } from './api'
 import type { GuessOption, RoundCount, RoundDuration, RoundOutcome } from './game'
 import type { GuessArea } from './guess/area'
 import type { RoundRecapEntry } from './guess/recap'
-import type {
-  AttemptResult, MultiplayerRound, RoomConnection, RoundReveal,
-} from './multiplayer/protocol'
+import type { AttemptResult, MultiplayerRound, RoomConnection, RoundReveal } from './multiplayer/protocol'
 import type { RoundTimer } from './round/timer'
-import {
-  DEFAULT_MUSIC_THEME,
-  DEFAULT_ROUND_COUNT,
-  DEFAULT_ROUND_DURATION,
-} from './shared/storage'
+import { DEFAULT_MUSIC_THEME, DEFAULT_ROUND_COUNT, DEFAULT_ROUND_DURATION } from './shared/storage'
 
 export type AppState = {
   // Préférences de jeu
@@ -18,7 +12,7 @@ export type AppState = {
   selectedRoundCount: RoundCount
   selectedRoundDuration: RoundDuration
 
-  // Connexion et roster
+  // Connexion, roster et réglages
   multiplayerTracks: Track[]
   roomConnection: RoomConnection | null
   multiplayerPlayerId: string | null
@@ -29,6 +23,12 @@ export type AppState = {
   multiplayerGameOver: boolean
   multiplayerPlayerNames: Map<string, string>
   multiplayerLeaveInProgress: boolean
+  multiplayerMusicTheme: MusicTheme
+  currentGameMusicTheme: MusicTheme
+  multiplayerRoundCount: RoundCount
+  currentGameRoundCount: RoundCount
+  multiplayerRoundDuration: RoundDuration
+  currentGameRoundDuration: RoundDuration
 
   // Manche en cours
   multiplayerAudio: HTMLAudioElement | null
@@ -47,7 +47,7 @@ export type AppState = {
   multiplayerOwnRoundRecap: (RoundRecapEntry | undefined)[]
   multiplayerPlayedTrackIds: Set<string>
 
-  // Réponses et scores
+  // Réponses, scores et horloge
   ownAnswerResult: AttemptResult | null
   finishedPlayerIds: Set<string>
   multiplayerAttempts: Map<string, number>
@@ -57,49 +57,30 @@ export type AppState = {
   multiplayerLastOwnGuess: GuessOption | null
   multiplayerLastOwnElapsedMs: number
   multiplayerAttemptResultHandler: ((result: AttemptResult) => void) | null
-
-  // Horloge synchronisée
   multiplayerClockOffsetMs: number
   multiplayerClockSyncPromise: Promise<void> | null
   multiplayerClockSynced: boolean
   multiplayerLastClockSyncRound: number
-
-  // Réglages de la partie en cours
-  multiplayerMusicTheme: MusicTheme
-  currentGameMusicTheme: MusicTheme
-  multiplayerRoundCount: RoundCount
-  currentGameRoundCount: RoundCount
-  multiplayerRoundDuration: RoundDuration
-  currentGameRoundDuration: RoundDuration
 }
 
 export const state: AppState = {
-  selectedTheme: DEFAULT_MUSIC_THEME,
-  selectedRoundCount: DEFAULT_ROUND_COUNT,
+  selectedTheme: DEFAULT_MUSIC_THEME, selectedRoundCount: DEFAULT_ROUND_COUNT,
   selectedRoundDuration: DEFAULT_ROUND_DURATION,
-
-  multiplayerTracks: [], roomConnection: null, multiplayerPlayerId: null,
-  multiplayerIsHost: false, multiplayerHostId: null, multiplayerHostSeen: false,
-  multiplayerHostLeft: false, multiplayerGameOver: false,
-  multiplayerPlayerNames: new Map(), multiplayerLeaveInProgress: false,
-
-  multiplayerAudio: null, multiplayerTimer: null, multiplayerTransitionId: null,
-  currentMultiplayerGameId: null, currentMultiplayerRound: null, currentHostTrack: null,
-  currentRoundReveal: null, multiplayerLastRoundId: null, multiplayerGuessArea: null,
-  multiplayerCatalog: [], multiplayerRoundPlayerIds: new Set(),
-  multiplayerRoundFinished: false, multiplayerOwnRoundHistory: [],
-  multiplayerOwnRoundRecap: [], multiplayerPlayedTrackIds: new Set(),
-
-  ownAnswerResult: null, finishedPlayerIds: new Set(), multiplayerAttempts: new Map(),
-  multiplayerTriedAnswerKeys: new Map(), multiplayerScores: new Map(),
-  multiplayerCurrentRoundNumber: 0, multiplayerLastOwnGuess: null,
-  multiplayerLastOwnElapsedMs: 0, multiplayerAttemptResultHandler: null,
-
-  multiplayerClockOffsetMs: 0, multiplayerClockSyncPromise: null,
-  multiplayerClockSynced: false, multiplayerLastClockSyncRound: 0,
-
+  multiplayerTracks: [], roomConnection: null, multiplayerPlayerId: null, multiplayerIsHost: false,
+  multiplayerHostId: null, multiplayerHostSeen: false, multiplayerHostLeft: false,
+  multiplayerGameOver: false, multiplayerPlayerNames: new Map(), multiplayerLeaveInProgress: false,
   multiplayerMusicTheme: DEFAULT_MUSIC_THEME, currentGameMusicTheme: DEFAULT_MUSIC_THEME,
   multiplayerRoundCount: DEFAULT_ROUND_COUNT, currentGameRoundCount: DEFAULT_ROUND_COUNT,
   multiplayerRoundDuration: DEFAULT_ROUND_DURATION,
   currentGameRoundDuration: DEFAULT_ROUND_DURATION,
+  multiplayerAudio: null, multiplayerTimer: null, multiplayerTransitionId: null,
+  currentMultiplayerGameId: null, currentMultiplayerRound: null, currentHostTrack: null,
+  currentRoundReveal: null, multiplayerLastRoundId: null, multiplayerGuessArea: null,
+  multiplayerCatalog: [], multiplayerRoundPlayerIds: new Set(), multiplayerRoundFinished: false,
+  multiplayerOwnRoundHistory: [], multiplayerOwnRoundRecap: [], multiplayerPlayedTrackIds: new Set(),
+  ownAnswerResult: null, finishedPlayerIds: new Set(), multiplayerAttempts: new Map(),
+  multiplayerTriedAnswerKeys: new Map(), multiplayerScores: new Map(),
+  multiplayerCurrentRoundNumber: 0, multiplayerLastOwnGuess: null, multiplayerLastOwnElapsedMs: 0,
+  multiplayerAttemptResultHandler: null, multiplayerClockOffsetMs: 0,
+  multiplayerClockSyncPromise: null, multiplayerClockSynced: false, multiplayerLastClockSyncRound: 0,
 }

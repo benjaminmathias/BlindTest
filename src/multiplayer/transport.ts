@@ -3,9 +3,8 @@ import { isRecord, isString } from '../shared/validate'
 import {
   getRoomAdmissionError, isAttemptResult, isClockPing, isClockPong, isGameCatalog, isGameOver,
   isGameStart, isMultiplayerRound, isPlayer, isPlayerGuess, isRoundComplete, isRoundReveal,
-  isScoreUpdate,
-  type ClockPing, type ClockPong, type ClockSyncResult, type GameStart, type HostSettings,
-  type Player, type RoomConnection, type RoomHandlers,
+  isScoreUpdate, type ClockPing, type ClockPong, type ClockSyncResult, type GameStart,
+  type HostSettings, type Player, type RoomConnection, type RoomHandlers,
 } from './protocol'
 
 const CLOCK_SAMPLE_COUNT = 5
@@ -23,7 +22,6 @@ type PendingClockPing = {
 function createSupabaseClient(): SupabaseClient {
   const url = import.meta.env.VITE_SUPABASE_URL
   const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-
   if (!url || !publishableKey) throw new Error('Variables d’environnement Supabase manquantes')
   return createClient(url, publishableKey)
 }
@@ -81,11 +79,7 @@ export async function joinRoom(
   let currentSettings: HostSettings | undefined = isHost ? settings : undefined
   let gameStarted = false
 
-  const sendBroadcast = async (
-    event: string,
-    payload: object,
-    errorMessage: string,
-  ): Promise<void> => {
+  const sendBroadcast = async (event: string, payload: object, errorMessage: string): Promise<void> => {
     const status = await channel.send({
       type: 'broadcast', event, payload: { ...payload, senderId: playerId },
     })
@@ -156,7 +150,6 @@ export async function joinRoom(
       .sort((first, second) => first.name.localeCompare(second.name))
 
     handlers.onPlayers(players)
-
     if (isHost) {
       for (const player of players) void ensurePrivateChannel(player.playerId).catch(console.error)
     }
@@ -235,7 +228,6 @@ export async function joinRoom(
   })
   channel.on('broadcast', { event: 'clock_pong' }, ({ payload }) => {
     if (!isClockPong(payload) || payload.playerId !== playerId) return
-
     const pendingPing = pendingClockPings.get(payload.pingId)
     if (!pendingPing) return
 
@@ -275,8 +267,7 @@ export async function joinRoom(
 
     const hosts = Object.values(channel.presenceState<Player>()).flat()
       .filter((presence) => isPlayer(presence) && presence.isHost)
-    if (isHost && hosts.length > 1
-      && hosts.map(({ playerId: id }) => id).sort()[0] !== playerId) {
+    if (isHost && hosts.length > 1 && hosts.map(({ playerId: id }) => id).sort()[0] !== playerId) {
       throw new Error('Ce code de partie est déjà utilisé.')
     }
     if (!isHost && hosts.some((host) => host.gameStarted === true)) {
@@ -313,7 +304,6 @@ export async function joinRoom(
     },
     updateGameSettings: async (nextSettings) => {
       if (!isHost) throw new Error('Seul l’hôte peut modifier les réglages')
-
       const previousSettings = currentSettings
       currentSettings = nextSettings
       try {
@@ -337,7 +327,6 @@ export async function joinRoom(
     },
     sendAttemptResult: async (result) => {
       if (!isHost) throw new Error('Seul l’hôte peut envoyer un résultat')
-
       const privateChannel = await ensurePrivateChannel(result.playerId)
       const status = await privateChannel.send({
         type: 'broadcast', event: 'attempt_result',

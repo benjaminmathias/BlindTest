@@ -13,11 +13,6 @@ export function setText(selector: string, text: string): void {
   if (element) element.textContent = text
 }
 
-export function setHidden(selector: string, hidden: boolean): void {
-  const element = qs<HTMLElement>(selector)
-  if (element) element.hidden = hidden
-}
-
 export function setDisabled(selector: string, disabled: boolean): void {
   const element = qs<HTMLButtonElement>(selector)
   if (element) element.disabled = disabled

@@ -34,11 +34,7 @@ type Preference<T> = {
   write: (value: T) => void
 }
 
-function preference<T>(
-  key: string,
-  parse: (raw: string | null) => T | null,
-  fallback: T,
-): Preference<T> {
+function preference<T>(key: string, parse: (raw: string | null) => T | null, fallback: T): Preference<T> {
   return {
     read: () => parse(readRaw(key)) ?? fallback,
     write: (value) => writeRaw(key, String(value)),
@@ -50,33 +46,22 @@ function numberPreference<T extends number>(
   isValid: (value: number) => value is T,
   fallback: T,
 ): Preference<T> {
-  return preference(
-    key,
-    (raw) => {
-      if (raw === null) return null
-      const value = Number(raw)
-      return Number.isFinite(value) && isValid(value) ? value : null
-    },
-    fallback,
-  )
-}
-
-const volume = preference<number>(
-  VOLUME_KEY,
-  (raw) => {
+  return preference(key, (raw) => {
     if (raw === null) return null
     const value = Number(raw)
-    return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : null
-  },
-  DEFAULT_VOLUME,
-)
+    return Number.isFinite(value) && isValid(value) ? value : null
+  }, fallback)
+}
+
+const volume = preference<number>(VOLUME_KEY, (raw) => {
+  if (raw === null) return null
+  const value = Number(raw)
+  return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : null
+}, DEFAULT_VOLUME)
 
 const musicTheme = preference<MusicTheme>(
-  MUSIC_THEME_KEY,
-  (raw) => (isMusicTheme(raw) ? raw : null),
-  DEFAULT_MUSIC_THEME,
+  MUSIC_THEME_KEY, (raw) => (isMusicTheme(raw) ? raw : null), DEFAULT_MUSIC_THEME,
 )
-
 const roundCount = numberPreference(ROUND_COUNT_KEY, isRoundCount, DEFAULT_ROUND_COUNT)
 const roundDuration = numberPreference(ROUND_DURATION_KEY, isRoundDuration, DEFAULT_ROUND_DURATION)
 
@@ -103,7 +88,6 @@ export function readHighScore(roundCount: RoundCount): number {
       return legacyScore
     }
   }
-
   return 0
 }
 

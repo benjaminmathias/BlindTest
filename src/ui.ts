@@ -9,7 +9,6 @@ export function setStatusMessage(
 }
 
 export const formatScore = (value: number): string => value.toLocaleString('fr-FR')
-
 export const formatRemainingTime = (milliseconds: number): string =>
   `${(milliseconds / 1000).toFixed(1)} s`
 
@@ -47,15 +46,12 @@ export function animateScore(
 
   const startedAt = performance.now()
   const delta = to - from
-
   const tick = (now: number): void => {
     const progress = Math.min(1, (now - startedAt) / duration)
     const eased = 1 - (1 - progress) ** 3
     element.textContent = formatScore(Math.round(from + delta * eased))
-
     if (progress < 1) scoreAnimations.set(element, window.requestAnimationFrame(tick))
     else scoreAnimations.delete(element)
   }
-
   scoreAnimations.set(element, window.requestAnimationFrame(tick))
 }

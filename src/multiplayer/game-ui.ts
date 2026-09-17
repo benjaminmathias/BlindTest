@@ -33,8 +33,7 @@ export function renderLeaderboard(
     .map(([playerId, name]) => ({ playerId, name, score: scores.get(playerId) ?? 0 }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
   leaderboard.replaceChildren(...players.map((player, index) =>
-    playerRow(player, index, currentPlayerId, false),
-  ))
+    playerRow(player, index, currentPlayerId, false)))
 }
 
 export function renderFinalLeaderboard(
@@ -43,6 +42,5 @@ export function renderFinalLeaderboard(
   currentPlayerId: string | null,
 ): void {
   leaderboard.replaceChildren(...scores.map((player, index) =>
-    playerRow(player, index, currentPlayerId, true),
-  ))
+    playerRow(player, index, currentPlayerId, true)))
 }

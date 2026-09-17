@@ -3,10 +3,7 @@ import { formatScore } from '../ui'
 import { ROUND_MARKS } from './marks'
 
 const ROUND_RESULT_LABELS = {
-  correct: 'Bonne réponse',
-  wrong: 'Raté',
-  timeout: 'Temps écoulé',
-  skip: 'Passé',
+  correct: 'Bonne réponse', wrong: 'Raté', timeout: 'Temps écoulé', skip: 'Passé',
 } as const
 
 export function renderRoundResult(
@@ -35,12 +32,10 @@ export function renderRoundResult(
   const track = document.createElement('span')
   track.className = 'round-result__track'
   track.textContent = getDisplaySongTitle(title)
-
   const artistElement = document.createElement('span')
   artistElement.className = 'round-result__artist'
   artistElement.textContent = ` — ${artist}`
   track.append(artistElement)
-
   body.append(outcome, track)
   status.append(badge, body)
 
@@ -50,6 +45,5 @@ export function renderRoundResult(
     pointsElement.textContent = `+${formatScore(points)}`
     status.append(pointsElement)
   }
-
   status.closest('.game-shell')?.classList.add('is-answered')
 }

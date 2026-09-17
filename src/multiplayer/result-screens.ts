@@ -5,10 +5,7 @@ import { focusScreenHeading } from '../ui'
 import { renderFinalLeaderboard } from './game-ui'
 import type { GameOver } from './protocol'
 import {
-  cleanupMultiplayerRound,
-  leaveMultiplayerRoom,
-  startMultiplayerGame,
-  stopMultiplayerTransition,
+  cleanupMultiplayerRound, leaveMultiplayerRoom, startMultiplayerGame, stopMultiplayerTransition,
 } from './session'
 
 function bindLeaveButton(button: HTMLButtonElement): void {
@@ -42,7 +39,6 @@ export function handleMultiplayerHostLeft(): void {
       </section>
     </main>`
   focusScreenHeading(app)
-
   bindLeaveButton(document.querySelector<HTMLButtonElement>('#return-home-button')!)
 }
 
@@ -88,9 +84,8 @@ export function handleGameOver(gameOver: GameOver): void {
       await startMultiplayerGame()
     } catch (error) {
       console.error(error)
-      await leaveMultiplayerRoom(
-        error instanceof Error ? error.message : 'Impossible de relancer la partie.',
-      )
+      await leaveMultiplayerRoom(error instanceof Error
+        ? error.message : 'Impossible de relancer la partie.')
     }
   })
 }

@@ -44,7 +44,6 @@ export function createGuessRound(options: GuessRoundOptions): GuessRound {
     if (options.canSubmit && !options.canSubmit()) return
 
     const guess = area.getSelectedOption()
-
     if (!guess) {
       area.showError(options.emptyMessage ?? 'Choisis une suggestion dans la liste.')
       if (focusOnError) area.focusInput()
@@ -52,7 +51,6 @@ export function createGuessRound(options: GuessRoundOptions): GuessRound {
     }
 
     const key = getCanonicalSongKey(guess)
-
     if (triedKeys.has(key)) {
       area.showError(options.duplicateMessage ?? 'Cette réponse a déjà été essayée.')
       if (focusOnError) area.focusInput()
