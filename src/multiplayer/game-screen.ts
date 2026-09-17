@@ -1,27 +1,20 @@
 import { app, qs } from '../dom'
 import { formatGuessOption } from '../game'
-import { createId } from '../shared/id'
-import { state } from '../state'
-import { volume } from '../services'
 import { createGuessRound } from '../round/guess'
 import { roundStageMarkup } from '../round/stage'
 import { createRoundTimer } from '../round/timer'
+import { volume } from '../services'
+import { createId } from '../shared/id'
+import { state } from '../state'
 import { focusScreenHeading } from '../ui'
+import { getEstimatedHostNow, maybeResynchronizeMultiplayerClock } from './clock'
 import { renderMultiplayerLeaderboard } from './leaderboard'
 import type { AttemptResult, MultiplayerRound } from './protocol'
-import {
-  checkMultiplayerRoundCompletion,
-  cleanupMultiplayerRound,
-  leaveMultiplayerRoom,
-} from './session'
-import { getEstimatedHostNow, maybeResynchronizeMultiplayerClock } from './clock'
+import { checkMultiplayerRoundCompletion, cleanupMultiplayerRound, leaveMultiplayerRoom } from './session'
 
 export function renderMultiplayerRound(round: MultiplayerRound): void {
-  if (
-    state.multiplayerHostLeft
-    || state.multiplayerGameOver
-    || round.gameId !== state.currentMultiplayerGameId
-  ) {
+  if (state.multiplayerHostLeft || state.multiplayerGameOver
+    || round.gameId !== state.currentMultiplayerGameId) {
     return
   }
 
@@ -119,8 +112,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
     if (result.roundId !== round.roundId || result.playerId !== state.multiplayerPlayerId) return
     waitingForResult = false
     guessRound.recordAttempt(
-      result.attemptsUsed - 1,
-      result.isCorrect,
+      result.attemptsUsed - 1, result.isCorrect,
       state.multiplayerLastOwnGuess ? formatGuessOption(state.multiplayerLastOwnGuess) : '',
       result.attemptsRemaining,
     )
@@ -128,12 +120,11 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
 
     if (result.finished) {
       state.multiplayerLastOwnElapsedMs = Math.min(
-        roundDurationMs,
-        Math.max(0, getEstimatedHostNow() - round.startAt),
+        roundDurationMs, Math.max(0, getEstimatedHostNow() - round.startAt),
       )
-      finishOwnRound(
-        result.isCorrect ? 'Bonne réponse ! Résultat à venir…' : 'Plus aucun essai. Résultat à venir…',
-      )
+      finishOwnRound(result.isCorrect
+        ? 'Bonne réponse ! Résultat à venir…'
+        : 'Plus aucun essai. Résultat à venir…')
     } else {
       guessRound.area.clearInput()
       guessRound.area.setDisabled(false)
@@ -157,9 +148,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
       guessRound.area.setDisabled(true)
       gameStatus.textContent = 'Vérification…'
       void state.roomConnection?.sendGuess({
-        roundId: round.roundId,
-        guessId: createId(),
-        answerId: guess.id,
+        roundId: round.roundId, guessId: createId(), answerId: guess.id,
       }).catch((error) => {
         console.error(error)
         void leaveMultiplayerRoom('Connexion interrompue.')

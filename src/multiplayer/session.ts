@@ -143,19 +143,15 @@ function applyPlayers(players: Player[]): void {
 function showGameStarting(): void {
   const status = qs<HTMLParagraphElement>('#lobby-status')
     ?? qs<HTMLParagraphElement>('#multiplayer-status')
-
   if (status) status.textContent = 'La partie va commencer…'
   setDisabled('#start-game-button', true)
-
   if (state.roomConnection && !state.multiplayerIsHost) {
     synchronizeMultiplayerClock(state.roomConnection, true)
   }
 }
 
 function handleGameStart(gameStart: GameStart): void {
-  if (state.multiplayerHostLeft
-    || !gameStart?.gameId
-    || !gameStart.startedBy
+  if (state.multiplayerHostLeft || !gameStart?.gameId || !gameStart.startedBy
     || gameStart.startedBy !== state.multiplayerHostId
     || gameStart.gameId === state.currentMultiplayerGameId) {
     return
@@ -181,7 +177,6 @@ function handleGameCatalog(catalog: GameCatalog): void {
 
 export async function startMultiplayerGame(): Promise<void> {
   const connection = state.roomConnection
-
   if (!connection || !state.multiplayerIsHost) {
     throw new Error('Seul l’hôte peut commencer la partie')
   }
@@ -218,10 +213,8 @@ async function sendNextMultiplayerRound(connection: RoomConnection): Promise<voi
   if (!state.multiplayerIsHost || !state.currentMultiplayerGameId) return
 
   cleanupMultiplayerRound()
-  state.currentMultiplayerRound = null
-  state.currentHostTrack = null
-  state.finishedPlayerIds = new Set()
-  state.multiplayerAttempts = new Map()
+  state.currentMultiplayerRound = null; state.currentHostTrack = null
+  state.finishedPlayerIds = new Set(); state.multiplayerAttempts = new Map()
   state.multiplayerTriedAnswerKeys = new Map()
 
   const correctTrack = pickUnplayedTrack(state.multiplayerTracks, state.multiplayerPlayedTrackIds)
@@ -244,8 +237,7 @@ function finalScores(): GameOver['scores'] {
     .map(([playerId, name]) => ({
       playerId, name, score: state.multiplayerScores.get(playerId) ?? 0,
     }))
-    .sort((first, second) =>
-      second.score - first.score || first.name.localeCompare(second.name))
+    .sort((first, second) => second.score - first.score || first.name.localeCompare(second.name))
 }
 
 async function completeMultiplayerRound(round: MultiplayerRound): Promise<void> {
@@ -294,8 +286,8 @@ export function checkMultiplayerRoundCompletion(): void {
     return
   }
 
-  const allPlayersAnswered = [...state.multiplayerRoundPlayerIds].every((playerId) =>
-    state.finishedPlayerIds.has(playerId))
+  const allPlayersAnswered = [...state.multiplayerRoundPlayerIds]
+    .every((playerId) => state.finishedPlayerIds.has(playerId))
   if (!allPlayersAnswered) return
 
   state.multiplayerRoundFinished = true
@@ -332,9 +324,7 @@ function handlePlayerGuess(guess: PlayerGuess): void {
     isHost: state.multiplayerIsHost,
     round: state.currentMultiplayerRound,
     correctTrack: state.currentHostTrack,
-    catalog: new Map(
-      state.multiplayerCatalog.map(({ id, title, artist }) => [id, { title, artist }]),
-    ),
+    catalog: new Map(state.multiplayerCatalog.map(({ id, title, artist }) => [id, { title, artist }])),
     activePlayerIds: state.multiplayerRoundPlayerIds,
     finishedPlayerIds: state.finishedPlayerIds,
     attempts: state.multiplayerAttempts,
@@ -366,16 +356,13 @@ function handlePlayerGuess(guess: PlayerGuess): void {
 }
 
 export function handleAttemptResult(result: AttemptResult): void {
-  if (state.multiplayerHostLeft
-    || state.multiplayerGameOver
-    || !state.currentMultiplayerRound
+  if (state.multiplayerHostLeft || state.multiplayerGameOver || !state.currentMultiplayerRound
     || result.roundId !== state.currentMultiplayerRound.roundId) {
     return
   }
 
   state.multiplayerScores.set(result.playerId, result.totalScore)
   renderMultiplayerLeaderboard()
-
   if (result.playerId !== state.multiplayerPlayerId) return
 
   state.ownAnswerResult = result
@@ -403,19 +390,15 @@ function handleRoundReveal(reveal: RoundReveal): void {
     renderRoundResult(
       revealCard,
       state.ownAnswerResult ? (state.ownAnswerResult.isCorrect ? 'correct' : 'wrong') : 'timeout',
-      reveal.title,
-      reveal.artist,
+      reveal.title, reveal.artist,
       state.ownAnswerResult?.isCorrect ? state.ownAnswerResult.addedScore : 0,
     )
   }
-
   setText('#multiplayer-status', '')
 }
 
 function handleRoundComplete(result: RoundComplete): void {
-  if (state.multiplayerHostLeft
-    || state.multiplayerGameOver
-    || !state.currentMultiplayerRound
+  if (state.multiplayerHostLeft || state.multiplayerGameOver || !state.currentMultiplayerRound
     || result.roundId !== state.currentMultiplayerRound.roundId
     || result.round !== state.currentMultiplayerRound.round) {
     return
@@ -442,11 +425,8 @@ function handleRoundComplete(result: RoundComplete): void {
   }
 
   if (state.currentRoundReveal) {
-    revealArtwork(
-      document,
-      state.currentRoundReveal.imageUrl,
-      `Cover de ${state.currentRoundReveal.title} par ${state.currentRoundReveal.artist}`,
-    )
+    revealArtwork(document, state.currentRoundReveal.imageUrl,
+      `Cover de ${state.currentRoundReveal.title} par ${state.currentRoundReveal.artist}`)
   }
 
   qs<HTMLFormElement>('#multiplayer-guess-form')?.querySelectorAll('input, button')
@@ -475,10 +455,7 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
     state.multiplayerIsHost = isHost
 
     state.roomConnection = await joinRoom(
-      roomCode,
-      playerId,
-      playerName,
-      isHost,
+      roomCode, playerId, playerName, isHost,
       {
         musicTheme: state.multiplayerMusicTheme,
         roundCount: state.multiplayerRoundCount,
@@ -503,7 +480,6 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
 
     setDisabled('#start-game-button', state.multiplayerPlayerNames.size < 2)
     setDisabled('#leave-room-button', false)
-
     if (!isHost) synchronizeMultiplayerClock(state.roomConnection)
   } catch (error) {
     console.error(error)

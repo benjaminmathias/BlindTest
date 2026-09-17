@@ -24,12 +24,8 @@ export type HostSettings = {
 }
 
 export type Player = {
-  playerId: string
-  name: string
-  isHost: boolean
-  musicTheme?: MusicTheme
-  roundCount?: RoundCount
-  roundDuration?: RoundDuration
+  playerId: string; name: string; isHost: boolean
+  musicTheme?: MusicTheme; roundCount?: RoundCount; roundDuration?: RoundDuration
   gameStarted?: boolean
 }
 
@@ -48,26 +44,16 @@ export type PlayerGuess = {
 }
 
 export type AttemptResult = {
-  roundId: string
-  guessId: string
-  playerId: string
-  isCorrect: boolean
-  attemptsUsed: number
-  attemptsRemaining: number
-  finished: boolean
-  addedScore: number
-  totalScore: number
+  roundId: string; guessId: string; playerId: string; isCorrect: boolean
+  attemptsUsed: number; attemptsRemaining: number; finished: boolean
+  addedScore: number; totalScore: number
 }
 
 export type ScoreUpdate = Pick<AttemptResult, 'roundId' | 'playerId' | 'totalScore'>
 export type RoundComplete = { roundId: string; round: number }
 export type FinalScore = { playerId: string; name: string; score: number }
 export type GameOver = { gameId: string; scores: FinalScore[] }
-
-export type GameStart = HostSettings & {
-  gameId: string; startedBy: string; catalog: GuessOption[]
-}
-
+export type GameStart = HostSettings & { gameId: string; startedBy: string; catalog: GuessOption[] }
 export type ClockSyncResult = { offsetMs: number; rttMs: number }
 
 export type RoomConnection = {

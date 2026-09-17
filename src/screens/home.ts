@@ -8,18 +8,10 @@ import { roundCountChoices, roundDurationChoices, themeChoices } from '../shared
 import { renderSelect } from '../shared/markup'
 import { renderRoundResult } from '../shared/round-result'
 import {
-  generateRoomCode,
-  isValidPlayerName,
-  isValidRoomCode,
-  normalizePlayerName,
-  normalizeRoomCode,
+  generateRoomCode, isValidPlayerName, isValidRoomCode, normalizePlayerName, normalizeRoomCode,
 } from '../shared/room'
 import {
-  readHighScore,
-  saveHighScoreIfNeeded,
-  storeMusicTheme,
-  storeRoundCount,
-  storeRoundDuration,
+  readHighScore, saveHighScoreIfNeeded, storeMusicTheme, storeRoundCount, storeRoundDuration,
 } from '../shared/storage'
 import { createSoloGame, type SoloGame } from '../solo'
 import { state } from '../state'
@@ -34,7 +26,6 @@ function updateHomeHighScore(): void {
 
   const value = readHighScore(state.selectedRoundCount)
   element.hidden = value <= 0
-
   const strong = document.createElement('strong')
   strong.textContent = formatScore(value)
   element.replaceChildren(`Meilleur score · ${state.selectedRoundCount} manches `, strong)
@@ -95,8 +86,7 @@ export function renderHome(initialStatus = ''): void {
           <p id="home-status" class="status" role="status" aria-live="polite"></p>
         </form>
       </section>
-    </main>
-  `
+    </main>`
   focusScreenHeading(app)
 
   const startButton = requireElement<HTMLButtonElement>('#start-button')
@@ -111,7 +101,7 @@ export function renderHome(initialStatus = ''): void {
   setStatusMessage(statusMessage, initialStatus, initialStatus.length > 0)
   volume.setupControls()
 
-  bindSelect(qs('#solo-theme-select'), (raw) => (isMusicTheme(raw) ? raw : null), (theme) => {
+  bindSelect(qs('#solo-theme-select'), (raw) => asValid(raw, isMusicTheme), (theme) => {
     state.selectedTheme = theme
     storeMusicTheme(theme)
   })
@@ -158,17 +148,12 @@ export function renderHome(initialStatus = ''): void {
 
     try {
       await soloGame.start(
-        state.selectedTheme,
-        state.selectedRoundCount,
-        state.selectedRoundDuration,
+        state.selectedTheme, state.selectedRoundCount, state.selectedRoundDuration,
       )
     } catch (error) {
       console.error(error)
-      setStatusMessage(
-        soloStatusMessage,
-        error instanceof Error ? error.message : 'Impossible de lancer la partie.',
-        true,
-      )
+      setStatusMessage(soloStatusMessage, error instanceof Error
+        ? error.message : 'Impossible de lancer la partie.', true)
       startButton.textContent = 'Jouer en solo'
     } finally {
       startButton.disabled = false

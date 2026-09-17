@@ -98,8 +98,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
     </div>
     <p class="guess-search__error" id="${errorId}" hidden></p>
     <p class="sr-only" id="${announcerId}" role="status" aria-live="polite"></p>
-    <p class="sr-only" id="${emptyAnnouncerId}" role="status" aria-live="polite"></p>
-  `
+    <p class="sr-only" id="${emptyAnnouncerId}" role="status" aria-live="polite"></p>`
 
   const slotsElement = form.querySelector<HTMLOListElement>('.attempt-slots')!
   const slotElements = [...form.querySelectorAll<HTMLLIElement>('.attempt-slot')]
@@ -129,10 +128,8 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       text.textContent = label
 
       slot.replaceChildren(mark, text)
-      slot.setAttribute(
-        'aria-label',
-        `Essai ${index + 1} : ${outcome === 'correct' ? 'bonne réponse' : 'mauvaise réponse'} ${label}`,
-      )
+      slot.setAttribute('aria-label',
+        `Essai ${index + 1} : ${outcome === 'correct' ? 'bonne réponse' : 'mauvaise réponse'} ${label}`)
     },
   }
 
@@ -235,7 +232,6 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       item.append(title, artist)
       item.addEventListener('mousedown', (event) => event.preventDefault(), { signal })
       item.addEventListener('click', () => chooseOption(option), { signal })
-
       return item
     })
 
@@ -256,7 +252,6 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
   function updateButtonMode(): void {
     const hasText = input.value.trim().length > 0
     const mode: 'validate' | 'skip' = hasText || !canSkip ? 'validate' : 'skip'
-
     if (mode === buttonMode && submit.dataset.ready === 'true') return
 
     buttonMode = mode
@@ -348,9 +343,7 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       submit.disabled = disabled
       if (disabled) closeList()
     },
-    setSubmitHidden: (hidden) => {
-      submit.hidden = hidden
-    },
+    setSubmitHidden: (hidden) => { submit.hidden = hidden },
     focusInput: () => input.focus(),
     setCatalog: (nextCatalog) => {
       catalog = nextCatalog
@@ -360,12 +353,8 @@ export function createGuessArea(container: HTMLElement, config: GuessAreaConfig)
       excludedKeys = new Set(keys)
       if (!listbox.hidden) refreshSuggestions()
     },
-    showError: (message) => {
-      showErrorState(message)
-    },
-    clearError: () => {
-      clearErrorState()
-    },
+    showError: showErrorState,
+    clearError: clearErrorState,
     announceRemaining: (remaining) => {
       announcer.textContent = `${remaining} essai${remaining === 1 ? '' : 's'} restant${remaining === 1 ? '' : 's'}`
     },

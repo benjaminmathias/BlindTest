@@ -1,27 +1,15 @@
 import { fetchTracks, type MusicTheme, type Track } from './api'
 import { qs } from './dom'
 import {
-  formatGuessOption,
-  getAttemptScore,
-  pickUnplayedTrack,
-  MAX_ATTEMPTS,
-  type GuessOption,
-  type RoundCount,
-  type RoundDuration,
-  type RoundOutcome,
+  formatGuessOption, getAttemptScore, pickUnplayedTrack, MAX_ATTEMPTS,
+  type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
 } from './game'
 import { roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry } from './guess/recap'
 import { createGuessRound } from './round/guess'
 import { roundStageMarkup } from './round/stage'
 import { createRoundTimer, type RoundTimer } from './round/timer'
 import { isSameSong } from './song'
-import {
-  animateScore,
-  focusScreenHeading,
-  formatRemainingTime,
-  formatScore,
-  setStatusMessage,
-} from './ui'
+import { animateScore, focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
 const MAX_ROUND_SCORE = 1000
 
@@ -65,8 +53,7 @@ export type SoloGame = {
 export function createSoloGame(options: SoloGameOptions): SoloGame {
   const state: SoloGameState = {
     tracks: [], round: 0, roundCount: 5, roundDuration: 30, score: 0,
-    playedTrackIds: new Set(), roundHistory: [], roundRecap: [],
-    audio: null, timer: null,
+    playedTrackIds: new Set(), roundHistory: [], roundRecap: [], audio: null, timer: null,
   }
 
   const stop = (): void => {
@@ -103,11 +90,12 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       </main>`
     focusScreenHeading(options.app)
 
-    const replayButton = qs<HTMLButtonElement>('#replay-button', options.app)!
     qs<HTMLButtonElement>('#return-home-button', options.app)!.addEventListener('click', () => {
       stop()
       options.renderHome()
     })
+
+    const replayButton = qs<HTMLButtonElement>('#replay-button', options.app)!
     replayButton.addEventListener('click', async () => {
       replayButton.disabled = true
       state.round = 1
@@ -158,9 +146,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
             </div>
           </header>
           ${roundStageMarkup({
-            timerId: 'timer',
-            progressId: 'timer-progress',
-            revealId: 'game-reveal',
+            timerId: 'timer', progressId: 'timer-progress', revealId: 'game-reveal',
             initialTime: formatRemainingTime(roundDurationMs),
           })}
           <p id="game-status" class="status" role="status" aria-live="polite"></p>
@@ -205,10 +191,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         attemptsUsed += 1
         const isCorrect = isSameSong(guess, correctTrack)
         guessRound.recordAttempt(
-          attemptsUsed - 1,
-          isCorrect,
-          formatGuessOption(guess),
-          MAX_ATTEMPTS - attemptsUsed,
+          attemptsUsed - 1, isCorrect, formatGuessOption(guess), MAX_ATTEMPTS - attemptsUsed,
         )
 
         if (isCorrect || attemptsUsed === MAX_ATTEMPTS) {
@@ -234,13 +217,13 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       timerEl.textContent = formatRemainingTime(time)
       progressEl.style.transform = `scaleX(${Math.max(0, Math.min(1, time / roundDurationMs))})`
       timerEl.parentElement?.classList.toggle('is-low', time > 0 && time <= 5000)
+
       const guessArea = guessRound.area
       guessArea.setDisabled(true)
       guessArea.setSubmitHidden(true)
       guessArea.destroy()
       options.revealArtwork(
-        document,
-        correctTrack.imageUrl,
+        document, correctTrack.imageUrl,
         `Cover de ${correctTrack.title} par ${correctTrack.artist}`,
       )
 
@@ -266,12 +249,9 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         state.score += points
         animateScore(scoreDisplay, previousScore, state.score)
         options.renderRoundResult(revealCard, 'correct', correctTrack.title, correctTrack.artist, points)
-      } else if (roundOutcome === 'timeout') {
-        options.renderRoundResult(revealCard, 'timeout', correctTrack.title, correctTrack.artist)
-      } else if (roundOutcome === 'skipped') {
-        options.renderRoundResult(revealCard, 'skip', correctTrack.title, correctTrack.artist)
       } else {
-        options.renderRoundResult(revealCard, 'wrong', correctTrack.title, correctTrack.artist)
+        const result = roundOutcome === 'timeout' ? 'timeout' : roundOutcome === 'skipped' ? 'skip' : 'wrong'
+        options.renderRoundResult(revealCard, result, correctTrack.title, correctTrack.artist)
       }
 
       const next = document.createElement('button')
