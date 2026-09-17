@@ -155,6 +155,7 @@ export function renderMultiplayerRound(round: MultiplayerRound): void {
       })
     },
   })
+  state.multiplayerGuessArea = guessRound.area
   guessRound.area.setDisabled(true)
 
   const audio = new Audio(round.audioUrl)
