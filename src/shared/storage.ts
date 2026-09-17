@@ -1,10 +1,5 @@
 import { isMusicTheme, type MusicTheme } from '../api'
-import {
-  isRoundCount,
-  isRoundDuration,
-  type RoundCount,
-  type RoundDuration,
-} from '../game'
+import { isRoundCount, isRoundDuration, type RoundCount, type RoundDuration } from '../game'
 
 export const HIGH_SCORE_KEY = 'blindtest-high-score'
 
@@ -43,11 +38,10 @@ function preference<T>(
   key: string,
   parse: (raw: string | null) => T | null,
   fallback: T,
-  serialize: (value: T) => string = String,
 ): Preference<T> {
   return {
     read: () => parse(readRaw(key)) ?? fallback,
-    write: (value) => writeRaw(key, serialize(value)),
+    write: (value) => writeRaw(key, String(value)),
   }
 }
 
@@ -95,21 +89,15 @@ export const storeRoundCount = (value: RoundCount): void => roundCount.write(val
 export const readStoredRoundDuration = (): RoundDuration => roundDuration.read()
 export const storeRoundDuration = (value: RoundDuration): void => roundDuration.write(value)
 
-function highScoreKey(roundCount: RoundCount): string {
-  return `${HIGH_SCORE_KEY}-${roundCount}`
-}
+const highScoreKey = (roundCount: RoundCount): string => `${HIGH_SCORE_KEY}-${roundCount}`
 
 export function readHighScore(roundCount: RoundCount): number {
   const storedScore = Number(readRaw(highScoreKey(roundCount)))
-
-  if (Number.isFinite(storedScore) && storedScore > 0) {
-    return storedScore
-  }
+  if (Number.isFinite(storedScore) && storedScore > 0) return storedScore
 
   // Migration de l'ancienne clé unique vers la clé par nombre de manches.
   if (roundCount === 5 && readRaw(highScoreKey(5)) === null) {
     const legacyScore = Number(readRaw(HIGH_SCORE_KEY))
-
     if (Number.isFinite(legacyScore) && legacyScore > 0) {
       writeRaw(highScoreKey(5), String(legacyScore))
       return legacyScore
@@ -120,10 +108,7 @@ export function readHighScore(roundCount: RoundCount): number {
 }
 
 export function saveHighScoreIfNeeded(roundCount: RoundCount, value: number): boolean {
-  if (value <= readHighScore(roundCount)) {
-    return false
-  }
-
+  if (value <= readHighScore(roundCount)) return false
   writeRaw(highScoreKey(roundCount), String(value))
   return true
 }

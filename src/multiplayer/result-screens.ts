@@ -11,10 +11,15 @@ import {
   stopMultiplayerTransition,
 } from './session'
 
+function bindLeaveButton(button: HTMLButtonElement): void {
+  button.addEventListener('click', () => {
+    button.disabled = true
+    void leaveMultiplayerRoom()
+  })
+}
+
 export function handleMultiplayerHostLeft(): void {
-  if (state.multiplayerHostLeft) {
-    return
-  }
+  if (state.multiplayerHostLeft) return
 
   state.multiplayerHostLeft = true
   state.multiplayerGameOver = true
@@ -26,9 +31,7 @@ export function handleMultiplayerHostLeft(): void {
 
   const connection = state.roomConnection
   state.roomConnection = null
-  void connection?.leave().catch((error) => {
-    console.error(error)
-  })
+  void connection?.leave().catch(console.error)
 
   app.innerHTML = `
     <main class="welcome welcome--status">
@@ -37,24 +40,14 @@ export function handleMultiplayerHostLeft(): void {
         <p class="status" role="status" aria-live="polite">L’hôte a quitté la partie.</p>
         <button id="return-home-button" class="button-primary full-width" type="button">Retour à l'accueil</button>
       </section>
-    </main>
-  `
+    </main>`
   focusScreenHeading(app)
 
-  const returnHomeButton = document.querySelector<HTMLButtonElement>('#return-home-button')!
-  returnHomeButton.addEventListener('click', () => {
-    returnHomeButton.disabled = true
-    void leaveMultiplayerRoom()
-  })
+  bindLeaveButton(document.querySelector<HTMLButtonElement>('#return-home-button')!)
 }
 
 export function handleGameOver(gameOver: GameOver): void {
-  if (
-    state.multiplayerGameOver
-    || gameOver.gameId !== state.currentMultiplayerGameId
-  ) {
-    return
-  }
+  if (state.multiplayerGameOver || gameOver.gameId !== state.currentMultiplayerGameId) return
 
   state.multiplayerGameOver = true
   cleanupMultiplayerRound()
@@ -78,26 +71,19 @@ export function handleGameOver(gameOver: GameOver): void {
           ? '<p id="lobby-status" class="status" role="status" aria-live="polite"></p><div class="result-actions"><button id="replay-multiplayer-button" class="button-primary" type="button">Rejouer</button><button id="return-home-button" type="button" class="button-secondary">Retour à l\'accueil</button></div>'
           : '<p id="lobby-status" class="status" role="status" aria-live="polite">En attente de l\'hôte…</p><button id="return-home-button" class="button-secondary full-width" type="button">Retour à l\'accueil</button>'}
       </section>
-    </main>
-  `
+    </main>`
   focusScreenHeading(app)
 
-  const leaderboard = document.querySelector<HTMLOListElement>(
-    '#multiplayer-final-leaderboard',
-  )!
-  renderFinalLeaderboard(leaderboard, gameOver.scores, state.multiplayerPlayerId)
-
-  document.querySelector<HTMLButtonElement>('#return-home-button')!.addEventListener('click', (event) => {
-    const button = event.currentTarget as HTMLButtonElement
-    button.disabled = true
-    void leaveMultiplayerRoom()
-  })
+  renderFinalLeaderboard(
+    document.querySelector<HTMLOListElement>('#multiplayer-final-leaderboard')!,
+    gameOver.scores,
+    state.multiplayerPlayerId,
+  )
+  bindLeaveButton(document.querySelector<HTMLButtonElement>('#return-home-button')!)
 
   const replayButton = document.querySelector<HTMLButtonElement>('#replay-multiplayer-button')
-
   replayButton?.addEventListener('click', async () => {
     replayButton.disabled = true
-
     try {
       await startMultiplayerGame()
     } catch (error) {

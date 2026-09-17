@@ -8,16 +8,23 @@ export function setStatusMessage(
   element.classList.toggle('status--error', isError && message.length > 0)
 }
 
-export function formatScore(value: number): string {
-  return value.toLocaleString('fr-FR')
+export const formatScore = (value: number): string => value.toLocaleString('fr-FR')
+
+export const formatRemainingTime = (milliseconds: number): string =>
+  `${(milliseconds / 1000).toFixed(1)} s`
+
+export function focusScreenHeading(root: ParentNode): void {
+  const heading = root.querySelector<HTMLHeadingElement>('h1')
+  if (!heading) return
+  heading.tabIndex = -1
+  heading.focus()
 }
 
 const scoreAnimations = new WeakMap<HTMLElement, number>()
 
-function prefersReducedMotion(): boolean {
-  return typeof window.matchMedia === 'function'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
+const prefersReducedMotion = (): boolean =>
+  typeof window.matchMedia === 'function'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export function animateScore(
   element: HTMLElement | null,
@@ -25,20 +32,16 @@ export function animateScore(
   to: number,
   duration = 400,
 ): void {
-  if (!element) {
-    return
-  }
+  if (!element) return
 
-  const target = element
-  const existing = scoreAnimations.get(target)
-
+  const existing = scoreAnimations.get(element)
   if (existing !== undefined) {
     window.cancelAnimationFrame(existing)
-    scoreAnimations.delete(target)
+    scoreAnimations.delete(element)
   }
 
   if (from === to || prefersReducedMotion()) {
-    target.textContent = formatScore(to)
+    element.textContent = formatScore(to)
     return
   }
 
@@ -48,25 +51,11 @@ export function animateScore(
   const tick = (now: number): void => {
     const progress = Math.min(1, (now - startedAt) / duration)
     const eased = 1 - (1 - progress) ** 3
-    target.textContent = formatScore(Math.round(from + delta * eased))
+    element.textContent = formatScore(Math.round(from + delta * eased))
 
-    if (progress < 1) {
-      scoreAnimations.set(target, window.requestAnimationFrame(tick))
-    } else {
-      scoreAnimations.delete(target)
-    }
+    if (progress < 1) scoreAnimations.set(element, window.requestAnimationFrame(tick))
+    else scoreAnimations.delete(element)
   }
 
-  scoreAnimations.set(target, window.requestAnimationFrame(tick))
-}
-
-export function formatRemainingTime(milliseconds: number): string {
-  return `${(milliseconds / 1000).toFixed(1)} s`
-}
-
-export function focusScreenHeading(root: ParentNode): void {
-  const heading = root.querySelector<HTMLHeadingElement>('h1')
-  if (!heading) return
-  heading.tabIndex = -1
-  heading.focus()
+  scoreAnimations.set(element, window.requestAnimationFrame(tick))
 }

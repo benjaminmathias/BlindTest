@@ -1,25 +1,15 @@
 const ARTWORK_SIZE_PATTERN = /100x100bb/
+const ARTWORK_SIZES = [200, 400, 600]
 
-function artworkVariant(imageUrl: string, size: number): string {
-  return imageUrl.replace(ARTWORK_SIZE_PATTERN, `${size}x${size}bb`)
-}
+const artworkVariant = (imageUrl: string, size: number): string =>
+  imageUrl.replace(ARTWORK_SIZE_PATTERN, `${size}x${size}bb`)
 
-export function getArtworkUrl(imageUrl: string): string {
-  if (!imageUrl) {
-    return ''
-  }
-
-  return artworkVariant(imageUrl, 600)
-}
+export const getArtworkUrl = (imageUrl: string): string =>
+  imageUrl ? artworkVariant(imageUrl, 600) : ''
 
 export function getArtworkSrcSet(imageUrl: string): string {
-  if (!imageUrl || !ARTWORK_SIZE_PATTERN.test(imageUrl)) {
-    return ''
-  }
-
-  return [200, 400, 600]
-    .map((size) => `${artworkVariant(imageUrl, size)} ${size}w`)
-    .join(', ')
+  if (!imageUrl || !ARTWORK_SIZE_PATTERN.test(imageUrl)) return ''
+  return ARTWORK_SIZES.map((size) => `${artworkVariant(imageUrl, size)} ${size}w`).join(', ')
 }
 
 export function renderArtworkMarkup(): string {
@@ -36,31 +26,22 @@ export function renderArtworkMarkup(): string {
           </svg>
         </span>
       </div>
-    </figure>
-  `
+    </figure>`
 }
 
 export function revealArtwork(root: ParentNode, imageUrl: string, alt: string): void {
   const image = root.querySelector<HTMLImageElement>('[data-artwork-image]')
   const placeholder = root.querySelector<HTMLElement>('[data-artwork-placeholder]')
-
-  if (!image || !placeholder || image.dataset.revealed === 'true') {
-    return
-  }
+  if (!image || !placeholder || image.dataset.revealed === 'true') return
 
   const src = getArtworkUrl(imageUrl)
-
-  if (!src) {
-    return
-  }
+  if (!src) return
 
   image.dataset.revealed = 'true'
   image.alt = alt
-  const onLoad = (): void => {
-    if (image.naturalWidth <= 2) {
-      return
-    }
 
+  const onLoad = (): void => {
+    if (image.naturalWidth <= 2) return
     image.removeEventListener('load', onLoad)
     image.classList.add('is-visible')
     placeholder.classList.add('is-hidden')
@@ -72,8 +53,6 @@ export function revealArtwork(root: ParentNode, imageUrl: string, alt: string): 
   }, { once: true })
 
   const srcSet = getArtworkSrcSet(imageUrl)
-  if (srcSet) {
-    image.srcset = srcSet
-  }
+  if (srcSet) image.srcset = srcSet
   image.src = src
 }

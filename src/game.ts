@@ -5,16 +5,13 @@ import { getCanonicalSongKey, getDisplaySongTitle, normalizeComparableText } fro
 export const ROUND_COUNT_OPTIONS = [5, 10, 15, 20] as const
 export const ROUND_DURATION_OPTIONS = [15, 20, 30] as const
 export const MAX_ATTEMPTS = 5
+export const MIN_SEARCH_LENGTH = 2
+export const MAX_SUGGESTIONS = 5
 
 export type RoundCount = (typeof ROUND_COUNT_OPTIONS)[number]
 export type RoundDuration = (typeof ROUND_DURATION_OPTIONS)[number]
-
 export type GuessOption = Pick<Track, 'id' | 'title' | 'artist'>
-
 export type RoundOutcome = 'correct' | 'failed' | 'timeout' | 'skipped'
-
-export const MIN_SEARCH_LENGTH = 2
-export const MAX_SUGGESTIONS = 5
 
 export const isRoundCount = (value: unknown): value is RoundCount =>
   oneOf(value, ROUND_COUNT_OPTIONS)
@@ -22,17 +19,16 @@ export const isRoundCount = (value: unknown): value is RoundCount =>
 export const isRoundDuration = (value: unknown): value is RoundDuration =>
   oneOf(value, ROUND_DURATION_OPTIONS)
 
-export function formatGuessOption(track: GuessOption): string {
-  return `${getDisplaySongTitle(track.title)} — ${track.artist}`
-}
+export const formatGuessOption = (track: GuessOption): string =>
+  `${getDisplaySongTitle(track.title)} — ${track.artist}`
 
-export function normalizeSearchText(value: string): string {
-  return normalizeComparableText(value)
-}
+export const normalizeSearchText = normalizeComparableText
 
 export function findGuessOption(options: GuessOption[], value: string): GuessOption | null {
   const normalized = normalizeSearchText(value)
-  return options.find((option) => normalizeSearchText(formatGuessOption(option)) === normalized) ?? null
+  return options.find(
+    (option) => normalizeSearchText(formatGuessOption(option)) === normalized,
+  ) ?? null
 }
 
 type RankedGuess = {
@@ -48,57 +44,42 @@ export function searchGuessOptions(
   excludedKeys: ReadonlySet<string> = new Set<string>(),
 ): GuessOption[] {
   const needle = normalizeSearchText(query)
-
-  if (needle.length < MIN_SEARCH_LENGTH || limit <= 0) {
-    return []
-  }
+  if (needle.length < MIN_SEARCH_LENGTH || limit <= 0) return []
 
   const ranked: RankedGuess[] = []
   const seenIds = new Set<string>()
   const seenKeys = new Set<string>()
 
   options.forEach((option, order) => {
-    if (seenIds.has(option.id)) {
-      return
-    }
+    if (seenIds.has(option.id)) return
 
     const title = normalizeSearchText(getDisplaySongTitle(option.title))
     const artist = normalizeSearchText(option.artist)
+    const score = title.startsWith(needle) ? 0
+      : artist.startsWith(needle) ? 1
+        : title.includes(needle) ? 2
+          : artist.includes(needle) ? 3
+            : -1
 
-    let score = -1
-    if (title.startsWith(needle)) score = 0
-    else if (artist.startsWith(needle)) score = 1
-    else if (title.includes(needle)) score = 2
-    else if (artist.includes(needle)) score = 3
-
-    if (score === -1) {
-      return
-    }
+    if (score === -1) return
 
     const key = getCanonicalSongKey({ title: option.title, artist: option.artist })
-    if (excludedKeys.has(key) || seenKeys.has(key)) {
-      return
-    }
+    if (excludedKeys.has(key) || seenKeys.has(key)) return
 
     seenIds.add(option.id)
     seenKeys.add(key)
     ranked.push({ option, score, order })
   })
 
-  ranked.sort((first, second) => first.score - second.score || first.order - second.order)
-
-  return ranked.slice(0, limit).map(({ option }) => option)
+  return ranked
+    .sort((first, second) => first.score - second.score || first.order - second.order)
+    .slice(0, limit)
+    .map(({ option }) => option)
 }
 
 export function getRandomTrack(availableTracks: Track[]): Track {
-  if (availableTracks.length === 0) {
-    throw new Error('Aucun morceau disponible')
-  }
-
   const track = availableTracks[Math.floor(Math.random() * availableTracks.length)]
-  if (!track) {
-    throw new Error('Aucun morceau disponible')
-  }
+  if (!track) throw new Error('Aucun morceau disponible')
   return track
 }
 
@@ -110,9 +91,8 @@ export function pickUnplayedTrack(tracks: readonly Track[], playedTrackIds: Set<
     availableTracks = [...tracks]
   }
 
-  // Privilégie un artiste pas encore entendu dans la partie pour éviter les
-  // répétitions ; si le catalogue ne le permet pas, on retombe sur tous les
-  // morceaux non joués.
+  // Privilégie un artiste pas encore entendu dans la partie ; sinon retombe sur
+  // tous les morceaux non joués.
   const playedArtists = new Set(
     tracks
       .filter((track) => playedTrackIds.has(track.id))
@@ -143,8 +123,7 @@ export function getRoundScore(
     return 0
   }
 
-  const ratio = remainingTime / roundDurationMs
-  return Math.max(1, Math.min(maxRoundScore, Math.floor(maxRoundScore * ratio)))
+  return Math.max(1, Math.min(maxRoundScore, Math.floor(maxRoundScore * (remainingTime / roundDurationMs))))
 }
 
 export function getAttemptScore(
@@ -154,6 +133,7 @@ export function getAttemptScore(
   attempt: number,
 ): number {
   if (!Number.isInteger(attempt) || attempt < 1 || attempt > MAX_ATTEMPTS) return 0
+
   const timeScore = getRoundScore(remainingTime, roundDurationMs, maxRoundScore)
   return timeScore === 0 ? 0 : Math.max(1, Math.floor(timeScore * (6 - attempt) / 5))
 }
