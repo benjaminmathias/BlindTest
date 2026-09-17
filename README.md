@@ -122,7 +122,6 @@ Aucun framework frontend.
 - Le **catalogue** (`api.ts`) et l'**identité des morceaux** (`song.ts`) sont la
   source de vérité partagée par les deux modes.
 
-
 ## Lancer le projet
 
     git clone https://github.com/benjaminmathias/BlindTest.git
@@ -150,6 +149,10 @@ Vérification TypeScript + tests :
 Build de production :
 
     npm run build
+
+Les tests couvrent les règles du jeu, le protocole multijoueur (transport en
+mémoire, hôte + invité), l'autocomplete, le stockage, le volume, ainsi que les
+écrans de manche solo et multijoueur (rendu, envoi de réponse, nettoyage).
 
 ## Audio
 
