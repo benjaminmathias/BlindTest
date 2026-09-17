@@ -6,12 +6,21 @@ import {
   type RoundCount,
   type RoundDuration,
 } from '../game'
-import { isArrayOf, isFiniteNumber, isInt, isRecord, isString } from '../shared/validate'
+import {
+  isArrayOf,
+  isBoolean,
+  isFiniteNumber,
+  isInt,
+  isNonNegative,
+  isRecord,
+  isShape,
+  isString,
+  isText,
+  optional,
+} from '../shared/validate'
 
 export type HostSettings = {
-  musicTheme: MusicTheme
-  roundCount: RoundCount
-  roundDuration: RoundDuration
+  musicTheme: MusicTheme; roundCount: RoundCount; roundDuration: RoundDuration
 }
 
 export type Player = {
@@ -24,32 +33,18 @@ export type Player = {
   gameStarted?: boolean
 }
 
-export type GameCatalog = {
-  gameId: string
-  options: GuessOption[]
-}
+export type GameCatalog = { gameId: string; options: GuessOption[] }
 
 export type MultiplayerRound = {
-  gameId: string
-  roundId: string
-  round: number
-  startAt: number
-  audioUrl: string
+  gameId: string; roundId: string; round: number; startAt: number; audioUrl: string
 }
 
 export type RoundReveal = {
-  roundId: string
-  correctTrackId: string
-  title: string
-  artist: string
-  imageUrl: string
+  roundId: string; correctTrackId: string; title: string; artist: string; imageUrl: string
 }
 
 export type PlayerGuess = {
-  roundId: string
-  guessId: string
-  playerId: string
-  answerId: string
+  roundId: string; guessId: string; playerId: string; answerId: string
 }
 
 export type AttemptResult = {
@@ -65,36 +60,15 @@ export type AttemptResult = {
 }
 
 export type ScoreUpdate = Pick<AttemptResult, 'roundId' | 'playerId' | 'totalScore'>
+export type RoundComplete = { roundId: string; round: number }
+export type FinalScore = { playerId: string; name: string; score: number }
+export type GameOver = { gameId: string; scores: FinalScore[] }
 
-export type RoundComplete = {
-  roundId: string
-  round: number
+export type GameStart = HostSettings & {
+  gameId: string; startedBy: string; catalog: GuessOption[]
 }
 
-export type FinalScore = {
-  playerId: string
-  name: string
-  score: number
-}
-
-export type GameOver = {
-  gameId: string
-  scores: FinalScore[]
-}
-
-export type GameStart = {
-  gameId: string
-  startedBy: string
-  musicTheme: MusicTheme
-  roundCount: RoundCount
-  roundDuration: RoundDuration
-  catalog: GuessOption[]
-}
-
-export type ClockSyncResult = {
-  offsetMs: number
-  rttMs: number
-}
+export type ClockSyncResult = { offsetMs: number; rttMs: number }
 
 export type RoomConnection = {
   startGame: (gameId: string, settings: HostSettings, catalog: GuessOption[]) => Promise<void>
@@ -111,14 +85,8 @@ export type RoomConnection = {
   leave: () => Promise<void>
 }
 
-export type ClockPing = {
-  pingId: string
-  playerId: string
-}
-
-export type ClockPong = ClockPing & {
-  hostNow: number
-}
+export type ClockPing = { pingId: string; playerId: string }
+export type ClockPong = ClockPing & { hostNow: number }
 
 export type RoomHandlers = {
   onPlayers: (players: Player[]) => void
@@ -133,19 +101,13 @@ export type RoomHandlers = {
   onGameOver: (gameOver: GameOver) => void
 }
 
-const optional = <T>(value: unknown, check: (input: unknown) => input is T): boolean =>
-  value === undefined || check(value)
-
-export function isPlayer(value: unknown): value is Player {
-  return isRecord(value)
-    && isString(value.playerId)
-    && isString(value.name)
-    && typeof value.isHost === 'boolean'
-    && optional(value.musicTheme, isMusicTheme)
-    && optional(value.roundCount, isRoundCount)
-    && optional(value.roundDuration, isRoundDuration)
-    && optional(value.gameStarted, (input): input is boolean => typeof input === 'boolean')
-}
+export const isPlayer = isShape<Player>({
+  playerId: isString, name: isString, isHost: isBoolean,
+  musicTheme: (value) => optional(value, isMusicTheme),
+  roundCount: (value) => optional(value, isRoundCount),
+  roundDuration: (value) => optional(value, isRoundDuration),
+  gameStarted: (value) => optional(value, isBoolean),
+})
 
 export function getRoomAdmissionError(players: Player[], isHost: boolean): string | null {
   const hosts = players.filter((player) => player.isHost)
@@ -159,87 +121,65 @@ export function getRoomAdmissionError(players: Player[], isHost: boolean): strin
   return null
 }
 
-const isGuessOption = (value: unknown): value is GuessOption =>
-  isRecord(value) && isString(value.id) && isString(value.title) && isString(value.artist)
+const isGuessOption = isShape<GuessOption>({ id: isString, title: isString, artist: isString })
 
 const isGuessOptionList = (value: unknown): value is GuessOption[] =>
   isArrayOf(value, isGuessOption) && value.length > 0
 
-export const isGameStart = (value: unknown): value is GameStart =>
-  isRecord(value)
-  && isString(value.gameId)
-  && isString(value.startedBy)
-  && isMusicTheme(value.musicTheme)
-  && isRoundCount(value.roundCount)
-  && isRoundDuration(value.roundDuration)
-  && isGuessOptionList(value.catalog)
+export const isGameStart = isShape<GameStart>({
+  gameId: isString, startedBy: isString, musicTheme: isMusicTheme,
+  roundCount: isRoundCount, roundDuration: isRoundDuration, catalog: isGuessOptionList,
+})
 
-export const isGameCatalog = (value: unknown): value is GameCatalog =>
-  isRecord(value) && isString(value.gameId) && isGuessOptionList(value.options)
+export const isGameCatalog = isShape<GameCatalog>({
+  gameId: isString, options: isGuessOptionList,
+})
+
+// round_start ne doit jamais transporter la solution.
+const hidesSolution = (value: unknown): boolean =>
+  isRecord(value) && !('correctTrackId' in value) && !('title' in value)
+  && !('artist' in value) && !('imageUrl' in value)
+
+const isRoundShape = isShape<MultiplayerRound>({
+  gameId: isString, roundId: isString, round: (value) => isInt(value, 1),
+  startAt: isFiniteNumber, audioUrl: isString,
+})
 
 export const isMultiplayerRound = (value: unknown): value is MultiplayerRound =>
-  isRecord(value)
-  && isString(value.gameId)
-  && isString(value.roundId)
-  && !('correctTrackId' in value)
-  && !('title' in value)
-  && !('artist' in value)
-  && !('imageUrl' in value)
-  && isInt(value.round, 1)
-  && isFiniteNumber(value.startAt)
-  && isString(value.audioUrl)
+  hidesSolution(value) && isRoundShape(value)
 
-export const isPlayerGuess = (value: unknown): value is PlayerGuess =>
-  isRecord(value)
-  && isString(value.roundId)
-  && isString(value.guessId)
-  && isString(value.playerId)
-  && isString(value.answerId)
+export const isPlayerGuess = isShape<PlayerGuess>({
+  roundId: isString, guessId: isString, playerId: isString, answerId: isString,
+})
 
-export const isAttemptResult = (value: unknown): value is AttemptResult =>
-  isRecord(value)
-  && isString(value.roundId)
-  && isString(value.guessId)
-  && isString(value.playerId)
-  && typeof value.isCorrect === 'boolean'
-  && isInt(value.attemptsUsed, 1)
-  && isInt(value.attemptsRemaining)
-  && typeof value.finished === 'boolean'
-  && isFiniteNumber(value.addedScore)
-  && value.addedScore >= 0
-  && isFiniteNumber(value.totalScore)
-  && value.totalScore >= 0
+export const isAttemptResult = isShape<AttemptResult>({
+  roundId: isString, guessId: isString, playerId: isString, isCorrect: isBoolean,
+  attemptsUsed: (value) => isInt(value, 1), attemptsRemaining: (value) => isInt(value),
+  finished: isBoolean, addedScore: isNonNegative, totalScore: isNonNegative,
+})
 
-export const isScoreUpdate = (value: unknown): value is ScoreUpdate =>
-  isRecord(value)
-  && isString(value.roundId)
-  && isString(value.playerId)
-  && isFiniteNumber(value.totalScore)
-  && value.totalScore >= 0
+export const isScoreUpdate = isShape<ScoreUpdate>({
+  roundId: isString, playerId: isString, totalScore: isNonNegative,
+})
 
-export const isRoundComplete = (value: unknown): value is RoundComplete =>
-  isRecord(value) && isString(value.roundId) && isInt(value.round, 1)
+export const isRoundComplete = isShape<RoundComplete>({
+  roundId: isString, round: (value) => isInt(value, 1),
+})
 
-export const isRoundReveal = (value: unknown): value is RoundReveal =>
-  isRecord(value)
-  && isString(value.roundId)
-  && isString(value.correctTrackId)
-  && isString(value.title)
-  && isString(value.artist)
-  && typeof value.imageUrl === 'string'
+export const isRoundReveal = isShape<RoundReveal>({
+  roundId: isString, correctTrackId: isString, title: isString,
+  artist: isString, imageUrl: isText,
+})
 
-const isFinalScore = (value: unknown): value is FinalScore =>
-  isRecord(value)
-  && isString(value.playerId)
-  && isString(value.name)
-  && isFiniteNumber(value.score)
-  && value.score >= 0
+const isFinalScore = isShape<FinalScore>({
+  playerId: isString, name: isString, score: isNonNegative,
+})
 
-export const isGameOver = (value: unknown): value is GameOver =>
-  isRecord(value) && isString(value.gameId) && isArrayOf(value.scores, isFinalScore)
+export const isGameOver = isShape<GameOver>({
+  gameId: isString, scores: (value) => isArrayOf(value, isFinalScore),
+})
 
-export const isClockPing = (value: unknown): value is ClockPing =>
-  isRecord(value) && isString(value.pingId) && isString(value.playerId)
+export const isClockPing = isShape<ClockPing>({ pingId: isString, playerId: isString })
 
 export const isClockPong = (value: unknown): value is ClockPong =>
   isClockPing(value) && 'hostNow' in value && isFiniteNumber(value.hostNow)

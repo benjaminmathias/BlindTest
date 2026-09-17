@@ -1,28 +1,12 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js'
-import {
-  getRoomAdmissionError,
-  isAttemptResult,
-  isClockPing,
-  isClockPong,
-  isGameCatalog,
-  isGameOver,
-  isGameStart,
-  isMultiplayerRound,
-  isPlayer,
-  isPlayerGuess,
-  isRoundComplete,
-  isRoundReveal,
-  isScoreUpdate,
-  type ClockPing,
-  type ClockPong,
-  type ClockSyncResult,
-  type GameStart,
-  type HostSettings,
-  type Player,
-  type RoomConnection,
-  type RoomHandlers,
-} from './protocol'
 import { isRecord, isString } from '../shared/validate'
+import {
+  getRoomAdmissionError, isAttemptResult, isClockPing, isClockPong, isGameCatalog, isGameOver,
+  isGameStart, isMultiplayerRound, isPlayer, isPlayerGuess, isRoundComplete, isRoundReveal,
+  isScoreUpdate,
+  type ClockPing, type ClockPong, type ClockSyncResult, type GameStart, type HostSettings,
+  type Player, type RoomConnection, type RoomHandlers,
+} from './protocol'
 
 const CLOCK_SAMPLE_COUNT = 5
 const CLOCK_PING_TIMEOUT_MS = 750
@@ -40,10 +24,7 @@ function createSupabaseClient(): SupabaseClient {
   const url = import.meta.env.VITE_SUPABASE_URL
   const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
-  if (!url || !publishableKey) {
-    throw new Error('Variables d’environnement Supabase manquantes')
-  }
-
+  if (!url || !publishableKey) throw new Error('Variables d’environnement Supabase manquantes')
   return createClient(url, publishableKey)
 }
 
@@ -91,9 +72,7 @@ export async function joinRoom(
   handlers: RoomHandlers,
 ): Promise<RoomConnection> {
   const supabase = createSupabaseClient()
-  const channel = supabase.channel(`room:${roomCode}`, {
-    config: { broadcast: { self: true } },
-  })
+  const channel = supabase.channel(`room:${roomCode}`, { config: { broadcast: { self: true } } })
   const pendingClockPings = new Map<string, PendingClockPing>()
   const privateChannels = new Map<string, RealtimeChannel>()
   const privateSubscriptions = new Map<string, Promise<RealtimeChannel>>()
@@ -108,11 +87,8 @@ export async function joinRoom(
     errorMessage: string,
   ): Promise<void> => {
     const status = await channel.send({
-      type: 'broadcast',
-      event,
-      payload: { ...payload, senderId: playerId },
+      type: 'broadcast', event, payload: { ...payload, senderId: playerId },
     })
-
     if (status !== 'ok') throw new Error(errorMessage)
   }
 
@@ -126,9 +102,9 @@ export async function joinRoom(
 
   const isHostMessage = (payload: unknown): boolean => {
     if (!isRecord(payload) || !isString(payload.senderId)) return false
-    return Object.values(channel.presenceState<Player>())
-      .flat()
-      .some((presence) => isPlayer(presence) && presence.isHost && presence.playerId === payload.senderId)
+    return Object.values(channel.presenceState<Player>()).flat()
+      .some((presence) =>
+        isPlayer(presence) && presence.isHost && presence.playerId === payload.senderId)
   }
 
   const ensurePrivateChannel = (targetPlayerId: string): Promise<RealtimeChannel> => {
@@ -182,23 +158,18 @@ export async function joinRoom(
     handlers.onPlayers(players)
 
     if (isHost) {
-      for (const player of players) {
-        void ensurePrivateChannel(player.playerId).catch(console.error)
-      }
+      for (const player of players) void ensurePrivateChannel(player.playerId).catch(console.error)
     }
   }
 
   const trackPresence = async (errorMessage: string): Promise<void> => {
     const status = await channel.track({
-      playerId,
-      name,
-      isHost,
+      playerId, name, isHost,
       musicTheme: currentSettings?.musicTheme,
       roundCount: currentSettings?.roundCount,
       roundDuration: currentSettings?.roundDuration,
       gameStarted,
     })
-
     if (status !== 'ok') throw new Error(errorMessage)
   }
 
@@ -229,7 +200,6 @@ export async function joinRoom(
       ).catch((error: unknown) => {
         const pendingPing = pendingClockPings.get(pingId)
         if (!pendingPing) return
-
         pendingClockPings.delete(pingId)
         window.clearTimeout(pendingPing.timeoutId)
         pendingPing.reject(error instanceof Error ? error : new Error(String(error)))
@@ -328,19 +298,15 @@ export async function joinRoom(
   return {
     startGame: async (gameId, nextSettings, catalog) => {
       if (!isHost) throw new Error('Seul l’hôte peut commencer la partie')
-
       currentSettings = nextSettings
       gameStarted = true
       await trackPresence('Impossible de publier le démarrage')
       await sendBroadcast(
         'game_start',
         {
-          gameId,
-          startedBy: playerId,
-          musicTheme: nextSettings.musicTheme,
-          roundCount: nextSettings.roundCount,
-          roundDuration: nextSettings.roundDuration,
-          catalog,
+          gameId, startedBy: playerId,
+          musicTheme: nextSettings.musicTheme, roundCount: nextSettings.roundCount,
+          roundDuration: nextSettings.roundDuration, catalog,
         } satisfies GameStart,
         'Impossible d’envoyer le démarrage de la partie',
       )
@@ -350,7 +316,6 @@ export async function joinRoom(
 
       const previousSettings = currentSettings
       currentSettings = nextSettings
-
       try {
         await trackPresence('Impossible de publier les réglages de la partie')
       } catch (error) {
@@ -365,8 +330,7 @@ export async function joinRoom(
     sendGuess: async (guess) => {
       const privateChannel = await ensurePrivateChannel(playerId)
       const status = await privateChannel.send({
-        type: 'broadcast',
-        event: 'player_guess',
+        type: 'broadcast', event: 'player_guess',
         payload: { ...guess, playerId, senderId: playerId },
       })
       if (status !== 'ok') throw new Error('Impossible d’envoyer la réponse')
@@ -376,8 +340,7 @@ export async function joinRoom(
 
       const privateChannel = await ensurePrivateChannel(result.playerId)
       const status = await privateChannel.send({
-        type: 'broadcast',
-        event: 'attempt_result',
+        type: 'broadcast', event: 'attempt_result',
         payload: { ...result, senderId: playerId },
       })
       if (status !== 'ok') throw new Error('Impossible d’envoyer le résultat')
@@ -394,7 +357,6 @@ export async function joinRoom(
       if (isHost || roomClosed) return { offsetMs: 0, rttMs: 0 }
 
       const samples: ClockSyncResult[] = []
-
       for (let index = 0; index < CLOCK_SAMPLE_COUNT && !roomClosed; index += 1) {
         try {
           samples.push(await pingClock())
@@ -411,7 +373,6 @@ export async function joinRoom(
     leave: async () => {
       roomClosed = true
       clearPendingClockPings()
-
       try {
         await channel.untrack()
       } finally {

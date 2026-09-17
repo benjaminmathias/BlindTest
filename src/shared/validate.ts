@@ -31,3 +31,31 @@ export function asValid<T>(
 ): T | null {
   return isValid(value) ? value : null
 }
+
+export function isShape<T>(
+  checks: Record<string, (value: unknown) => boolean>,
+): (value: unknown) => value is T {
+  const entries = Object.entries(checks)
+
+  return (value): value is T =>
+    isRecord(value) && entries.every(([key, check]) => check(value[key]))
+}
+
+export function isNonNegative(value: unknown): value is number {
+  return isFiniteNumber(value) && value >= 0
+}
+
+export function isText(value: unknown): value is string {
+  return typeof value === 'string'
+}
+
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean'
+}
+
+export function optional<T>(
+  value: unknown,
+  check: (input: unknown) => input is T,
+): boolean {
+  return value === undefined || check(value)
+}
