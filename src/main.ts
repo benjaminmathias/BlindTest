@@ -1,5 +1,5 @@
 import './style.css'
-import { synchronizeMultiplayerClock } from './multiplayer/session'
+import { synchronizeMultiplayerClock } from './multiplayer/clock'
 import { renderHome, soloGame } from './screens/home'
 import { volume } from './services'
 import {

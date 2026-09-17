@@ -12,10 +12,9 @@ import type { AttemptResult, MultiplayerRound } from './protocol'
 import {
   checkMultiplayerRoundCompletion,
   cleanupMultiplayerRound,
-  getEstimatedHostNow,
   leaveMultiplayerRoom,
-  maybeResynchronizeMultiplayerClock,
 } from './session'
+import { getEstimatedHostNow, maybeResynchronizeMultiplayerClock } from './clock'
 
 export function renderMultiplayerRound(round: MultiplayerRound): void {
   if (

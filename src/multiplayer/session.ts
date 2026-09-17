@@ -6,27 +6,16 @@ import { renderLobby } from '../screens/lobby'
 import { revealArtwork } from '../shared/artwork'
 import { createId } from '../shared/id'
 import { renderRoundResult } from '../shared/round-result'
-import {
-  DEFAULT_MUSIC_THEME,
-  DEFAULT_ROUND_COUNT,
-  DEFAULT_ROUND_DURATION,
-} from '../shared/storage'
+import { DEFAULT_MUSIC_THEME, DEFAULT_ROUND_COUNT, DEFAULT_ROUND_DURATION } from '../shared/storage'
 import { state } from '../state'
+import { isActiveConnection, synchronizeMultiplayerClock } from './clock'
 import { scorePlayerGuess } from './game'
 import { renderMultiplayerRound } from './game-screen'
 import { renderMultiplayerLeaderboard } from './leaderboard'
 import { renderLobbyPlayers } from './lobby-view'
 import {
-  type AttemptResult,
-  type GameCatalog,
-  type GameOver,
-  type GameStart,
-  type MultiplayerRound,
-  type Player,
-  type PlayerGuess,
-  type RoomConnection,
-  type RoundComplete,
-  type RoundReveal,
+  type AttemptResult, type GameCatalog, type GameOver, type GameStart, type MultiplayerRound,
+  type Player, type PlayerGuess, type RoomConnection, type RoundComplete, type RoundReveal,
   type ScoreUpdate,
 } from './protocol'
 import { handleGameOver, handleMultiplayerHostLeft } from './result-screens'
@@ -36,7 +25,6 @@ export const MAX_ROUND_SCORE = 1000
 
 const MULTIPLAYER_START_DELAY_MS = 3000
 const MULTIPLAYER_ROUND_TRANSITION_MS = 4000
-const MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL = 3
 
 const ADMISSION_ERRORS = new Set([
   'Partie introuvable.',
@@ -52,23 +40,14 @@ function toFriendlyRoomError(error: unknown): string {
       return 'Multijoueur indisponible pour le moment.'
     }
   }
-
   return 'Impossible de rejoindre cette partie.'
 }
 
-function isActiveConnection(connection: RoomConnection | null): connection is RoomConnection {
-  return connection !== null
-    && state.roomConnection === connection
-    && !state.multiplayerHostLeft
-    && !state.multiplayerGameOver
-}
-
 export function stopMultiplayerAudio(): void {
-  if (state.multiplayerAudio) {
-    state.multiplayerAudio.pause()
-    state.multiplayerAudio.currentTime = 0
-    state.multiplayerAudio = null
-  }
+  if (!state.multiplayerAudio) return
+  state.multiplayerAudio.pause()
+  state.multiplayerAudio.currentTime = 0
+  state.multiplayerAudio = null
 }
 
 export function stopMultiplayerTimer(): void {
@@ -76,15 +55,10 @@ export function stopMultiplayerTimer(): void {
   state.multiplayerTimer = null
 }
 
-export function getEstimatedHostNow(): number {
-  return Date.now() + state.multiplayerClockOffsetMs
-}
-
 export function stopMultiplayerTransition(): void {
-  if (state.multiplayerTransitionId !== null) {
-    window.clearTimeout(state.multiplayerTransitionId)
-    state.multiplayerTransitionId = null
-  }
+  if (state.multiplayerTransitionId === null) return
+  window.clearTimeout(state.multiplayerTransitionId)
+  state.multiplayerTransitionId = null
 }
 
 export function cleanupMultiplayerRound(): void {
@@ -137,55 +111,6 @@ function resetMultiplayerSessionState(): void {
   state.multiplayerRoundDuration = DEFAULT_ROUND_DURATION
 }
 
-export function synchronizeMultiplayerClock(
-  connection: NonNullable<typeof state.roomConnection>,
-  force = false,
-): void {
-  if (state.multiplayerIsHost || state.multiplayerHostLeft || state.multiplayerGameOver) {
-    state.multiplayerClockOffsetMs = 0
-    return
-  }
-
-  if (state.multiplayerClockSyncPromise) {
-    if (force) {
-      void state.multiplayerClockSyncPromise.then(() => {
-        if (isActiveConnection(connection)) synchronizeMultiplayerClock(connection)
-      })
-    }
-    return
-  }
-
-  const syncPromise = connection.syncClock()
-    .then((result) => {
-      if (!isActiveConnection(connection)) return
-
-      if (result.rttMs > 0) state.multiplayerClockOffsetMs = result.offsetMs
-      // Une synchronisation sans échantillon exploitable retombe sur l'horloge
-      // locale : on marque quand même la tentative comme terminée pour ne pas
-      // laisser « Synchronisation… » affiché indéfiniment.
-      state.multiplayerClockSynced = true
-    })
-    .catch(console.error)
-
-  state.multiplayerClockSyncPromise = syncPromise
-  void syncPromise.finally(() => {
-    if (state.multiplayerClockSyncPromise === syncPromise) {
-      state.multiplayerClockSyncPromise = null
-    }
-  })
-}
-
-export function maybeResynchronizeMultiplayerClock(currentRound: number): void {
-  if (!isActiveConnection(state.roomConnection)) return
-
-  if (currentRound - state.multiplayerLastClockSyncRound < MULTIPLAYER_CLOCK_RESYNC_ROUND_INTERVAL) {
-    return
-  }
-
-  state.multiplayerLastClockSyncRound = currentRound
-  synchronizeMultiplayerClock(state.roomConnection)
-}
-
 function isStaleRound(round: MultiplayerRound): boolean {
   const current = state.currentMultiplayerRound
 
@@ -195,14 +120,7 @@ function isStaleRound(round: MultiplayerRound): boolean {
     || round.round < 1
     || round.round > state.currentGameRoundCount
     || round.roundId === state.multiplayerLastRoundId
-    || (current
-      ? round.round <= current.round
-      : round.round < state.multiplayerCurrentRoundNumber)
-}
-
-function handleRoundStart(round: MultiplayerRound): void {
-  if (isStaleRound(round)) return
-  renderMultiplayerRound(round)
+    || (current ? round.round <= current.round : round.round < state.multiplayerCurrentRoundNumber)
 }
 
 function applyPlayers(players: Player[]): void {
@@ -222,30 +140,18 @@ function applyPlayers(players: Player[]): void {
     if (hostPlayer.roundDuration) state.multiplayerRoundDuration = hostPlayer.roundDuration
   }
 
-  state.multiplayerPlayerNames = new Map(
-    players.map((player) => [player.playerId, player.name]),
-  )
+  state.multiplayerPlayerNames = new Map(players.map((player) => [player.playerId, player.name]))
 
   for (const player of players) {
-    if (!state.multiplayerScores.has(player.playerId)) {
-      state.multiplayerScores.set(player.playerId, 0)
-    }
+    if (!state.multiplayerScores.has(player.playerId)) state.multiplayerScores.set(player.playerId, 0)
   }
 
   if (state.currentMultiplayerRound && !state.multiplayerRoundFinished) {
     for (const playerId of state.multiplayerRoundPlayerIds) {
-      if (!state.multiplayerPlayerNames.has(playerId)) {
-        state.multiplayerRoundPlayerIds.delete(playerId)
-      }
+      if (!state.multiplayerPlayerNames.has(playerId)) state.multiplayerRoundPlayerIds.delete(playerId)
     }
-
     checkMultiplayerRoundCompletion()
   }
-}
-
-function renderPlayers(players: Player[]): void {
-  applyPlayers(players)
-  renderLobbyPlayers(players)
 }
 
 function showGameStarting(): void {
@@ -261,25 +167,20 @@ function showGameStarting(): void {
 }
 
 function handleGameStart(gameStart: GameStart): void {
-  if (
-    state.multiplayerHostLeft
+  if (state.multiplayerHostLeft
     || !gameStart?.gameId
     || !gameStart.startedBy
     || gameStart.startedBy !== state.multiplayerHostId
-    || gameStart.gameId === state.currentMultiplayerGameId
-  ) {
+    || gameStart.gameId === state.currentMultiplayerGameId) {
     return
   }
 
   state.currentGameMusicTheme = isMusicTheme(gameStart.musicTheme)
-    ? gameStart.musicTheme
-    : DEFAULT_MUSIC_THEME
+    ? gameStart.musicTheme : DEFAULT_MUSIC_THEME
   state.currentGameRoundCount = isRoundCount(gameStart.roundCount)
-    ? gameStart.roundCount
-    : DEFAULT_ROUND_COUNT
+    ? gameStart.roundCount : DEFAULT_ROUND_COUNT
   state.currentGameRoundDuration = isRoundDuration(gameStart.roundDuration)
-    ? gameStart.roundDuration
-    : DEFAULT_ROUND_DURATION
+    ? gameStart.roundDuration : DEFAULT_ROUND_DURATION
   state.currentMultiplayerGameId = gameStart.gameId
   resetMultiplayerGameState()
   state.multiplayerCatalog = gameStart.catalog
@@ -317,8 +218,7 @@ export async function startMultiplayerGame(): Promise<void> {
     roundDuration: state.currentGameRoundDuration,
   }, state.multiplayerCatalog)
   await connection.sendCatalog({
-    gameId: state.currentMultiplayerGameId,
-    options: state.multiplayerCatalog,
+    gameId: state.currentMultiplayerGameId, options: state.multiplayerCatalog,
   })
 
   state.multiplayerCurrentRoundNumber = 1
@@ -356,20 +256,15 @@ async function sendNextMultiplayerRound(connection: RoomConnection): Promise<voi
 function finalScores(): GameOver['scores'] {
   return [...state.multiplayerPlayerNames.entries()]
     .map(([playerId, name]) => ({
-      playerId,
-      name,
-      score: state.multiplayerScores.get(playerId) ?? 0,
+      playerId, name, score: state.multiplayerScores.get(playerId) ?? 0,
     }))
     .sort((first, second) =>
-      second.score - first.score
-      || first.name.localeCompare(second.name),
-    )
+      second.score - first.score || first.name.localeCompare(second.name))
 }
 
 async function completeMultiplayerRound(round: MultiplayerRound): Promise<void> {
   const connection = state.roomConnection
   const correctTrack = state.currentHostTrack
-
   if (!connection) return
 
   try {
@@ -404,9 +299,7 @@ async function completeMultiplayerRound(round: MultiplayerRound): Promise<void> 
     }, MULTIPLAYER_ROUND_TRANSITION_MS)
   } catch (error) {
     console.error(error)
-    if (state.roomConnection === connection) {
-      void leaveMultiplayerRoom('Connexion interrompue.')
-    }
+    if (state.roomConnection === connection) void leaveMultiplayerRoom('Connexion interrompue.')
   }
 }
 
@@ -416,8 +309,7 @@ export function checkMultiplayerRoundCompletion(): void {
   }
 
   const allPlayersAnswered = [...state.multiplayerRoundPlayerIds].every((playerId) =>
-    state.finishedPlayerIds.has(playerId),
-  )
+    state.finishedPlayerIds.has(playerId))
   if (!allPlayersAnswered) return
 
   state.multiplayerRoundFinished = true
@@ -472,7 +364,6 @@ function handlePlayerGuess(guess: PlayerGuess): void {
   renderMultiplayerLeaderboard()
 
   const connection = state.roomConnection
-
   if (!connection) {
     checkMultiplayerRoundCompletion()
     return
@@ -489,12 +380,10 @@ function handlePlayerGuess(guess: PlayerGuess): void {
 }
 
 export function handleAttemptResult(result: AttemptResult): void {
-  if (
-    state.multiplayerHostLeft
+  if (state.multiplayerHostLeft
     || state.multiplayerGameOver
     || !state.currentMultiplayerRound
-    || result.roundId !== state.currentMultiplayerRound.roundId
-  ) {
+    || result.roundId !== state.currentMultiplayerRound.roundId) {
     return
   }
 
@@ -517,7 +406,8 @@ function handleScoreUpdate(update: ScoreUpdate): void {
 }
 
 function handleRoundReveal(reveal: RoundReveal): void {
-  if (!state.currentMultiplayerRound || reveal.roundId !== state.currentMultiplayerRound.roundId) return
+  if (!state.currentMultiplayerRound
+    || reveal.roundId !== state.currentMultiplayerRound.roundId) return
 
   state.currentRoundReveal = reveal
   revealArtwork(document, reveal.imageUrl, `Cover de ${reveal.title} par ${reveal.artist}`)
@@ -537,13 +427,11 @@ function handleRoundReveal(reveal: RoundReveal): void {
 }
 
 function handleRoundComplete(result: RoundComplete): void {
-  if (
-    state.multiplayerHostLeft
+  if (state.multiplayerHostLeft
     || state.multiplayerGameOver
     || !state.currentMultiplayerRound
     || result.roundId !== state.currentMultiplayerRound.roundId
-    || result.round !== state.currentMultiplayerRound.round
-  ) {
+    || result.round !== state.currentMultiplayerRound.round) {
     return
   }
 
@@ -611,10 +499,13 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
         roundDuration: state.multiplayerRoundDuration,
       },
       {
-        onPlayers: renderPlayers,
+        onPlayers: (players) => {
+          applyPlayers(players)
+          renderLobbyPlayers(players)
+        },
         onGameStart: handleGameStart,
         onGameCatalog: handleGameCatalog,
-        onRoundStart: handleRoundStart,
+        onRoundStart: (round) => { if (!isStaleRound(round)) renderMultiplayerRound(round) },
         onPlayerGuess: handlePlayerGuess,
         onAttemptResult: handleAttemptResult,
         onScoreUpdate: handleScoreUpdate,
