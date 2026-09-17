@@ -15,7 +15,7 @@ import {
 } from '../game'
 import { openRoom } from '../multiplayer/session'
 import { volume } from '../services'
-import { renderArtworkMarkup, revealArtwork } from '../shared/artwork'
+import { revealArtwork } from '../shared/artwork'
 import { renderRoundResult } from '../shared/round-result'
 import {
   generateRoomCode,
@@ -95,7 +95,6 @@ export const soloGame: SoloGame = createSoloGame({
   getVolume: () => volume.get(),
   setupVolumeControls: () => volume.setupControls(),
   renderVolumeControlMarkup: (id, compact) => volume.renderMarkup(id, compact),
-  renderArtworkMarkup,
   revealArtwork,
   renderRoundResult,
   readHighScore,

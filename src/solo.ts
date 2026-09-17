@@ -1,12 +1,27 @@
 import { fetchTracks, type MusicTheme, type Track } from './api'
+import { qs } from './dom'
 import {
-  formatGuessOption, getAttemptScore, pickUnplayedTrack, MAX_ATTEMPTS,
-  type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
+  formatGuessOption,
+  getAttemptScore,
+  pickUnplayedTrack,
+  MAX_ATTEMPTS,
+  type GuessOption,
+  type RoundCount,
+  type RoundDuration,
+  type RoundOutcome,
 } from './game'
-import { createGuessArea } from './guess/area'
 import { roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry } from './guess/recap'
-import { getCanonicalSongKey, isSameSong } from './song'
-import { animateScore, focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
+import { createGuessRound } from './round/guess'
+import { roundStageMarkup } from './round/stage'
+import { createRoundTimer, type RoundTimer } from './round/timer'
+import { isSameSong } from './song'
+import {
+  animateScore,
+  focusScreenHeading,
+  formatRemainingTime,
+  formatScore,
+  setStatusMessage,
+} from './ui'
 
 const MAX_ROUND_SCORE = 1000
 
@@ -20,7 +35,7 @@ export type SoloGameState = {
   roundHistory: (RoundOutcome | undefined)[]
   roundRecap: (RoundRecapEntry | undefined)[]
   audio: HTMLAudioElement | null
-  timerId: number | null
+  timer: RoundTimer | null
 }
 
 type SoloGameOptions = {
@@ -28,7 +43,6 @@ type SoloGameOptions = {
   getVolume: () => number
   setupVolumeControls: () => void
   renderVolumeControlMarkup: (id: string, compact?: boolean) => string
-  renderArtworkMarkup: () => string
   revealArtwork: (root: ParentNode, imageUrl: string, alt: string) => void
   renderRoundResult: (
     status: HTMLElement,
@@ -52,23 +66,15 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
   const state: SoloGameState = {
     tracks: [], round: 0, roundCount: 5, roundDuration: 30, score: 0,
     playedTrackIds: new Set(), roundHistory: [], roundRecap: [],
-    audio: null, timerId: null,
-  }
-
-  const stopTimer = (): void => {
-    if (state.timerId !== null) window.clearInterval(state.timerId)
-    state.timerId = null
-  }
-
-  const stopAudio = (): void => {
-    state.audio?.pause()
-    if (state.audio) state.audio.currentTime = 0
-    state.audio = null
+    audio: null, timer: null,
   }
 
   const stop = (): void => {
-    stopTimer()
-    stopAudio()
+    state.timer?.stop()
+    state.timer = null
+    state.audio?.pause()
+    if (state.audio) state.audio.currentTime = 0
+    state.audio = null
   }
 
   const showResult = (): void => {
@@ -97,8 +103,8 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       </main>`
     focusScreenHeading(options.app)
 
-    const replayButton = options.app.querySelector<HTMLButtonElement>('#replay-button')!
-    options.app.querySelector<HTMLButtonElement>('#return-home-button')!.addEventListener('click', () => {
+    const replayButton = qs<HTMLButtonElement>('#replay-button', options.app)!
+    qs<HTMLButtonElement>('#return-home-button', options.app)!.addEventListener('click', () => {
       stop()
       options.renderHome()
     })
@@ -113,7 +119,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         await startRound()
       } catch (error) {
         console.error(error)
-        setStatusMessage(options.app.querySelector('.status'), 'Impossible de relancer la partie.', true)
+        setStatusMessage(qs('.status', options.app), 'Impossible de relancer la partie.', true)
         replayButton.disabled = false
       }
     })
@@ -127,6 +133,7 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
     audio.volume = options.getVolume()
     audio.preload = 'auto'
     state.audio = audio
+
     let audioBlocked = false
     try {
       await audio.play()
@@ -137,6 +144,9 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
 
     const roundStartedAt = performance.now()
     let hasAnswered = false
+    let attemptsUsed = 0
+    let lastGuess: GuessOption | null = null
+
     options.app.innerHTML = `
       <main class="welcome welcome--game">
         <section class="welcome__content game-shell" aria-labelledby="question-title">
@@ -147,10 +157,12 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
               <div class="game-volume"><label class="sr-only" for="volume-slider-round">Volume</label>${options.renderVolumeControlMarkup('volume-slider-round', true)}</div>
             </div>
           </header>
-          <div class="game-stage">${options.renderArtworkMarkup()}<div class="stage-readout"><div class="progress">
-            <p id="timer" class="progress__time" role="timer">${formatRemainingTime(roundDurationMs)}</p>
-            <div class="progress__track" aria-hidden="true"><div id="timer-progress" class="progress__bar"></div></div>
-          </div><p id="game-reveal" class="round-result-slot" role="status" aria-live="polite"></p></div></div>
+          ${roundStageMarkup({
+            timerId: 'timer',
+            progressId: 'timer-progress',
+            revealId: 'game-reveal',
+            initialTime: formatRemainingTime(roundDurationMs),
+          })}
           <p id="game-status" class="status" role="status" aria-live="polite"></p>
           <p id="solo-timer-status" class="sr-only" role="status" aria-live="polite"></p>
           <h1 id="question-title" class="sr-only">Quel est ce titre ?</h1>
@@ -160,26 +172,13 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       </main>`
     focusScreenHeading(options.app)
 
-    const status = options.app.querySelector<HTMLParagraphElement>('#game-status')!
-    const revealCard = options.app.querySelector<HTMLParagraphElement>('#game-reveal')!
-    const timer = options.app.querySelector<HTMLParagraphElement>('#timer')!
-    const timerStatus = options.app.querySelector<HTMLParagraphElement>('#solo-timer-status')!
-    const progress = options.app.querySelector<HTMLDivElement>('#timer-progress')!
-    const scoreDisplay = options.app.querySelector<HTMLSpanElement>('#score')!
-    const playButton = options.app.querySelector<HTMLButtonElement>('#solo-play-audio-button')!
-    const triedKeys = new Set<string>()
-    let attemptsUsed = 0
-    let lastGuess: GuessOption | null = null
-
-    const guessArea = createGuessArea(options.app.querySelector<HTMLElement>('[data-guess-area]')!, {
-      catalog: state.tracks,
-      maxAttempts: MAX_ATTEMPTS,
-      placeholder: 'Rechercher un titre ou un artiste…',
-      canSkip: true,
-      onSkip: () => finish(null, 'skip'),
-    })
-    const form = guessArea.form
-    guessArea.setExcludedKeys(triedKeys)
+    const status = qs<HTMLParagraphElement>('#game-status', options.app)!
+    const revealCard = qs<HTMLParagraphElement>('#game-reveal', options.app)!
+    const timerEl = qs<HTMLParagraphElement>('#timer', options.app)!
+    const timerStatus = qs<HTMLParagraphElement>('#solo-timer-status', options.app)!
+    const progressEl = qs<HTMLDivElement>('#timer-progress', options.app)!
+    const scoreDisplay = qs<HTMLSpanElement>('#score', options.app)!
+    const playButton = qs<HTMLButtonElement>('#solo-play-audio-button', options.app)!
 
     options.setupVolumeControls()
 
@@ -196,46 +195,61 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
       }
     })
 
-    guessArea.focusInput()
-    const remaining = (): number => Math.max(0, roundDurationMs - (performance.now() - roundStartedAt))
-    let announcedTimerThreshold = 0
-    const announceTimerThreshold = (value: number): void => {
-      if (value <= 10_000 && value > 5_000 && announcedTimerThreshold < 10) {
-        announcedTimerThreshold = 10
-        timerStatus.textContent = 'Il reste 10 secondes.'
-      } else if (value <= 5_000 && value > 0 && announcedTimerThreshold < 5) {
-        announcedTimerThreshold = 5
-        timerStatus.textContent = 'Il reste 5 secondes.'
-      }
-    }
-    const updateTimer = (value: number): void => {
-      timer.textContent = formatRemainingTime(value)
-      progress.style.transform = `scaleX(${Math.max(0, Math.min(1, value / roundDurationMs))})`
-      timer.parentElement?.classList.toggle('is-low', value > 0 && value <= 5000)
-      announceTimerThreshold(value)
-    }
+    const guessRound = createGuessRound({
+      container: qs<HTMLElement>('[data-guess-area]', options.app)!,
+      catalog: state.tracks,
+      canSkip: true,
+      onSkip: () => finish(null, 'skip'),
+      onGuess: (guess) => {
+        lastGuess = guess
+        attemptsUsed += 1
+        const isCorrect = isSameSong(guess, correctTrack)
+        guessRound.recordAttempt(
+          attemptsUsed - 1,
+          isCorrect,
+          formatGuessOption(guess),
+          MAX_ATTEMPTS - attemptsUsed,
+        )
+
+        if (isCorrect || attemptsUsed === MAX_ATTEMPTS) {
+          finish(guess)
+          return
+        }
+
+        guessRound.area.clearInput()
+        guessRound.area.focusInput()
+      },
+    })
+    guessRound.area.focusInput()
+
     const finish = (selected: GuessOption | null, outcome?: 'timeout' | 'skip'): void => {
       if (hasAnswered) return
-      const time = remaining()
+
+      const time = Math.max(0, roundDurationMs - (performance.now() - roundStartedAt))
       const timedOut = time <= 0
       hasAnswered = true
       stop()
       playButton.hidden = true
       playButton.disabled = true
-      updateTimer(time)
+      timerEl.textContent = formatRemainingTime(time)
+      progressEl.style.transform = `scaleX(${Math.max(0, Math.min(1, time / roundDurationMs))})`
+      timerEl.parentElement?.classList.toggle('is-low', time > 0 && time <= 5000)
+      const guessArea = guessRound.area
       guessArea.setDisabled(true)
       guessArea.setSubmitHidden(true)
       guessArea.destroy()
-      options.revealArtwork(document, correctTrack.imageUrl, `Cover de ${correctTrack.title} par ${correctTrack.artist}`)
+      options.revealArtwork(
+        document,
+        correctTrack.imageUrl,
+        `Cover de ${correctTrack.title} par ${correctTrack.artist}`,
+      )
+
       const isCorrect = selected ? isSameSong(selected, correctTrack) : false
       const roundOutcome: RoundOutcome =
-        timedOut || outcome === 'timeout'
-          ? 'timeout'
-          : outcome === 'skip'
-            ? 'skipped'
-            : isCorrect
-              ? 'correct'
-              : 'failed'
+        timedOut || outcome === 'timeout' ? 'timeout'
+          : outcome === 'skip' ? 'skipped'
+            : isCorrect ? 'correct' : 'failed'
+
       state.roundHistory[state.round - 1] = roundOutcome
       state.roundRecap[state.round - 1] = {
         outcome: roundOutcome,
@@ -245,16 +259,17 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
         solution: { title: correctTrack.title, artist: correctTrack.artist },
       }
       status.textContent = ''
-      if (timedOut || outcome === 'timeout') {
-        options.renderRoundResult(revealCard, 'timeout', correctTrack.title, correctTrack.artist)
-      } else if (outcome === 'skip') {
-        options.renderRoundResult(revealCard, 'skip', correctTrack.title, correctTrack.artist)
-      } else if (isCorrect) {
+
+      if (roundOutcome === 'correct') {
         const points = getAttemptScore(time, roundDurationMs, MAX_ROUND_SCORE, attemptsUsed)
         const previousScore = state.score
         state.score += points
         animateScore(scoreDisplay, previousScore, state.score)
         options.renderRoundResult(revealCard, 'correct', correctTrack.title, correctTrack.artist, points)
+      } else if (roundOutcome === 'timeout') {
+        options.renderRoundResult(revealCard, 'timeout', correctTrack.title, correctTrack.artist)
+      } else if (roundOutcome === 'skipped') {
+        options.renderRoundResult(revealCard, 'skip', correctTrack.title, correctTrack.artist)
       } else {
         options.renderRoundResult(revealCard, 'wrong', correctTrack.title, correctTrack.artist)
       }
@@ -275,49 +290,21 @@ export function createSoloGame(options: SoloGameOptions): SoloGame {
           next.disabled = false
         }
       })
-      const searchRow = options.app.querySelector('.guess-search')
-      if (searchRow) {
-        searchRow.replaceWith(next)
-      } else {
-        status.insertAdjacentElement('afterend', next)
-      }
+
+      const searchRow = qs('.guess-search', options.app)
+      if (searchRow) searchRow.replaceWith(next)
+      else status.insertAdjacentElement('afterend', next)
     }
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault()
-      const guess = guessArea.getSelectedOption()
-      if (!guess) {
-        guessArea.showError('Choisis une suggestion dans la liste.')
-        guessArea.focusInput()
-        return
-      }
-      const guessKey = getCanonicalSongKey(guess)
-      if (triedKeys.has(guessKey)) {
-        guessArea.showError('Cette réponse a déjà été essayée.')
-        guessArea.focusInput()
-        return
-      }
-      guessArea.clearError()
-      triedKeys.add(guessKey)
-      guessArea.setExcludedKeys(triedKeys)
-      lastGuess = guess
-      attemptsUsed += 1
-      const isCorrect = isSameSong(guess, correctTrack)
-      guessArea.slots.setResult(attemptsUsed - 1, isCorrect ? 'correct' : 'wrong', formatGuessOption(guess))
-      guessArea.announceRemaining(MAX_ATTEMPTS - attemptsUsed)
-      if (isCorrect || attemptsUsed === MAX_ATTEMPTS) {
-        finish(guess)
-        return
-      }
-      guessArea.clearInput()
-      guessArea.focusInput()
+    state.timer = createRoundTimer({
+      startAt: roundStartedAt,
+      durationMs: roundDurationMs,
+      now: () => performance.now(),
+      timeEl: timerEl,
+      progressEl,
+      statusEl: timerStatus,
+      onExpire: () => finish(null, 'timeout'),
     })
-    state.timerId = window.setInterval(() => {
-      const time = remaining()
-      updateTimer(time)
-      if (time <= 0) finish(null, 'timeout')
-    }, 100)
-    updateTimer(remaining())
   }
 
   return {

@@ -67,15 +67,8 @@ export function stopMultiplayerAudio(): void {
 }
 
 export function stopMultiplayerTimer(): void {
-  if (state.multiplayerTimerId !== null) {
-    window.clearInterval(state.multiplayerTimerId)
-    state.multiplayerTimerId = null
-  }
-
-  if (state.multiplayerStartTimeoutId !== null) {
-    window.clearTimeout(state.multiplayerStartTimeoutId)
-    state.multiplayerStartTimeoutId = null
-  }
+  state.multiplayerTimer?.stop()
+  state.multiplayerTimer = null
 }
 
 export function getEstimatedHostNow(): number {

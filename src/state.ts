@@ -2,6 +2,7 @@ import type { MusicTheme, Track } from './api'
 import type { GuessOption, RoundCount, RoundDuration, RoundOutcome } from './game'
 import type { GuessArea } from './guess/area'
 import type { RoundRecapEntry } from './guess/recap'
+import type { RoundTimer } from './round/timer'
 import type {
   AttemptResult,
   MultiplayerRound,
@@ -22,8 +23,7 @@ export type AppState = {
   multiplayerTracks: Track[]
   roomConnection: RoomConnection | null
   multiplayerAudio: HTMLAudioElement | null
-  multiplayerTimerId: number | null
-  multiplayerStartTimeoutId: number | null
+  multiplayerTimer: RoundTimer | null
   multiplayerPlayerId: string | null
   multiplayerIsHost: boolean
   currentMultiplayerGameId: string | null
@@ -74,8 +74,7 @@ export const state: AppState = {
   multiplayerTracks: [],
   roomConnection: null,
   multiplayerAudio: null,
-  multiplayerTimerId: null,
-  multiplayerStartTimeoutId: null,
+  multiplayerTimer: null,
   multiplayerPlayerId: null,
   multiplayerIsHost: false,
   currentMultiplayerGameId: null,
