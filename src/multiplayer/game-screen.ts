@@ -8,7 +8,7 @@ import { getCanonicalSongKey } from '../song'
 import { state } from '../state'
 import { focusScreenHeading, formatRemainingTime } from '../ui'
 import { renderMultiplayerLeaderboard } from './leaderboard'
-import type { AttemptResult, MultiplayerRound } from './realtime'
+import type { AttemptResult, MultiplayerRound } from './protocol'
 import {
   checkMultiplayerRoundCompletion,
   cleanupMultiplayerRound,

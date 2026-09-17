@@ -15,7 +15,6 @@ import { renderMultiplayerRound } from './game-screen'
 import { scorePlayerGuess } from './game'
 import { renderMultiplayerLeaderboard } from './leaderboard'
 import {
-  joinRoom,
   type AttemptResult,
   type GameCatalog,
   type GameOver,
@@ -26,7 +25,8 @@ import {
   type RoundComplete,
   type RoundReveal,
   type ScoreUpdate,
-} from './realtime'
+} from './protocol'
+import { joinRoom } from './transport'
 import { handleGameOver, handleMultiplayerHostLeft } from './result-screens'
 
 export const MAX_ROUND_SCORE = 1000
@@ -736,16 +736,18 @@ export async function openRoom(roomCode: string, playerName: string, isHost: boo
         roundCount: state.multiplayerRoundCount,
         roundDuration: state.multiplayerRoundDuration,
       },
-      renderPlayers,
-      handleGameStart,
-      handleGameCatalog,
-      handleRoundStart,
-      handlePlayerGuess,
-      handleAttemptResult,
-      handleScoreUpdate,
-      handleRoundReveal,
-      handleRoundComplete,
-      handleGameOver,
+      {
+        onPlayers: renderPlayers,
+        onGameStart: handleGameStart,
+        onGameCatalog: handleGameCatalog,
+        onRoundStart: handleRoundStart,
+        onPlayerGuess: handlePlayerGuess,
+        onAttemptResult: handleAttemptResult,
+        onScoreUpdate: handleScoreUpdate,
+        onRoundReveal: handleRoundReveal,
+        onRoundComplete: handleRoundComplete,
+        onGameOver: handleGameOver,
+      },
     )
     if (startButton) {
       startButton.disabled = state.multiplayerPlayerNames.size < 2

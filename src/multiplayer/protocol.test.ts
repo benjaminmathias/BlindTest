@@ -71,15 +71,34 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }))
 
-import {
-  joinRoom,
-  type AttemptResult,
-  type GameStart,
-  type MultiplayerRound,
-  type Player,
-  type PlayerGuess,
-  type RoundReveal,
-} from './realtime'
+import { joinRoom } from './transport'
+import type {
+  AttemptResult,
+  GameStart,
+  MultiplayerRound,
+  Player,
+  PlayerGuess,
+  RoomHandlers,
+  RoundReveal,
+} from './protocol'
+
+const noop = (): void => undefined
+
+function handlers(overrides: Partial<RoomHandlers> = {}): RoomHandlers {
+  return {
+    onPlayers: noop,
+    onGameStart: noop,
+    onGameCatalog: noop,
+    onRoundStart: noop,
+    onPlayerGuess: noop,
+    onAttemptResult: noop,
+    onScoreUpdate: noop,
+    onRoundReveal: noop,
+    onRoundComplete: noop,
+    onGameOver: noop,
+    ...overrides,
+  }
+}
 
 beforeAll(() => {
   vi.stubGlobal('window', globalThis)
@@ -98,22 +117,20 @@ describe('protocole multijoueur intégré', () => {
     const hostAnswers: PlayerGuess[] = []
     const guestResults: AttemptResult[] = []
     const guestReveals: RoundReveal[] = []
-    const noop = (): void => undefined
     const settings = { musicTheme: 'pop' as const, roundCount: 5 as const, roundDuration: 30 as const }
     const catalog = [
       { id: 'correct', title: 'Titre', artist: 'Artiste' },
       { id: 'other', title: 'Autre', artist: 'Artiste' },
     ]
 
-    const host = await joinRoom(
-      'TEST', 'host', 'Host', true, settings,
-      noop, noop, noop, noop, (answer) => hostAnswers.push(answer), noop, noop, noop, noop, noop,
-    )
-    const guest = await joinRoom(
-      'TEST', 'guest', 'Guest', false, settings,
-      noop, (start) => guestStarts.push(start), noop, noop, noop,
-      (result) => guestResults.push(result), noop, (reveal) => guestReveals.push(reveal), noop, noop,
-    )
+    const host = await joinRoom('TEST', 'host', 'Host', true, settings, handlers({
+      onPlayerGuess: (answer) => hostAnswers.push(answer),
+    }))
+    const guest = await joinRoom('TEST', 'guest', 'Guest', false, settings, handlers({
+      onGameStart: (start) => guestStarts.push(start),
+      onAttemptResult: (result) => guestResults.push(result),
+      onRoundReveal: (reveal) => guestReveals.push(reveal),
+    }))
 
     await host.startGame('game', settings, catalog)
     const round: MultiplayerRound = {
@@ -145,16 +162,11 @@ describe('protocole multijoueur intégré', () => {
 
   it('propage le départ de l’hôte au client restant', async () => {
     const snapshots: Player[][] = []
-    const noop = (): void => undefined
     const settings = { musicTheme: 'rock' as const, roundCount: 5 as const, roundDuration: 30 as const }
-    const host = await joinRoom(
-      'LEFT', 'host', 'Host', true, settings,
-      noop, noop, noop, noop, noop, noop, noop, noop, noop, noop,
-    )
-    const guest = await joinRoom(
-      'LEFT', 'guest', 'Guest', false, settings,
-      (players) => snapshots.push(players), noop, noop, noop, noop, noop, noop, noop, noop, noop,
-    )
+    const host = await joinRoom('LEFT', 'host', 'Host', true, settings, handlers())
+    const guest = await joinRoom('LEFT', 'guest', 'Guest', false, settings, handlers({
+      onPlayers: (players) => snapshots.push(players),
+    }))
 
     await host.leave()
     expect(snapshots.at(-1)?.some(({ isHost }) => isHost)).toBe(false)
@@ -162,12 +174,9 @@ describe('protocole multijoueur intégré', () => {
   }, 10_000)
 
   it('ne conserve qu’un hôte lors d’une collision simultanée', async () => {
-    const noop = (): void => undefined
     const settings = { musicTheme: 'all' as const, roundCount: 5 as const, roundDuration: 30 as const }
-    const connectHost = (playerId: string) => joinRoom(
-      'RACE', playerId, playerId, true, settings,
-      noop, noop, noop, noop, noop, noop, noop, noop, noop, noop,
-    )
+    const connectHost = (playerId: string) =>
+      joinRoom('RACE', playerId, playerId, true, settings, handlers())
 
     const results = await Promise.allSettled([connectHost('z-host'), connectHost('a-host')])
     expect(results.filter(({ status }) => status === 'fulfilled')).toHaveLength(1)

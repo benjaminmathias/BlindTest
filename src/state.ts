@@ -6,7 +6,7 @@ import type {
   MultiplayerRound,
   RoomConnection,
   RoundReveal,
-} from './multiplayer/realtime'
+} from './multiplayer/protocol'
 import {
   DEFAULT_MUSIC_THEME,
   DEFAULT_ROUND_COUNT,

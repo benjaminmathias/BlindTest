@@ -9,7 +9,7 @@ import {
   isPlayerGuess,
   isRoundComplete,
   isRoundReveal,
-} from './realtime'
+} from './protocol'
 
 describe('validateurs Realtime', () => {
   it('accepte les payloads attendus', () => {

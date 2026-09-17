@@ -3,7 +3,7 @@ import { roundRecapMarkup, roundTimelineMarkup } from '../guess-ui'
 import { state } from '../state'
 import { focusScreenHeading } from '../ui'
 import { renderFinalLeaderboard } from './game-ui'
-import type { GameOver } from './realtime'
+import type { GameOver } from './protocol'
 import {
   cleanupMultiplayerRound,
   leaveMultiplayerRoom,

@@ -1,4 +1,4 @@
-import type { FinalScore } from './realtime'
+import type { FinalScore } from './protocol'
 
 function playerRow(
   player: FinalScore,

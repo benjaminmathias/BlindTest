@@ -1,6 +1,6 @@
 import { getAttemptScore, MAX_ATTEMPTS } from '../game'
 import { getCanonicalSongKey, isSameSong, type SongIdentity } from '../song'
-import type { AttemptResult, MultiplayerRound, PlayerGuess } from './realtime'
+import type { AttemptResult, MultiplayerRound, PlayerGuess } from './protocol'
 
 type ScoreGuessOptions = {
   isHost: boolean

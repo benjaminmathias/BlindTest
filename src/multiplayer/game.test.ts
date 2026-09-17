@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { scorePlayerGuess } from './game'
-import type { MultiplayerRound, PlayerGuess } from './realtime'
+import type { MultiplayerRound, PlayerGuess } from './protocol'
 
 const round: MultiplayerRound = {
   gameId: 'g', roundId: 'r2', round: 2, startAt: 1_000, audioUrl: 'audio',
