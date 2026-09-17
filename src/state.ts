@@ -1,6 +1,7 @@
 import type { MusicTheme, Track } from './api'
 import type { GuessOption, RoundCount, RoundDuration, RoundOutcome } from './game'
-import type { GuessArea, RoundRecapEntry } from './guess-ui'
+import type { GuessArea } from './guess/area'
+import type { RoundRecapEntry } from './guess/recap'
 import type {
   AttemptResult,
   MultiplayerRound,

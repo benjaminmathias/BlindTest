@@ -1,6 +1,6 @@
 import { app } from '../dom'
 import { formatGuessOption, MAX_ATTEMPTS } from '../game'
-import { createGuessArea } from '../guess-ui'
+import { createGuessArea } from '../guess/area'
 import { volume } from '../services'
 import { renderArtworkMarkup } from '../shared/artwork'
 import { createId } from '../shared/id'

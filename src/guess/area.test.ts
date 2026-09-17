@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { GuessOption } from './game'
-import { createGuessArea, type GuessArea } from './guess-ui'
-import { getCanonicalSongKey } from './song'
+import type { GuessOption } from '../game'
+import { createGuessArea, type GuessArea } from './area'
+import { getCanonicalSongKey } from '../song'
 
 const catalog: GuessOption[] = [
   { id: '1', title: 'Wonderwall', artist: 'Oasis' },

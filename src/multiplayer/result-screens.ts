@@ -1,5 +1,5 @@
 import { app } from '../dom'
-import { roundRecapMarkup, roundTimelineMarkup } from '../guess-ui'
+import { roundRecapMarkup, roundTimelineMarkup } from '../guess/recap'
 import { state } from '../state'
 import { focusScreenHeading } from '../ui'
 import { renderFinalLeaderboard } from './game-ui'

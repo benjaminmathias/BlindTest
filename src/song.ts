@@ -12,6 +12,38 @@ export function normalizeComparableText(value: string): string {
     .toLowerCase()
 }
 
+// Normalisation caractère par caractère : renvoie le texte comparable et, pour
+// chaque caractère normalisé, son index dans le texte d'origine. Sert à
+// surligner une correspondance sans perdre les accents ni les espaces.
+export function normalizeWithIndex(text: string): { normalized: string; map: number[] } {
+  let normalized = ''
+  const map: number[] = []
+
+  for (let index = 0; index < text.length; index += 1) {
+    const base = (text[index] ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+
+    for (const character of base) {
+      if (/\s/.test(character)) {
+        if (normalized.length === 0 || normalized.endsWith(' ')) continue
+        normalized += ' '
+      } else {
+        normalized += character
+      }
+      map.push(index)
+    }
+  }
+
+  while (normalized.endsWith(' ')) {
+    normalized = normalized.slice(0, -1)
+    map.pop()
+  }
+
+  return { normalized, map }
+}
+
 function words(value: string): string[] {
   return normalizeComparableText(value)
     .split(/[^a-z0-9]+/)

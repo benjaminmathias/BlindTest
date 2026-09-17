@@ -3,9 +3,8 @@ import {
   formatGuessOption, getAttemptScore, pickUnplayedTrack, MAX_ATTEMPTS,
   type GuessOption, type RoundCount, type RoundDuration, type RoundOutcome,
 } from './game'
-import {
-  createGuessArea, roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry,
-} from './guess-ui'
+import { createGuessArea } from './guess/area'
+import { roundRecapMarkup, roundTimelineMarkup, type RoundRecapEntry } from './guess/recap'
 import { getCanonicalSongKey, isSameSong } from './song'
 import { animateScore, focusScreenHeading, formatRemainingTime, formatScore, setStatusMessage } from './ui'
 
