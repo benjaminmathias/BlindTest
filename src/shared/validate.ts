@@ -24,3 +24,10 @@ export function isArrayOf<T>(
 ): value is T[] {
   return Array.isArray(value) && value.every(check)
 }
+
+export function asValid<T>(
+  value: unknown,
+  isValid: (input: unknown) => input is T,
+): T | null {
+  return isValid(value) ? value : null
+}

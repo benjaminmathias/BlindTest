@@ -1,18 +1,25 @@
-import {
-  isMusicTheme,
-  MUSIC_THEMES,
-  MUSIC_THEME_LABELS,
-} from '../api'
-import { app } from '../dom'
-import {
-  isRoundCount,
-  isRoundDuration,
-  ROUND_COUNT_OPTIONS,
-  ROUND_DURATION_OPTIONS,
-} from '../game'
+import { isMusicTheme, MUSIC_THEME_LABELS } from '../api'
+import { app, bindSelect, qs, requireElement } from '../dom'
+import { isRoundCount, isRoundDuration } from '../game'
 import { leaveMultiplayerRoom, startMultiplayerGame } from '../multiplayer/session'
+import { roundCountChoices, roundDurationChoices, themeChoices } from '../shared/choices'
+import { renderOptions, type SelectOption } from '../shared/markup'
+import { asValid } from '../shared/validate'
 import { state } from '../state'
 import { focusScreenHeading } from '../ui'
+
+const hostSelect = (
+  id: string,
+  name: string,
+  options: readonly SelectOption[],
+  selected: string | number,
+): string => `<select id="${id}" name="${name}">${renderOptions(options, selected)}</select>`
+
+const guestValue = (id: string, value: string): string =>
+  `<span id="${id}" class="lobby-rule__value">${value}</span>`
+
+const rule = (label: string, control: string): string =>
+  `<div class="lobby-rule"><span class="field-label">${label}</span>${control}</div>`
 
 export function renderLobby(roomCode: string, isHost: boolean): void {
   app.innerHTML = `
@@ -26,32 +33,15 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
         </div>
 
         <div class="lobby-rules">
-          <div class="lobby-rule">
-            <span class="field-label">Thème</span>
-            ${isHost
-              ? `<select id="lobby-theme-select" name="musicTheme">${MUSIC_THEMES.map(
-                  (theme) =>
-                    `<option value="${theme}"${theme === state.multiplayerMusicTheme ? ' selected' : ''}>${MUSIC_THEME_LABELS[theme]}</option>`,
-                ).join('')}</select>`
-              : `<span id="lobby-theme-value" class="lobby-rule__value">${MUSIC_THEME_LABELS[state.multiplayerMusicTheme]}</span>`}
-          </div>
-          <div class="lobby-rule">
-            <span class="field-label">Manches</span>
-            ${isHost
-              ? `<select id="lobby-round-count" name="roundCount">${ROUND_COUNT_OPTIONS.map(
-                  (count) =>
-                    `<option value="${count}"${count === state.multiplayerRoundCount ? ' selected' : ''}>${count}</option>`,
-                ).join('')}</select>`
-              : `<span id="lobby-round-count-value" class="lobby-rule__value">${state.multiplayerRoundCount}</span>`}
-          </div>
-          <div class="lobby-rule">
-            <span class="field-label">Durée</span>
-            ${isHost
-              ? `<select id="lobby-round-duration" name="roundDuration">${ROUND_DURATION_OPTIONS.map(
-                  (duration) => `<option value="${duration}"${duration === state.multiplayerRoundDuration ? ' selected' : ''}>${duration} s</option>`,
-                ).join('')}</select>`
-              : `<span id="lobby-round-duration-value" class="lobby-rule__value">${state.multiplayerRoundDuration} s</span>`}
-          </div>
+          ${rule('Thème', isHost
+            ? hostSelect('lobby-theme-select', 'musicTheme', themeChoices, state.multiplayerMusicTheme)
+            : guestValue('lobby-theme-value', MUSIC_THEME_LABELS[state.multiplayerMusicTheme]))}
+          ${rule('Manches', isHost
+            ? hostSelect('lobby-round-count', 'roundCount', roundCountChoices, state.multiplayerRoundCount)
+            : guestValue('lobby-round-count-value', String(state.multiplayerRoundCount)))}
+          ${rule('Durée', isHost
+            ? hostSelect('lobby-round-duration', 'roundDuration', roundDurationChoices, state.multiplayerRoundDuration)
+            : guestValue('lobby-round-duration-value', `${state.multiplayerRoundDuration} s`))}
         </div>
 
         <h2 class="lobby-heading lobby-players-heading">Joueurs <span id="players-count" class="player-count"></span></h2>
@@ -73,13 +63,10 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
   `
   focusScreenHeading(app)
 
-  const startButton = document.querySelector<HTMLButtonElement>('#start-game-button')
-  const leaveButton = document.querySelector<HTMLButtonElement>('#leave-room-button')!
-  const copyButton = document.querySelector<HTMLButtonElement>('#copy-room-code-button')!
-  const lobbyStatus = document.querySelector<HTMLParagraphElement>('#lobby-status')!
-  const themeSelect = document.querySelector<HTMLSelectElement>('#lobby-theme-select')
-  const roundCountSelect = document.querySelector<HTMLSelectElement>('#lobby-round-count')
-  const roundDurationSelect = document.querySelector<HTMLSelectElement>('#lobby-round-duration')
+  const startButton = qs<HTMLButtonElement>('#start-game-button')
+  const leaveButton = requireElement<HTMLButtonElement>('#leave-room-button')
+  const copyButton = requireElement<HTMLButtonElement>('#copy-room-code-button')
+  const lobbyStatus = requireElement<HTMLParagraphElement>('#lobby-status')
 
   const pushGameSettings = (): void => {
     void state.roomConnection?.updateGameSettings({
@@ -92,31 +79,15 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
     })
   }
 
-  themeSelect?.addEventListener('change', () => {
-    const theme = themeSelect.value
-
-    if (!isMusicTheme(theme)) {
-      return
-    }
-
+  bindSelect(qs('#lobby-theme-select'), (raw) => asValid(raw, isMusicTheme), (theme) => {
     state.multiplayerMusicTheme = theme
     pushGameSettings()
   })
-
-  roundCountSelect?.addEventListener('change', () => {
-    const roundCount = Number(roundCountSelect.value)
-
-    if (!isRoundCount(roundCount)) {
-      return
-    }
-
-    state.multiplayerRoundCount = roundCount
+  bindSelect(qs('#lobby-round-count'), (raw) => asValid(Number(raw), isRoundCount), (count) => {
+    state.multiplayerRoundCount = count
     pushGameSettings()
   })
-
-  roundDurationSelect?.addEventListener('change', () => {
-    const duration = Number(roundDurationSelect.value)
-    if (!isRoundDuration(duration)) return
+  bindSelect(qs('#lobby-round-duration'), (raw) => asValid(Number(raw), isRoundDuration), (duration) => {
     state.multiplayerRoundDuration = duration
     pushGameSettings()
   })
@@ -125,10 +96,7 @@ export function renderLobby(roomCode: string, isHost: boolean): void {
     copyButton.disabled = true
 
     try {
-      if (!navigator.clipboard) {
-        throw new Error('Clipboard indisponible')
-      }
-
+      if (!navigator.clipboard) throw new Error('Clipboard indisponible')
       await navigator.clipboard.writeText(roomCode)
       lobbyStatus.textContent = 'Code copié !'
     } catch (error) {

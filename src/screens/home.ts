@@ -1,21 +1,11 @@
-import {
-  isMusicTheme,
-  MUSIC_THEMES,
-  MUSIC_THEME_LABELS,
-  type MusicTheme,
-} from '../api'
-import { app } from '../dom'
-import {
-  isRoundCount,
-  isRoundDuration,
-  ROUND_COUNT_OPTIONS,
-  ROUND_DURATION_OPTIONS,
-  type RoundCount,
-  type RoundDuration,
-} from '../game'
+import { isMusicTheme } from '../api'
+import { app, bindFieldReset, bindSelect, qs, requireElement } from '../dom'
+import { isRoundCount, isRoundDuration } from '../game'
 import { openRoom } from '../multiplayer/session'
 import { volume } from '../services'
 import { revealArtwork } from '../shared/artwork'
+import { roundCountChoices, roundDurationChoices, themeChoices } from '../shared/choices'
+import { renderSelect } from '../shared/markup'
 import { renderRoundResult } from '../shared/round-result'
 import {
   generateRoomCode,
@@ -34,53 +24,13 @@ import {
 import { createSoloGame, type SoloGame } from '../solo'
 import { state } from '../state'
 import { focusScreenHeading, formatScore, setStatusMessage } from '../ui'
+import { asValid } from '../shared/validate'
 
-function renderThemeSelectMarkup(selectId: string, selected: MusicTheme): string {
-  const options = MUSIC_THEMES.map(
-    (theme) =>
-      `<option value="${theme}"${theme === selected ? ' selected' : ''}>${MUSIC_THEME_LABELS[theme]}</option>`,
-  ).join('')
-
-  return `
-    <div class="form-field">
-      <label for="${selectId}">Thème</label>
-      <select id="${selectId}" name="musicTheme">${options}</select>
-    </div>
-  `
-}
-
-function renderRoundCountSelectMarkup(selectId: string, selected: RoundCount): string {
-  const options = ROUND_COUNT_OPTIONS.map(
-    (count) => `<option value="${count}"${count === selected ? ' selected' : ''}>${count}</option>`,
-  ).join('')
-
-  return `
-    <div class="form-field">
-      <label for="${selectId}">Manches</label>
-      <select id="${selectId}" name="roundCount">${options}</select>
-    </div>
-  `
-}
-
-function renderRoundDurationSelectMarkup(selectId: string, selected: RoundDuration): string {
-  const options = ROUND_DURATION_OPTIONS.map(
-    (duration) => `<option value="${duration}"${duration === selected ? ' selected' : ''}>${duration} s</option>`,
-  ).join('')
-
-  return `
-    <div class="form-field">
-      <label for="${selectId}">Durée</label>
-      <select id="${selectId}" name="roundDuration">${options}</select>
-    </div>
-  `
-}
+const PLAYER_NAME_ERROR = 'Le pseudo doit contenir entre 2 et 20 caractères.'
 
 function updateHomeHighScore(): void {
-  const element = document.querySelector<HTMLParagraphElement>('#home-high-score')
-
-  if (!element) {
-    return
-  }
+  const element = qs<HTMLParagraphElement>('#home-high-score')
+  if (!element) return
 
   const value = readHighScore(state.selectedRoundCount)
   element.hidden = value <= 0
@@ -115,9 +65,9 @@ export function renderHome(initialStatus = ''): void {
         </header>
 
         <div class="home-settings">
-          ${renderThemeSelectMarkup('solo-theme-select', state.selectedTheme)}
-          ${renderRoundCountSelectMarkup('solo-round-count', state.selectedRoundCount)}
-          ${renderRoundDurationSelectMarkup('solo-round-duration', state.selectedRoundDuration)}
+          ${renderSelect('solo-theme-select', 'Thème', themeChoices, state.selectedTheme, 'musicTheme')}
+          ${renderSelect('solo-round-count', 'Manches', roundCountChoices, state.selectedRoundCount, 'roundCount')}
+          ${renderSelect('solo-round-duration', 'Durée', roundDurationChoices, state.selectedRoundDuration, 'roundDuration')}
           <div class="form-field home-settings__volume">
             <label for="volume-slider">Volume</label>
             ${volume.renderMarkup('volume-slider')}
@@ -149,72 +99,57 @@ export function renderHome(initialStatus = ''): void {
   `
   focusScreenHeading(app)
 
-  const startButton = document.querySelector<HTMLButtonElement>('#start-button')!
-  const multiplayerForm = document.querySelector<HTMLFormElement>('#multiplayer-form')!
-  const roomCodeInput = document.querySelector<HTMLInputElement>('#room-code')!
-  const playerNameInput = document.querySelector<HTMLInputElement>('#player-name')!
-  const createRoomButton = document.querySelector<HTMLButtonElement>('#create-room-button')!
-  const joinButton = multiplayerForm.querySelector<HTMLButtonElement>('button[type="submit"]')!
-  const statusMessage = document.querySelector<HTMLParagraphElement>('#home-status')!
-  const soloStatusMessage = document.querySelector<HTMLParagraphElement>('#solo-status')!
-  const soloThemeSelect = document.querySelector<HTMLSelectElement>('#solo-theme-select')!
-  const soloRoundCountSelect = document.querySelector<HTMLSelectElement>('#solo-round-count')!
-  const soloRoundDurationSelect = document.querySelector<HTMLSelectElement>('#solo-round-duration')!
+  const startButton = requireElement<HTMLButtonElement>('#start-button')
+  const multiplayerForm = requireElement<HTMLFormElement>('#multiplayer-form')
+  const roomCodeInput = requireElement<HTMLInputElement>('#room-code')
+  const playerNameInput = requireElement<HTMLInputElement>('#player-name')
+  const createRoomButton = requireElement<HTMLButtonElement>('#create-room-button')
+  const joinButton = requireElement<HTMLButtonElement>('button[type="submit"]', multiplayerForm)
+  const statusMessage = requireElement<HTMLParagraphElement>('#home-status')
+  const soloStatusMessage = requireElement<HTMLParagraphElement>('#solo-status')
 
   setStatusMessage(statusMessage, initialStatus, initialStatus.length > 0)
-
   volume.setupControls()
 
-  soloThemeSelect.addEventListener('change', () => {
-    const theme = soloThemeSelect.value
-
-    if (!isMusicTheme(theme)) {
-      return
-    }
-
+  bindSelect(qs('#solo-theme-select'), (raw) => (isMusicTheme(raw) ? raw : null), (theme) => {
     state.selectedTheme = theme
     storeMusicTheme(theme)
   })
-
-  soloRoundCountSelect.addEventListener('change', () => {
-    const roundCount = Number(soloRoundCountSelect.value)
-
-    if (!isRoundCount(roundCount)) {
-      return
-    }
-
-    state.selectedRoundCount = roundCount
-    storeRoundCount(roundCount)
+  bindSelect(qs('#solo-round-count'), (raw) => asValid(Number(raw), isRoundCount), (count) => {
+    state.selectedRoundCount = count
+    storeRoundCount(count)
     updateHomeHighScore()
   })
-
-  soloRoundDurationSelect.addEventListener('change', () => {
-    const duration = Number(soloRoundDurationSelect.value)
-    if (!isRoundDuration(duration)) return
+  bindSelect(qs('#solo-round-duration'), (raw) => asValid(Number(raw), isRoundDuration), (duration) => {
     state.selectedRoundDuration = duration
     storeRoundDuration(duration)
   })
 
+  roomCodeInput.addEventListener('input', () => {
+    roomCodeInput.value = normalizeRoomCode(roomCodeInput.value).slice(0, 4)
+  })
+  bindFieldReset(roomCodeInput, playerNameInput)
+
   const setControlsDisabled = (disabled: boolean): void => {
-    startButton.disabled = disabled
-    roomCodeInput.disabled = disabled
-    playerNameInput.disabled = disabled
-    createRoomButton.disabled = disabled
-    joinButton.disabled = disabled
+    for (const control of [startButton, roomCodeInput, playerNameInput, createRoomButton, joinButton]) {
+      control.disabled = disabled
+    }
     createRoomButton.textContent = disabled ? 'Connexion…' : 'Créer une partie'
     joinButton.textContent = disabled ? 'Connexion…' : 'Rejoindre'
   }
 
-  roomCodeInput.addEventListener('input', () => {
-    roomCodeInput.value = normalizeRoomCode(roomCodeInput.value).slice(0, 4)
-    roomCodeInput.removeAttribute('aria-invalid')
-    roomCodeInput.removeAttribute('aria-describedby')
-  })
+  const showFieldError = (input: HTMLInputElement, message: string): void => {
+    setStatusMessage(statusMessage, message, true)
+    input.setAttribute('aria-invalid', 'true')
+    input.setAttribute('aria-describedby', 'home-status')
+    input.focus()
+  }
 
-  playerNameInput.addEventListener('input', () => {
-    playerNameInput.removeAttribute('aria-invalid')
-    playerNameInput.removeAttribute('aria-describedby')
-  })
+  const readPlayerName = (): string => {
+    const name = normalizePlayerName(playerNameInput.value)
+    playerNameInput.value = name
+    return name
+  }
 
   startButton.addEventListener('click', async () => {
     startButton.disabled = true
@@ -241,16 +176,8 @@ export function renderHome(initialStatus = ''): void {
   })
 
   createRoomButton.addEventListener('click', async () => {
-    const playerName = normalizePlayerName(playerNameInput.value)
-    playerNameInput.value = playerName
-
-    if (!isValidPlayerName(playerName)) {
-      setStatusMessage(statusMessage, 'Le pseudo doit contenir entre 2 et 20 caractères.', true)
-      playerNameInput.setAttribute('aria-invalid', 'true')
-      playerNameInput.setAttribute('aria-describedby', 'home-status')
-      playerNameInput.focus()
-      return
-    }
+    const playerName = readPlayerName()
+    if (!isValidPlayerName(playerName)) return showFieldError(playerNameInput, PLAYER_NAME_ERROR)
 
     const roomCode = generateRoomCode()
     roomCodeInput.value = roomCode
@@ -261,26 +188,12 @@ export function renderHome(initialStatus = ''): void {
   multiplayerForm.addEventListener('submit', async (event) => {
     event.preventDefault()
 
+    const playerName = readPlayerName()
+    if (!isValidPlayerName(playerName)) return showFieldError(playerNameInput, PLAYER_NAME_ERROR)
+
     const roomCode = normalizeRoomCode(roomCodeInput.value)
-    const playerName = normalizePlayerName(playerNameInput.value)
     roomCodeInput.value = roomCode
-    playerNameInput.value = playerName
-
-    if (!isValidPlayerName(playerName)) {
-      setStatusMessage(statusMessage, 'Le pseudo doit contenir entre 2 et 20 caractères.', true)
-      playerNameInput.setAttribute('aria-invalid', 'true')
-      playerNameInput.setAttribute('aria-describedby', 'home-status')
-      playerNameInput.focus()
-      return
-    }
-
-    if (!isValidRoomCode(roomCode)) {
-      setStatusMessage(statusMessage, 'Code de partie invalide.', true)
-      roomCodeInput.setAttribute('aria-invalid', 'true')
-      roomCodeInput.setAttribute('aria-describedby', 'home-status')
-      roomCodeInput.focus()
-      return
-    }
+    if (!isValidRoomCode(roomCode)) return showFieldError(roomCodeInput, 'Code de partie invalide.')
 
     setControlsDisabled(true)
     await openRoom(roomCode, playerName, false)

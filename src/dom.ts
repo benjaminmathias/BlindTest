@@ -22,3 +22,23 @@ export function setDisabled(selector: string, disabled: boolean): void {
   const element = qs<HTMLButtonElement>(selector)
   if (element) element.disabled = disabled
 }
+
+export function bindSelect<T>(
+  select: HTMLSelectElement | null,
+  parse: (raw: string) => T | null,
+  apply: (value: T) => void,
+): void {
+  select?.addEventListener('change', () => {
+    const value = parse(select.value)
+    if (value !== null) apply(value)
+  })
+}
+
+export function bindFieldReset(...inputs: HTMLInputElement[]): void {
+  for (const input of inputs) {
+    input.addEventListener('input', () => {
+      input.removeAttribute('aria-invalid')
+      input.removeAttribute('aria-describedby')
+    })
+  }
+}
