@@ -76,18 +76,52 @@ Aucun framework frontend.
 ## Structure
 
     src/
-    ├── api.ts                  # iTunes, catalogue, cache et retry
-    ├── game.ts                 # règles du jeu, scoring et autocomplete
-    ├── song.ts                 # identité et canonicalisation des morceaux
-    ├── solo.ts                 # orchestration du mode solo
-    ├── guess-ui.ts             # UI de saisie et historique des essais
-    ├── ui.ts                   # helpers UI
-    ├── multiplayer/
-    │   ├── game.ts             # validation et scoring côté hôte
-    │   ├── game-ui.ts          # classement multijoueur
-    │   └── realtime.ts         # Supabase Presence / Broadcast / clock sync
-    ├── main.ts                 # navigation et orchestration principale
-    └── style.css
+    ├── main.ts                  # amorçage : préférences, volume, resync d'horloge
+    ├── state.ts                 # état global, groupé par domaine
+    ├── dom.ts                   # helpers DOM partagés (qs, setText, bindSelect…)
+    ├── ui.ts                    # formatage, focus, animation de score
+    ├── services.ts              # singletons partagés (volume)
+    ├── api.ts                   # iTunes : thèmes, filtrage, dédup, cache, retry
+    ├── song.ts                  # identité et canonicalisation des morceaux
+    ├── game.ts                  # règles, options, scoring et autocomplete
+    ├── solo.ts                  # orchestration du mode solo
+    ├── guess/
+    │   ├── area.ts              # combobox accessible de saisie
+    │   ├── search.ts            # surlignage des correspondances
+    │   └── recap.ts             # timeline et récapitulatif des manches
+    ├── round/
+    │   ├── timer.ts             # horloge de manche (départ, temps, seuils)
+    │   ├── guess.ts             # boucle de saisie partagée solo / multi
+    │   └── stage.ts             # scène commune (artwork + horloge + résultat)
+    ├── screens/
+    │   ├── home.ts              # accueil et réglages solo
+    │   └── lobby.ts             # salle d'attente multijoueur
+    └── multiplayer/
+        ├── protocol.ts          # types et validateurs du protocole
+        ├── transport.ts         # Supabase Presence / Broadcast / clock ping
+        ├── clock.ts             # horloge synchronisée avec l'hôte
+        ├── session.ts           # cycle de vie de la partie (hôte, manches, reset)
+        ├── lobby-view.ts        # rendu du lobby
+        ├── game-screen.ts       # écran de manche multijoueur
+        ├── game.ts              # scoring autoritaire côté hôte
+        ├── leaderboard.ts       # classement live
+        ├── game-ui.ts           # lignes du classement
+        └── result-screens.ts    # fin de partie et départ de l'hôte
+
+### Comment ça se relie
+
+- **Accueil** (`screens/home.ts`) règle la partie solo ou appelle `openRoom`.
+- **Solo** (`solo.ts`) et **multijoueur** (`multiplayer/game-screen.ts`) partagent
+  la même scène (`round/stage.ts`), la même horloge (`round/timer.ts`) et la même
+  boucle de saisie (`round/guess.ts`) ; seul le transport des réponses diffère.
+- **Multijoueur** : `openRoom` ouvre la connexion (`transport.ts`), `session.ts`
+  redistribue les événements, fait autorité sur les manches et délègue le scoring
+  à `multiplayer/game.ts`. Les horloges se recalent via `clock.ts`.
+- Le **protocole** est décrit une seule fois dans `multiplayer/protocol.ts` :
+  types + validateurs, consommés par le transport et les gestionnaires.
+- Le **catalogue** (`api.ts`) et l'**identité des morceaux** (`song.ts`) sont la
+  source de vérité partagée par les deux modes.
+
 
 ## Lancer le projet
 
