@@ -210,7 +210,10 @@ export async function startMultiplayerGame(): Promise<void> {
 }
 
 async function sendNextMultiplayerRound(connection: RoomConnection): Promise<void> {
-  if (!state.multiplayerIsHost || !state.currentMultiplayerGameId) return
+  if (!state.multiplayerIsHost || state.roomConnection !== connection
+    || !state.currentMultiplayerGameId) {
+    return
+  }
 
   cleanupMultiplayerRound()
   state.currentMultiplayerRound = null; state.currentHostTrack = null

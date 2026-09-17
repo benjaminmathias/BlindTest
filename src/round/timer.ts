@@ -2,7 +2,6 @@ import { formatRemainingTime } from '../ui'
 
 export type RoundTimer = {
   stop: () => void
-  elapsedMs: () => number
 }
 
 export type RoundTimerOptions = {
@@ -29,8 +28,6 @@ export function createRoundTimer(options: RoundTimerOptions): RoundTimer {
   const container = timeEl.parentElement
   let started = false
   let announced = 0
-
-  const elapsed = (): number => Math.min(durationMs, Math.max(0, now() - startAt))
 
   const update = (): void => {
     if (!started) {
@@ -69,5 +66,5 @@ export function createRoundTimer(options: RoundTimerOptions): RoundTimer {
   const intervalId = window.setInterval(update, TICK_MS)
   update()
 
-  return { stop: () => window.clearInterval(intervalId), elapsedMs: elapsed }
+  return { stop: () => window.clearInterval(intervalId) }
 }
