@@ -7,11 +7,7 @@ import {
 import { isRecord, isString, oneOf } from './shared/validate'
 
 export type Track = {
-  id: string
-  title: string
-  artist: string
-  audioUrl: string
-  imageUrl: string
+  id: string; title: string; artist: string; audioUrl: string; imageUrl: string
 }
 
 export type ConcreteMusicTheme = 'pop' | 'rock' | 'rap' | 'electro' | 'chanson' | 'funk'
@@ -69,8 +65,7 @@ export const MUSIC_THEME_LABELS = {
   funk: THEMES.funk.label,
 } satisfies Record<MusicTheme, string>
 
-export const isMusicTheme = (value: unknown): value is MusicTheme =>
-  oneOf(value, MUSIC_THEMES)
+export const isMusicTheme = (value: unknown): value is MusicTheme => oneOf(value, MUSIC_THEMES)
 
 const GENRE_TO_THEME = new Map<string, ConcreteMusicTheme>(
   CONCRETE_THEMES.flatMap((theme) =>
@@ -87,14 +82,7 @@ type ITunesTrack = {
   primaryGenreName: string
 }
 
-type ITunesResponse = {
-  results: ITunesTrack[]
-}
-
-type StoredCatalog = {
-  savedAt: number
-  tracks: Track[]
-}
+type StoredCatalog = { savedAt: number; tracks: Track[] }
 
 const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search'
 export const MIN_CATALOG_SIZE = 20
@@ -106,12 +94,8 @@ const FETCH_RETRY_BASE_DELAY_MS = 250
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504])
 
 const isTrack = (value: unknown): value is Track =>
-  isRecord(value)
-  && isString(value.id)
-  && isString(value.title)
-  && isString(value.artist)
-  && typeof value.audioUrl === 'string'
-  && typeof value.imageUrl === 'string'
+  isRecord(value) && isString(value.id) && isString(value.title) && isString(value.artist)
+  && typeof value.audioUrl === 'string' && typeof value.imageUrl === 'string'
 
 const normalizeGenre = (genre: string): string =>
   genre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
@@ -126,7 +110,6 @@ export function deduplicateTracks(tracks: Track[]): Track[] {
   for (const track of tracks) {
     const key = getCanonicalSongKey(track)
     const existing = uniqueTracks.get(key)
-
     if (!existing || (hasCleanTitle(track) && !hasCleanTitle(existing))) {
       uniqueTracks.set(key, track)
     }
@@ -136,9 +119,7 @@ export function deduplicateTracks(tracks: Track[]): Track[] {
 }
 
 const countDistinctTitles = (tracks: Track[]): number =>
-  new Set(
-    tracks.map((track) => normalizeComparableText(canonicalizeSongTitle(track.title))),
-  ).size
+  new Set(tracks.map((t) => normalizeComparableText(canonicalizeSongTitle(t.title)))).size
 
 const isCatalogSufficient = (tracks: Track[]): boolean =>
   tracks.length >= MIN_CATALOG_SIZE && countDistinctTitles(tracks) >= 4
@@ -183,8 +164,7 @@ function writeStoredCatalog(theme: MusicTheme, tracks: Track[]): void {
   if (!storage) return
 
   try {
-    const payload: StoredCatalog = { savedAt: Date.now(), tracks }
-    storage.setItem(catalogStorageKey(theme), JSON.stringify(payload))
+    storage.setItem(catalogStorageKey(theme), JSON.stringify({ savedAt: Date.now(), tracks }))
   } catch {
     // Quota dépassé ou mode privé : le cache mémoire suffit pour la session.
   }
@@ -215,27 +195,19 @@ async function fetchJson<T>(query: string, url: URL): Promise<T> {
   throw lastError
 }
 
-async function fetchTracksForQuery(
-  query: string,
-  theme: ConcreteMusicTheme,
-): Promise<Track[]> {
+async function fetchTracksForQuery(query: string, theme: ConcreteMusicTheme): Promise<Track[]> {
   const url = new URL(ITUNES_SEARCH_URL)
   url.search = new URLSearchParams({
-    term: query,
-    media: 'music',
-    entity: 'song',
-    country: 'FR',
-    limit: '200',
+    term: query, media: 'music', entity: 'song', country: 'FR', limit: '200',
   }).toString()
 
-  const data = await fetchJson<ITunesResponse>(query, url)
+  const data = await fetchJson<{ results: ITunesTrack[] }>(query, url)
 
   return (data.results ?? [])
     .filter((track) =>
       track.previewUrl
       && GENRE_TO_THEME.get(normalizeGenre(track.primaryGenreName ?? '')) === theme
-      && !isParasiteVersion(track.trackName),
-    )
+      && !isParasiteVersion(track.trackName))
     .map((track) => ({
       id: String(track.trackId),
       title: track.trackName,
@@ -266,9 +238,7 @@ async function fetchTracksForTheme(theme: ConcreteMusicTheme): Promise<Track[]> 
   )
 
   const failures = results.filter((result) => result.status === 'rejected').length
-  if (failures > 0) {
-    console.warn(`${failures} recherche(s) iTunes ont échoué pour le thème ${theme}`)
-  }
+  if (failures > 0) console.warn(`${failures} recherche(s) iTunes ont échoué pour le thème ${theme}`)
 
   return results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
 }
@@ -305,9 +275,7 @@ export async function fetchTracks(theme: MusicTheme = 'all'): Promise<Track[]> {
   const results = await Promise.allSettled(themesToLoad.map(fetchTracksForTheme))
 
   const failures = results.filter((result) => result.status === 'rejected').length
-  if (failures > 0) {
-    console.warn(`${failures} thème(s) iTunes n'ont pas pu être chargés`)
-  }
+  if (failures > 0) console.warn(`${failures} thème(s) iTunes n'ont pas pu être chargés`)
 
   const perTheme = new Map<ConcreteMusicTheme, Track[]>()
   results.forEach((result, index) => {

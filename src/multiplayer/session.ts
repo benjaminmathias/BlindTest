@@ -72,43 +72,29 @@ export function cleanupMultiplayerRound(): void {
 export function resetMultiplayerGameState(): void {
   cleanupMultiplayerRound()
   stopMultiplayerTransition()
-  state.currentMultiplayerRound = null
-  state.currentHostTrack = null
-  state.currentRoundReveal = null
-  state.ownAnswerResult = null
-  state.finishedPlayerIds = new Set()
-  state.multiplayerAttempts = new Map()
-  state.multiplayerTriedAnswerKeys = new Map()
-  state.multiplayerCatalog = []
-  state.multiplayerScores = new Map()
-  state.multiplayerCurrentRoundNumber = 0
-  state.multiplayerOwnRoundHistory = []
-  state.multiplayerOwnRoundRecap = []
-  state.multiplayerLastOwnGuess = null
-  state.multiplayerPlayedTrackIds = new Set()
-  state.multiplayerRoundPlayerIds = new Set()
-  state.multiplayerRoundFinished = false
-  state.multiplayerGameOver = false
-  state.multiplayerLastRoundId = null
-  state.multiplayerClockSynced = false
-  state.multiplayerLastClockSyncRound = 0
+  state.currentMultiplayerRound = null; state.currentHostTrack = null
+  state.currentRoundReveal = null; state.ownAnswerResult = null
+  state.finishedPlayerIds = new Set(); state.multiplayerAttempts = new Map()
+  state.multiplayerTriedAnswerKeys = new Map(); state.multiplayerCatalog = []
+  state.multiplayerScores = new Map(); state.multiplayerCurrentRoundNumber = 0
+  state.multiplayerOwnRoundHistory = []; state.multiplayerOwnRoundRecap = []
+  state.multiplayerLastOwnGuess = null; state.multiplayerPlayedTrackIds = new Set()
+  state.multiplayerRoundPlayerIds = new Set(); state.multiplayerRoundFinished = false
+  state.multiplayerGameOver = false; state.multiplayerLastRoundId = null
+  state.multiplayerClockSynced = false; state.multiplayerLastClockSyncRound = 0
 }
 
 function resetMultiplayerSessionState(): void {
-  state.multiplayerPlayerNames = new Map()
-  state.multiplayerClockOffsetMs = 0
-  state.multiplayerClockSyncPromise = null
-  state.multiplayerHostSeen = false
-  state.multiplayerHostId = null
-  state.multiplayerHostLeft = false
-  state.currentMultiplayerGameId = null
-  state.multiplayerTracks = []
-  state.currentGameMusicTheme = DEFAULT_MUSIC_THEME
+  state.multiplayerPlayerNames = new Map(); state.multiplayerClockOffsetMs = 0
+  state.multiplayerClockSyncPromise = null; state.multiplayerHostSeen = false
+  state.multiplayerHostId = null; state.multiplayerHostLeft = false
+  state.currentMultiplayerGameId = null; state.multiplayerTracks = []
   state.multiplayerMusicTheme = DEFAULT_MUSIC_THEME
-  state.currentGameRoundCount = DEFAULT_ROUND_COUNT
+  state.currentGameMusicTheme = DEFAULT_MUSIC_THEME
   state.multiplayerRoundCount = DEFAULT_ROUND_COUNT
-  state.currentGameRoundDuration = DEFAULT_ROUND_DURATION
+  state.currentGameRoundCount = DEFAULT_ROUND_COUNT
   state.multiplayerRoundDuration = DEFAULT_ROUND_DURATION
+  state.currentGameRoundDuration = DEFAULT_ROUND_DURATION
 }
 
 function isStaleRound(round: MultiplayerRound): boolean {
